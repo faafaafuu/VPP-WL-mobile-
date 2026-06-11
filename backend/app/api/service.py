@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hmac
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Any
 
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
-from app.domain.models import NodeStatus, Platform, ReceiptClaim
+from app.domain.models import NodeHealth, NodeStatus, Platform, ReceiptClaim
+from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
@@ -64,7 +66,18 @@ class ApiService:
         self._require_admin(admin_token)
         health_score = self._health_score_from_payload(payload)
         status = self._node_status_from_payload(payload)
-        node = self.repository.update_node_health(node_id, health_score=health_score, status=status)
+        latency_ms = self._latency_from_payload(payload)
+        success_rate = self._success_rate_from_payload(payload)
+        health = self._health_from_payload(payload)
+        node = self.repository.update_node_health(
+            node_id,
+            health_score=health_score,
+            status=status,
+            latency_ms=latency_ms,
+            success_rate=success_rate,
+            health=health,
+            last_check_at=datetime.now(timezone.utc),
+        )
         if node is None:
             raise ApiError(HTTPStatus.NOT_FOUND, {"error": "node not found"})
         return {"node": _admin_node(node)}
@@ -113,6 +126,39 @@ class ApiService:
         except ValueError as exc:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "status must be active, draining, or disabled"}) from exc
 
+    def _latency_from_payload(self, payload: dict[str, Any]) -> int | None:
+        raw_latency = payload.get("latency_ms")
+        if raw_latency is None:
+            return None
+        try:
+            latency_ms = int(raw_latency)
+        except (TypeError, ValueError) as exc:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "latency_ms must be an integer"}) from exc
+        if latency_ms < 0:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "latency_ms must be positive"})
+        return latency_ms
+
+    def _success_rate_from_payload(self, payload: dict[str, Any]) -> float | None:
+        raw_success_rate = payload.get("success_rate")
+        if raw_success_rate is None:
+            return None
+        try:
+            success_rate = float(raw_success_rate)
+        except (TypeError, ValueError) as exc:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "success_rate must be a number"}) from exc
+        if not 0 <= success_rate <= 1:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "success_rate must be between 0 and 1"})
+        return success_rate
+
+    def _health_from_payload(self, payload: dict[str, Any]) -> NodeHealth | None:
+        raw_health = payload.get("health")
+        if raw_health is None:
+            return None
+        try:
+            return NodeHealth(str(raw_health))
+        except ValueError as exc:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "health must be healthy, degraded, or disabled"}) from exc
+
     def _receipt_claim_from_payload(self, payload: dict[str, Any]) -> ReceiptClaim:
         try:
             platform = Platform(str(payload.get("platform", "")).lower())
@@ -137,11 +183,16 @@ def _public_node(node: Any) -> dict[str, Any]:
     return {
         "id": node.id,
         "region": node.region,
+        "provider": node.provider,
         "country_code": node.country_code,
         "protocol": node.protocol.value,
         "status": node.status.value,
+        "health": node.health.value,
         "health_score": node.health_score,
+        "latency_ms": node.latency_ms,
+        "success_rate": node.success_rate,
         "priority": node.priority,
+        "score": round(node_score(node), 2),
     }
 
 
@@ -152,5 +203,6 @@ def _admin_node(node: Any) -> dict[str, Any]:
         "host": node.host,
         "port": node.port,
         "weight": node.weight,
+        "last_check_at": node.last_check_at.isoformat() if node.last_check_at else None,
         "usable": node.is_usable(),
     }

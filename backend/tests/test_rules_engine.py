@@ -49,6 +49,7 @@ def _node() -> VpnNode:
         id="node-1",
         tag="vless-eu-1",
         region="eu",
+        provider="test",
         country_code="DE",
         host="eu1.example.com",
         port=443,
@@ -61,4 +62,3 @@ def _node() -> VpnNode:
 
 if __name__ == "__main__":
     unittest.main()
-

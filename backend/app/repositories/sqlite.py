@@ -8,6 +8,7 @@ from typing import Any
 
 from app.domain.models import (
     Hysteria2Options,
+    NodeHealth,
     NodeStatus,
     Platform,
     Protocol,
@@ -36,6 +37,7 @@ class SqliteRepository:
     def migrate(self) -> None:
         schema_path = Path(__file__).resolve().parents[2] / "migrations" / "001_initial.sql"
         self.connection.executescript(schema_path.read_text(encoding="utf-8"))
+        self._ensure_node_columns()
         self.connection.commit()
 
     def close(self) -> None:
@@ -115,8 +117,9 @@ class SqliteRepository:
     def list_nodes(self) -> list[VpnNode]:
         rows = self.connection.execute(
             """
-            SELECT id, tag, region, country_code, host, port, protocol, status,
-                   priority, weight, health_score, options_json
+            SELECT id, tag, region, provider, country_code, host, port, protocol, status,
+                   priority, weight, health_score, latency_ms, success_rate, last_check_at,
+                   health, options_json
             FROM nodes
             ORDER BY priority ASC, health_score DESC, tag ASC
             """
@@ -126,8 +129,9 @@ class SqliteRepository:
     def get_node(self, node_id: str) -> VpnNode | None:
         row = self.connection.execute(
             """
-            SELECT id, tag, region, country_code, host, port, protocol, status,
-                   priority, weight, health_score, options_json
+            SELECT id, tag, region, provider, country_code, host, port, protocol, status,
+                   priority, weight, health_score, latency_ms, success_rate, last_check_at,
+                   health, options_json
             FROM nodes
             WHERE id = ?
             """,
@@ -139,12 +143,14 @@ class SqliteRepository:
         self.connection.execute(
             """
             INSERT INTO nodes
-                (id, tag, region, country_code, host, port, protocol, status,
-                 priority, weight, health_score, options_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (id, tag, region, provider, country_code, host, port, protocol, status,
+                 priority, weight, health_score, latency_ms, success_rate, last_check_at,
+                 health, options_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 tag = excluded.tag,
                 region = excluded.region,
+                provider = excluded.provider,
                 country_code = excluded.country_code,
                 host = excluded.host,
                 port = excluded.port,
@@ -153,12 +159,17 @@ class SqliteRepository:
                 priority = excluded.priority,
                 weight = excluded.weight,
                 health_score = excluded.health_score,
+                latency_ms = excluded.latency_ms,
+                success_rate = excluded.success_rate,
+                last_check_at = excluded.last_check_at,
+                health = excluded.health,
                 options_json = excluded.options_json
             """,
             (
                 node.id,
                 node.tag,
                 node.region,
+                node.provider,
                 node.country_code,
                 node.host,
                 node.port,
@@ -167,19 +178,49 @@ class SqliteRepository:
                 node.priority,
                 node.weight,
                 node.health_score,
+                node.latency_ms,
+                node.success_rate,
+                _dt_to_text(node.last_check_at) if node.last_check_at else None,
+                node.health.value,
                 _options_to_json(node),
             ),
         )
         self.connection.commit()
 
-    def update_node_health(self, node_id: str, health_score: int, status: NodeStatus | None = None) -> VpnNode | None:
+    def update_node_health(
+        self,
+        node_id: str,
+        health_score: int,
+        status: NodeStatus | None = None,
+        latency_ms: int | None = None,
+        success_rate: float | None = None,
+        health: NodeHealth | None = None,
+        last_check_at: datetime | None = None,
+    ) -> VpnNode | None:
         existing = self.get_node(node_id)
         if existing is None:
             return None
         next_status = status or existing.status
+        next_health = health or existing.health
+        next_latency = latency_ms if latency_ms is not None else existing.latency_ms
+        next_success_rate = success_rate if success_rate is not None else existing.success_rate
+        next_last_check_at = last_check_at or existing.last_check_at
         self.connection.execute(
-            "UPDATE nodes SET health_score = ?, status = ? WHERE id = ?",
-            (health_score, next_status.value, node_id),
+            """
+            UPDATE nodes
+            SET health_score = ?, status = ?, latency_ms = ?, success_rate = ?,
+                last_check_at = ?, health = ?
+            WHERE id = ?
+            """,
+            (
+                health_score,
+                next_status.value,
+                next_latency,
+                next_success_rate,
+                _dt_to_text(next_last_check_at) if next_last_check_at else None,
+                next_health.value,
+                node_id,
+            ),
         )
         self.connection.commit()
         return self.get_node(node_id)
@@ -190,6 +231,22 @@ class SqliteRepository:
             return
         for node in InMemoryRepository().list_nodes():
             self.upsert_node(node)
+
+    def _ensure_node_columns(self) -> None:
+        existing = {
+            row["name"]
+            for row in self.connection.execute("PRAGMA table_info(nodes)").fetchall()
+        }
+        columns = {
+            "provider": "TEXT NOT NULL DEFAULT 'unknown'",
+            "latency_ms": "INTEGER",
+            "success_rate": "REAL NOT NULL DEFAULT 1.0",
+            "last_check_at": "TEXT",
+            "health": "TEXT NOT NULL DEFAULT 'healthy'",
+        }
+        for name, definition in columns.items():
+            if name not in existing:
+                self.connection.execute(f"ALTER TABLE nodes ADD COLUMN {name} {definition}")
 
 
 def _user_from_row(row: sqlite3.Row) -> User:
@@ -212,6 +269,7 @@ def _node_from_row(row: sqlite3.Row) -> VpnNode:
         id=row["id"],
         tag=row["tag"],
         region=row["region"],
+        provider=row["provider"],
         country_code=row["country_code"],
         host=row["host"],
         port=int(row["port"]),
@@ -220,6 +278,10 @@ def _node_from_row(row: sqlite3.Row) -> VpnNode:
         priority=int(row["priority"]),
         weight=int(row["weight"]),
         health_score=int(row["health_score"]),
+        latency_ms=int(row["latency_ms"]) if row["latency_ms"] is not None else None,
+        success_rate=float(row["success_rate"]),
+        last_check_at=_dt_from_text(row["last_check_at"]) if row["last_check_at"] else None,
+        health=NodeHealth(row["health"]),
         options=_options_from_json(protocol, row["options_json"]),
     )
 

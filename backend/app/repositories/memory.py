@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from app.domain.models import (
+    NodeHealth,
     NodeStatus,
     Platform,
     Protocol,
@@ -68,11 +69,28 @@ class InMemoryRepository:
     def upsert_node(self, node: VpnNode) -> None:
         self.nodes_by_id[node.id] = node
 
-    def update_node_health(self, node_id: str, health_score: int, status: NodeStatus | None = None) -> VpnNode | None:
+    def update_node_health(
+        self,
+        node_id: str,
+        health_score: int,
+        status: NodeStatus | None = None,
+        latency_ms: int | None = None,
+        success_rate: float | None = None,
+        health: NodeHealth | None = None,
+        last_check_at: datetime | None = None,
+    ) -> VpnNode | None:
         node = self.nodes_by_id.get(node_id)
         if node is None:
             return None
-        updated = replace(node, health_score=health_score, status=status or node.status)
+        updated = replace(
+            node,
+            health_score=health_score,
+            status=status or node.status,
+            latency_ms=latency_ms if latency_ms is not None else node.latency_ms,
+            success_rate=success_rate if success_rate is not None else node.success_rate,
+            health=health or node.health,
+            last_check_at=last_check_at or node.last_check_at,
+        )
         self.nodes_by_id[node_id] = updated
         return updated
 
@@ -82,6 +100,7 @@ class InMemoryRepository:
                 id="node_eu_1",
                 tag="vless-eu-1",
                 region="eu-central",
+                provider="hetzner",
                 country_code="DE",
                 host="eu1.vpn.example.com",
                 port=443,
@@ -89,6 +108,8 @@ class InMemoryRepository:
                 status=NodeStatus.ACTIVE,
                 priority=10,
                 health_score=98,
+                latency_ms=55,
+                success_rate=0.99,
                 options=VlessOptions(
                     uuid="00000000-0000-4000-8000-000000000001",
                     server_name="cdn.example.com",
@@ -99,6 +120,7 @@ class InMemoryRepository:
                 id="node_eu_2",
                 tag="ss-eu-2",
                 region="eu-west",
+                provider="digitalocean",
                 country_code="NL",
                 host="eu2.vpn.example.com",
                 port=8443,
@@ -106,6 +128,8 @@ class InMemoryRepository:
                 status=NodeStatus.ACTIVE,
                 priority=20,
                 health_score=92,
+                latency_ms=70,
+                success_rate=0.97,
                 options=ShadowsocksOptions(
                     method="2022-blake3-aes-128-gcm",
                     password="replace-with-user-or-node-secret",
@@ -115,6 +139,7 @@ class InMemoryRepository:
                 id="node_us_1",
                 tag="vless-us-1",
                 region="us-east",
+                provider="aws",
                 country_code="US",
                 host="us1.vpn.example.com",
                 port=443,
@@ -122,6 +147,8 @@ class InMemoryRepository:
                 status=NodeStatus.DRAINING,
                 priority=30,
                 health_score=70,
+                latency_ms=140,
+                success_rate=0.92,
                 options=VlessOptions(
                     uuid="00000000-0000-4000-8000-000000000003",
                     server_name="assets.example.com",
@@ -131,6 +158,7 @@ class InMemoryRepository:
                 id="node_bad_1",
                 tag="vless-disabled",
                 region="asia",
+                provider="scaleway",
                 country_code="SG",
                 host="sg1.vpn.example.com",
                 port=443,
@@ -138,6 +166,9 @@ class InMemoryRepository:
                 status=NodeStatus.DISABLED,
                 priority=40,
                 health_score=10,
+                latency_ms=350,
+                success_rate=0.10,
+                health=NodeHealth.DISABLED,
                 options=VlessOptions(
                     uuid="00000000-0000-4000-8000-000000000004",
                     server_name="assets.example.com",

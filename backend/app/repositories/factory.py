@@ -3,7 +3,9 @@ from __future__ import annotations
 import os
 from typing import Protocol as TypingProtocol
 
-from app.domain.models import NodeStatus, ReceiptClaim, Subscription, User, VpnNode
+from datetime import datetime
+
+from app.domain.models import NodeHealth, NodeStatus, ReceiptClaim, Subscription, User, VpnNode
 from app.repositories.memory import InMemoryRepository
 from app.repositories.sqlite import SqliteRepository
 
@@ -30,7 +32,16 @@ class Repository(TypingProtocol):
     def upsert_node(self, node: VpnNode) -> None:
         ...
 
-    def update_node_health(self, node_id: str, health_score: int, status: NodeStatus | None = None) -> VpnNode | None:
+    def update_node_health(
+        self,
+        node_id: str,
+        health_score: int,
+        status: NodeStatus | None = None,
+        latency_ms: int | None = None,
+        success_rate: float | None = None,
+        health: NodeHealth | None = None,
+        last_check_at: datetime | None = None,
+    ) -> VpnNode | None:
         ...
 
 

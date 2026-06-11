@@ -19,6 +19,12 @@ class NodeStatus(str, Enum):
     DISABLED = "disabled"
 
 
+class NodeHealth(str, Enum):
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    DISABLED = "disabled"
+
+
 class Protocol(str, Enum):
     VLESS = "vless"
     SHADOWSOCKS = "shadowsocks"
@@ -81,6 +87,7 @@ class VpnNode:
     id: str
     tag: str
     region: str
+    provider: str
     country_code: str
     host: str
     port: int
@@ -89,10 +96,19 @@ class VpnNode:
     priority: int
     weight: int = 100
     health_score: int = 100
+    latency_ms: int | None = None
+    success_rate: float = 1.0
+    last_check_at: datetime | None = None
+    health: NodeHealth = NodeHealth.HEALTHY
     options: VlessOptions | ShadowsocksOptions | WireGuardOptions | Hysteria2Options | None = None
 
     def is_usable(self) -> bool:
-        return self.status in {NodeStatus.ACTIVE, NodeStatus.DRAINING} and self.health_score >= 40
+        return (
+            self.status in {NodeStatus.ACTIVE, NodeStatus.DRAINING}
+            and self.health == NodeHealth.HEALTHY
+            and self.health_score >= 40
+            and self.success_rate >= 0.75
+        )
 
 
 @dataclass(frozen=True)
@@ -105,4 +121,3 @@ class ReceiptClaim:
 
 def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid4().hex}"
-

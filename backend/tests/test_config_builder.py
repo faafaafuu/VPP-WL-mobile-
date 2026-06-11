@@ -14,6 +14,7 @@ class ConfigBuilderTest(unittest.TestCase):
                     id="node-1",
                     tag="vless-eu-1",
                     region="eu",
+                    provider="test",
                     country_code="DE",
                     host="eu1.example.com",
                     port=443,
@@ -44,6 +45,7 @@ class ConfigBuilderTest(unittest.TestCase):
                     id="disabled",
                     tag="disabled",
                     region="eu",
+                    provider="test",
                     country_code="DE",
                     host="bad.example.com",
                     port=443,
@@ -59,6 +61,7 @@ class ConfigBuilderTest(unittest.TestCase):
                     id="active",
                     tag="active",
                     region="eu",
+                    provider="test",
                     country_code="DE",
                     host="ok.example.com",
                     port=443,
@@ -84,4 +87,3 @@ class ConfigBuilderTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

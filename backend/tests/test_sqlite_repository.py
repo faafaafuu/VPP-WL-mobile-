@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app.domain.models import NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode
+from app.domain.models import NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode
 from app.repositories.sqlite import SqliteRepository
 
 
@@ -32,6 +32,7 @@ class SqliteRepositoryTest(unittest.TestCase):
                 id="node-test",
                 tag="node-test",
                 region="eu-test",
+                provider="test",
                 country_code="DE",
                 host="node.example.com",
                 port=443,
@@ -52,13 +53,23 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertEqual(node.options.transport, {"type": "ws", "path": "/ws"})
 
     def test_updates_node_health(self) -> None:
-        updated = self.repo.update_node_health("node_eu_1", health_score=10, status=NodeStatus.DISABLED)
+        updated = self.repo.update_node_health(
+            "node_eu_1",
+            health_score=10,
+            status=NodeStatus.DISABLED,
+            latency_ms=500,
+            success_rate=0.2,
+            health=NodeHealth.DISABLED,
+        )
         reloaded = self.repo.get_node("node_eu_1")
 
         self.assertIsNotNone(updated)
         self.assertIsNotNone(reloaded)
         self.assertEqual(reloaded.health_score, 10)
         self.assertEqual(reloaded.status, NodeStatus.DISABLED)
+        self.assertEqual(reloaded.latency_ms, 500)
+        self.assertEqual(reloaded.success_rate, 0.2)
+        self.assertEqual(reloaded.health, NodeHealth.DISABLED)
 
 
 if __name__ == "__main__":

@@ -65,6 +65,26 @@ class ApiServerTest(unittest.TestCase):
         self.assertFalse(update["node"]["usable"])
         self.assertNotIn("vless-eu-1", outbound_tags)
 
+    def test_admin_health_update_accepts_latency_success_rate_and_health(self) -> None:
+        receipt_response = self.service.auth_receipt(
+            {"platform": "sandbox", "receipt": "demo", "device_id": "device-1"},
+        )
+        user_id = self.service.user_id_from_authorization(f"Bearer {receipt_response['access_token']}")
+
+        update = self.service.admin_update_node_health(
+            "test-admin",
+            "node_eu_1",
+            {"health_score": 80, "latency_ms": 230, "success_rate": 0.91, "health": "degraded"},
+        )
+        config = self.service.config(user_id)
+        outbound_tags = {outbound["tag"] for outbound in config["outbounds"]}
+
+        self.assertEqual(update["node"]["latency_ms"], 230)
+        self.assertEqual(update["node"]["success_rate"], 0.91)
+        self.assertEqual(update["node"]["health"], "degraded")
+        self.assertFalse(update["node"]["usable"])
+        self.assertNotIn("vless-eu-1", outbound_tags)
+
     def test_admin_token_is_required(self) -> None:
         with self.assertRaises(ApiError) as context:
             self.service.admin_nodes("wrong")

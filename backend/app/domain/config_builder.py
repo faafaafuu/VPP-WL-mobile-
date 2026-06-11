@@ -10,6 +10,7 @@ from app.domain.models import (
     VpnNode,
     WireGuardOptions,
 )
+from app.domain.node_scoring import sort_nodes_by_score
 from app.domain.rules_engine import RulesEngine
 
 
@@ -18,10 +19,7 @@ class ConfigBuilder:
         self.rules_engine = rules_engine or RulesEngine()
 
     def build_client_config(self, nodes: list[VpnNode]) -> dict[str, Any]:
-        usable_nodes = sorted(
-            [node for node in nodes if node.is_usable()],
-            key=lambda node: (node.priority, -node.health_score, node.tag),
-        )
+        usable_nodes = sort_nodes_by_score(nodes)
         if not usable_nodes:
             raise ValueError("no usable VPN nodes available")
 
