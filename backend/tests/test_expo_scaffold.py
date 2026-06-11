@@ -31,6 +31,7 @@ class ExpoScaffoldTest(unittest.TestCase):
         client = (EXPO_ROOT / "src/api/backendClient.ts").read_text(encoding="utf-8")
 
         self.assertIn("/api/config", client)
+        self.assertIn("/api/auth/init", client)
         self.assertIn("/api/me", client)
         self.assertIn("/api/nodes", client)
         self.assertIn("/api/auth/receipt", client)
@@ -42,14 +43,17 @@ class ExpoScaffoldTest(unittest.TestCase):
         app = (EXPO_ROOT / "src/App.tsx").read_text(encoding="utf-8")
 
         self.assertIn("activateSandboxReceipt", auth_repository)
+        self.assertIn("initDevice", auth_repository)
         self.assertIn("loadCurrentSubscription", auth_repository)
         self.assertIn("platform: \"sandbox\"", auth_repository)
         self.assertIn("product_id: \"vpn.monthly\"", auth_repository)
         self.assertIn("fetchMe(token)", auth_repository)
+        self.assertIn("initAuth(normalizedDeviceId)", auth_repository)
         self.assertIn("subscription-required", auth_repository)
         self.assertIn("saveAccessToken(response.access_token)", auth_repository)
         self.assertNotIn("saveReceipt", auth_repository)
         self.assertIn("Активировать sandbox", app)
+        self.assertIn("Создать пользователя", app)
         self.assertIn("Проверить подписку", app)
         self.assertIn("secureTextEntry", app)
 

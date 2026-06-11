@@ -4,6 +4,8 @@ import { SecureTokenStore } from "../storage/secureStore";
 export type AuthState =
   | { kind: "idle" }
   | { kind: "checking" }
+  | { kind: "initializing" }
+  | { kind: "initialized"; userId: string }
   | { kind: "activating" }
   | { kind: "active"; expiresAt: string }
   | { kind: "auth-required" }
@@ -15,6 +17,23 @@ export class AuthRepository {
     private readonly apiClient: BackendApiClient,
     private readonly tokenStore: SecureTokenStore
   ) {}
+
+  async initDevice(deviceId: string): Promise<AuthState> {
+    const normalizedDeviceId = deviceId.trim();
+    if (!normalizedDeviceId) {
+      return { kind: "error", message: "Device ID is required" };
+    }
+
+    try {
+      const response = await this.apiClient.initAuth(normalizedDeviceId);
+      return { kind: "initialized", userId: response.user_id };
+    } catch (error) {
+      if (error instanceof BackendApiError) {
+        return { kind: "error", message: error.message };
+      }
+      return { kind: "error", message: "Unable to initialize user" };
+    }
+  }
 
   async activateSandboxReceipt(deviceId: string, receipt: string): Promise<AuthState> {
     const normalizedDeviceId = deviceId.trim();

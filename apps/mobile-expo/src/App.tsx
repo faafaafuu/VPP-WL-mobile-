@@ -51,6 +51,11 @@ export default function App() {
     }
   }
 
+  async function initUser() {
+    setAuthState({ kind: "initializing" });
+    setAuthState(await authRepository.initDevice(deviceId));
+  }
+
   async function checkSubscription() {
     setAuthState({ kind: "checking" });
     setAuthState(await authRepository.loadCurrentSubscription());
@@ -102,6 +107,15 @@ export default function App() {
             style={styles.input}
             value={receipt}
           />
+        <Pressable
+          disabled={authState.kind === "initializing"}
+          onPress={initUser}
+          style={[styles.outlineButton, authState.kind === "initializing" ? styles.disabledButton : null]}
+        >
+          <Text style={styles.outlineButtonText}>
+            {authState.kind === "initializing" ? "Создание..." : "Создать пользователя"}
+          </Text>
+        </Pressable>
         <Pressable
           disabled={authState.kind === "activating"}
           onPress={activateSandboxSubscription}
@@ -163,8 +177,12 @@ function describeAuthState(state: AuthState): string {
   switch (state.kind) {
     case "active":
       return `Подписка активна до ${state.expiresAt}.`;
+    case "initialized":
+      return `Пользователь создан: ${state.userId}.`;
     case "activating":
       return "Проверяем receipt через backend.";
+    case "initializing":
+      return "Создаём или ищем пользователя по Device ID.";
     case "checking":
       return "Проверяем сохранённый token.";
     case "auth-required":

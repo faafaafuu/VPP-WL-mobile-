@@ -5,6 +5,10 @@ export type ReceiptRequest = {
   product_id: string;
 };
 
+export type AuthInitResponse = {
+  user_id: string;
+};
+
 export type ReceiptResponse = {
   access_token: string;
   token_type: "Bearer";
@@ -53,6 +57,22 @@ export class BackendApiError extends Error {
 
 export class BackendApiClient {
   constructor(private readonly baseUrl: string) {}
+
+  async initAuth(deviceId: string): Promise<AuthInitResponse> {
+    const response = await fetch(`${this.baseUrl}/api/auth/init`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ device_id: deviceId })
+    });
+
+    if (!response.ok) {
+      throw new BackendApiError(response.status, await safeErrorMessage(response));
+    }
+
+    return (await response.json()) as AuthInitResponse;
+  }
 
   async fetchConfig(accessToken: string): Promise<string> {
     const response = await fetch(`${this.baseUrl}/api/config`, {

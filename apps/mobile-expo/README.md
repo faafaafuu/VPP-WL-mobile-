@@ -72,7 +72,7 @@ iOS still needs EAS or a macOS/Xcode runner for actual builds.
 6. On `401`, clear auth and show the subscription/auth state.
 7. On `403`, stop VPN and show subscription required.
 
-The current UI includes a sandbox receipt activation panel for MVP testing. It sends the receipt to `/api/auth/receipt`, stores only the returned access token, and does not persist the receipt.
+The current UI includes a sandbox auth panel for MVP testing. It can call `/api/auth/init` to create/resume a user by device id, then sends the receipt to `/api/auth/receipt`, stores only the returned access token, and does not persist the receipt.
 
 The UI also includes a diagnostics-only node panel backed by `GET /api/nodes`. The VPN runtime should still use `/api/config` for actual routing and failover.
 
