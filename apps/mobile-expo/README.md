@@ -45,6 +45,20 @@ Current Android skeleton:
 
 This gives the UI a stable native boundary without bundling the proxy runtime yet.
 
+## iOS Native Module
+
+The same local module also declares an Apple Expo module.
+
+Current iOS skeleton:
+
+- exposes `start(configJson)`, `stop()`, and `status()` to JavaScript;
+- uses `NETunnelProviderManager` to create or load the VPN profile;
+- stores the backend-provided sing-box config JSON in `providerConfiguration`;
+- reads `VpnRouterTunnelProviderBundleIdentifier` from Info.plist;
+- requires a real Network Extension target and entitlements before device testing.
+
+iOS still needs EAS or a macOS/Xcode runner for actual builds.
+
 ## Backend Flow
 
 1. Store an access token in secure storage.

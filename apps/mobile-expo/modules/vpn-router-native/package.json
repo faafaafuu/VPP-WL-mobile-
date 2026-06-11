@@ -1,0 +1,9 @@
+{
+  "name": "vpn-router-native",
+  "version": "0.1.0",
+  "description": "Expo native VPN bridge for VPN Router",
+  "main": "build/index.js",
+  "private": true,
+  "keywords": ["expo", "vpn", "network-extension", "vpnservice"],
+  "license": "UNLICENSED"
+}

@@ -34,6 +34,8 @@ const withVpnRouterNative: ConfigPlugin = (config) => {
     mod.modResults.NSVpnUsageDescription =
       mod.modResults.NSVpnUsageDescription ??
       "VPN Router uses a packet tunnel to route traffic according to the selected subscription config.";
+    mod.modResults.VpnRouterTunnelProviderBundleIdentifier =
+      mod.modResults.VpnRouterTunnelProviderBundleIdentifier ?? "$(PRODUCT_BUNDLE_IDENTIFIER).Tunnel";
     return mod;
   });
 

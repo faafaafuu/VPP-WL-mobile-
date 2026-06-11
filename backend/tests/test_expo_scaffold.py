@@ -19,6 +19,7 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("react-native", package_json["dependencies"])
         self.assertIn("expo-secure-store", package_json["dependencies"])
         self.assertIn("expo-modules-core", package_json["dependencies"])
+        self.assertEqual("file:./modules/vpn-router-native", package_json["dependencies"]["vpn-router-native"])
         self.assertIn("./plugins/withVpnRouterNative", app_config)
 
     def test_expo_backend_client_uses_mobile_api_contract(self) -> None:
@@ -66,6 +67,7 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("android.permission.FOREGROUND_SERVICE", plugin)
         self.assertIn("android.permission.BIND_VPN_SERVICE", plugin)
         self.assertIn("com.vpnrouter.nativevpn.VpnRouterService", plugin)
+        self.assertIn("VpnRouterTunnelProviderBundleIdentifier", plugin)
 
     def test_expo_android_native_module_declares_vpn_service(self) -> None:
         module_config = json.loads(
@@ -91,6 +93,30 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("class VpnRouterService : VpnService()", service)
         self.assertIn("EXTRA_CONFIG_JSON", service)
         self.assertIn("runner.start(configJson, fd)", service)
+
+    def test_expo_ios_native_module_declares_network_extension_controller(self) -> None:
+        module_config = json.loads(
+            (EXPO_ROOT / "modules/vpn-router-native/expo-module.config.json").read_text(encoding="utf-8")
+        )
+        podspec = (EXPO_ROOT / "modules/vpn-router-native/ios/VpnRouterNative.podspec").read_text(
+            encoding="utf-8"
+        )
+        native_module = (
+            EXPO_ROOT / "modules/vpn-router-native/ios/Sources/VpnRouterNativeModule.swift"
+        ).read_text(encoding="utf-8")
+        controller = (
+            EXPO_ROOT / "modules/vpn-router-native/ios/Sources/VpnRouterTunnelController.swift"
+        ).read_text(encoding="utf-8")
+
+        self.assertEqual(["android", "apple"], module_config["platforms"])
+        self.assertEqual(["VpnRouterNativeModule"], module_config["apple"]["modules"])
+        self.assertIn("NetworkExtension", podspec)
+        self.assertIn("Name(\"VpnRouterNative\")", native_module)
+        self.assertIn("AsyncFunction(\"start\")", native_module)
+        self.assertIn("NETunnelProviderManager", controller)
+        self.assertIn("NETunnelProviderProtocol", controller)
+        self.assertIn("providerConfiguration", controller)
+        self.assertIn("VpnRouterTunnelProviderBundleIdentifier", controller)
 
 
 if __name__ == "__main__":

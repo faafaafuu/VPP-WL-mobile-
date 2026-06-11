@@ -16,7 +16,8 @@
     "expo-modules-core": "latest",
     "expo-secure-store": "latest",
     "react": "latest",
-    "react-native": "latest"
+    "react-native": "latest",
+    "vpn-router-native": "file:./modules/vpn-router-native"
   },
   "devDependencies": {
     "@types/react": "latest",
