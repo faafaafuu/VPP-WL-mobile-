@@ -89,6 +89,12 @@ The response is a sing-box client config. It includes:
 
 Use this for diagnostics/status UI only. The VPN runtime should use `/api/config`.
 
+## Account Flow
+
+`GET /api/me`
+
+Returns the current user id and active subscription summary. Mobile clients should use this after app start or foreground resume to refresh subscription UI without requesting a VPN config.
+
 ## Error Handling
 
 | Status | Meaning | Mobile Client Reaction |

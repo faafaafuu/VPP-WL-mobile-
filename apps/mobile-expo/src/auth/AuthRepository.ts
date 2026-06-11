@@ -3,8 +3,11 @@ import { SecureTokenStore } from "../storage/secureStore";
 
 export type AuthState =
   | { kind: "idle" }
+  | { kind: "checking" }
   | { kind: "activating" }
   | { kind: "active"; expiresAt: string }
+  | { kind: "auth-required" }
+  | { kind: "subscription-required" }
   | { kind: "error"; message: string };
 
 export class AuthRepository {
@@ -35,6 +38,30 @@ export class AuthRepository {
         return { kind: "error", message: error.message };
       }
       return { kind: "error", message: "Unable to activate subscription" };
+    }
+  }
+
+  async loadCurrentSubscription(): Promise<AuthState> {
+    const token = await this.tokenStore.readAccessToken();
+    if (!token) {
+      return { kind: "auth-required" };
+    }
+
+    try {
+      const response = await this.apiClient.fetchMe(token);
+      if (!response.subscription?.active) {
+        return { kind: "subscription-required" };
+      }
+      return { kind: "active", expiresAt: response.subscription.expires_at };
+    } catch (error) {
+      if (error instanceof BackendApiError && error.statusCode === 401) {
+        await this.tokenStore.clearAccessToken();
+        return { kind: "auth-required" };
+      }
+      if (error instanceof BackendApiError) {
+        return { kind: "error", message: error.message };
+      }
+      return { kind: "error", message: "Unable to load subscription" };
     }
   }
 }

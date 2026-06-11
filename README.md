@@ -7,6 +7,7 @@ Mobile VPN/router service with "install and forget" UX. The first backend slice 
 - Issue an API token after a store receipt handoff.
 - Keep users, subscriptions, and VPN nodes behind repository interfaces.
 - Return a sing-box client config from `GET /api/config`.
+- Return current user/subscription state from `GET /api/me`.
 - Route Russian domains and rule sets directly, route the rest through an automatic proxy group.
 - Expose active nodes through `GET /api/nodes`.
 - Keep implementation dependency-light so the domain layer is testable without network installs.

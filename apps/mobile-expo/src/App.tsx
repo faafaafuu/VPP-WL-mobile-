@@ -51,6 +51,11 @@ export default function App() {
     }
   }
 
+  async function checkSubscription() {
+    setAuthState({ kind: "checking" });
+    setAuthState(await authRepository.loadCurrentSubscription());
+  }
+
   async function refreshNodes() {
     setNodesState({ kind: "loading" });
     setNodesState(await nodeRepository.loadNodes());
@@ -97,17 +102,26 @@ export default function App() {
             style={styles.input}
             value={receipt}
           />
-          <Pressable
-            disabled={authState.kind === "activating"}
-            onPress={activateSandboxSubscription}
-            style={[styles.secondaryButton, authState.kind === "activating" ? styles.disabledButton : null]}
-          >
+        <Pressable
+          disabled={authState.kind === "activating"}
+          onPress={activateSandboxSubscription}
+          style={[styles.secondaryButton, authState.kind === "activating" ? styles.disabledButton : null]}
+        >
             <Text style={styles.secondaryButtonText}>
               {authState.kind === "activating" ? "Проверка..." : "Активировать sandbox"}
             </Text>
-          </Pressable>
-          <Text style={styles.detailText}>{describeAuthState(authState)}</Text>
-        </View>
+        </Pressable>
+        <Pressable
+          disabled={authState.kind === "checking"}
+          onPress={checkSubscription}
+          style={[styles.outlineButton, authState.kind === "checking" ? styles.disabledButton : null]}
+        >
+          <Text style={styles.outlineButtonText}>
+            {authState.kind === "checking" ? "Проверка..." : "Проверить подписку"}
+          </Text>
+        </Pressable>
+        <Text style={styles.detailText}>{describeAuthState(authState)}</Text>
+      </View>
 
         <View style={styles.subscriptionPanel}>
           <Text style={styles.panelTitle}>Узлы</Text>
@@ -151,6 +165,12 @@ function describeAuthState(state: AuthState): string {
       return `Подписка активна до ${state.expiresAt}.`;
     case "activating":
       return "Проверяем receipt через backend.";
+    case "checking":
+      return "Проверяем сохранённый token.";
+    case "auth-required":
+      return "Нужна активация подписки.";
+    case "subscription-required":
+      return "Активная подписка не найдена.";
     case "error":
       return state.message;
     case "idle":
@@ -280,6 +300,20 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  outlineButton: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderColor: "#202124",
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 46,
+    justifyContent: "center"
+  },
+  outlineButtonText: {
+    color: "#202124",
     fontSize: 15,
     fontWeight: "700"
   },

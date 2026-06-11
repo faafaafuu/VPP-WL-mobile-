@@ -12,6 +12,7 @@ class OpenApiContractTest(unittest.TestCase):
             "/api/auth/init",
             "/api/auth/receipt",
             "/api/config",
+            "/api/me",
             "/api/nodes",
             "/api/admin/nodes",
             "/api/admin/nodes/{node_id}/health",
@@ -28,4 +29,3 @@ class OpenApiContractTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

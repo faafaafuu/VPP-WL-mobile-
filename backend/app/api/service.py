@@ -60,6 +60,14 @@ class ApiService:
         self._require_known_user(user_id)
         return {"nodes": [_public_node(node) for node in choose_preferred_nodes(self.repository.list_nodes())]}
 
+    def me(self, user_id: str) -> dict[str, Any]:
+        self._require_known_user(user_id)
+        subscription = self.repository.get_active_subscription(user_id)
+        return {
+            "user_id": user_id,
+            "subscription": _public_subscription(subscription) if subscription else None,
+        }
+
     def admin_nodes(self, admin_token: str) -> dict[str, Any]:
         self._require_admin(admin_token)
         return {"nodes": [_admin_node(node) for node in self.repository.list_nodes()]}
@@ -195,6 +203,15 @@ def _public_node(node: Any) -> dict[str, Any]:
         "success_rate": node.success_rate,
         "priority": node.priority,
         "score": round(node_score(node), 2),
+    }
+
+
+def _public_subscription(subscription: Any) -> dict[str, Any]:
+    return {
+        "active": subscription.is_active(),
+        "platform": subscription.platform.value,
+        "product_id": subscription.product_id,
+        "expires_at": subscription.expires_at.isoformat(),
     }
 
 

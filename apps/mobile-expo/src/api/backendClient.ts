@@ -26,6 +26,18 @@ export type PublicNode = {
   score: number;
 };
 
+export type SubscriptionSummary = {
+  active: boolean;
+  platform: "sandbox" | "apple" | "google";
+  product_id: string;
+  expires_at: string;
+};
+
+export type MeResponse = {
+  user_id: string;
+  subscription: SubscriptionSummary | null;
+};
+
 export class BackendApiError extends Error {
   constructor(
     public readonly statusCode: number,
@@ -54,6 +66,20 @@ export class BackendApiClient {
     }
 
     return JSON.stringify(await response.json());
+  }
+
+  async fetchMe(accessToken: string): Promise<MeResponse> {
+    const response = await fetch(`${this.baseUrl}/api/me`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new BackendApiError(response.status, await safeErrorMessage(response));
+    }
+
+    return (await response.json()) as MeResponse;
   }
 
   async fetchNodes(accessToken: string): Promise<PublicNode[]> {

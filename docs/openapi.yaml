@@ -73,6 +73,18 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+  /api/me:
+    get:
+      summary: Return current user and active subscription summary
+      responses:
+        "200":
+          description: Current user state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/nodes:
     get:
       summary: Return usable node metadata for diagnostics
@@ -220,6 +232,30 @@ components:
         expires_at:
           type: string
           format: date-time
+    MeResponse:
+      type: object
+      required: [user_id, subscription]
+      properties:
+        user_id:
+          type: string
+        subscription:
+          nullable: true
+          oneOf:
+            - $ref: "#/components/schemas/SubscriptionSummary"
+    SubscriptionSummary:
+      type: object
+      required: [active, platform, product_id, expires_at]
+      properties:
+        active:
+          type: boolean
+        platform:
+          type: string
+          enum: [sandbox, apple, google]
+        product_id:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
     PublicNode:
       type: object
       required: [id, region, provider, country_code, protocol, status, health, health_score, success_rate, priority, score]
@@ -276,4 +312,3 @@ components:
       properties:
         error:
           type: string
-

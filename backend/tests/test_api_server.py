@@ -28,11 +28,15 @@ class ApiServerTest(unittest.TestCase):
         user_id = self.service.user_id_from_authorization(f"Bearer {token}")
 
         config = self.service.config(user_id)
+        me = self.service.me(user_id)
 
         self.assertEqual(config["route"]["final"], "auto")
         outbound_tags = {outbound["tag"] for outbound in config["outbounds"]}
         self.assertIn("auto", outbound_tags)
         self.assertNotIn("vless-disabled", outbound_tags)
+        self.assertEqual(me["user_id"], user_id)
+        self.assertTrue(me["subscription"]["active"])
+        self.assertEqual(me["subscription"]["product_id"], "vpn.monthly")
 
     def test_config_requires_token(self) -> None:
         with self.assertRaises(ApiError) as context:
@@ -42,9 +46,11 @@ class ApiServerTest(unittest.TestCase):
 
     def test_config_rejects_user_without_subscription(self) -> None:
         init_response = self.service.auth_init({"device_id": "device-2"})
+        me = self.service.me(init_response["user_id"])
         with self.assertRaises(ApiError) as context:
             self.service.config(init_response["user_id"])
 
+        self.assertIsNone(me["subscription"])
         self.assertEqual(context.exception.status, HTTPStatus.FORBIDDEN)
 
     def test_admin_can_disable_node_and_remove_it_from_config(self) -> None:

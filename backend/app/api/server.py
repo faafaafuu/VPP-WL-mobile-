@@ -47,6 +47,12 @@ class ApiHandler(BaseHTTPRequestHandler):
                 return
             self._send_service_response(lambda: API_SERVICE.config(user_id))
             return
+        if path == "/api/me":
+            user_id = self._require_user_id()
+            if user_id is None:
+                return
+            self._send_service_response(lambda: API_SERVICE.me(user_id))
+            return
         if path == "/api/admin/nodes":
             admin_token = self.headers.get("X-Admin-Token", "")
             self._send_service_response(lambda: API_SERVICE.admin_nodes(admin_token))
