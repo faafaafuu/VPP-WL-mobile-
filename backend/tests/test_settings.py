@@ -1,0 +1,48 @@
+from __future__ import annotations
+
+import unittest
+
+from app.core.settings import SettingsError, load_settings
+
+
+class SettingsTest(unittest.TestCase):
+    def test_loads_required_settings(self) -> None:
+        settings = load_settings(
+            {
+                "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                "VPN_ROUTER_HOST": "0.0.0.0",
+                "VPN_ROUTER_PORT": "8090",
+            }
+        )
+
+        self.assertEqual(settings.host, "0.0.0.0")
+        self.assertEqual(settings.port, 8090)
+
+    def test_rejects_missing_secret(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings({"VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length"})
+
+    def test_rejects_placeholder_secret(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "replace-with-random-32-byte-secret",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                }
+            )
+
+    def test_rejects_invalid_port(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                    "VPN_ROUTER_PORT": "99999",
+                }
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()
+

@@ -37,9 +37,11 @@ By default it uses SQLite at `backend/data/vpn-router.db` and creates the schema
 Set required secrets before running:
 
 ```bash
-export VPN_ROUTER_TOKEN_SECRET="replace-with-random-32-byte-secret"
-export VPN_ROUTER_ADMIN_TOKEN="replace-with-random-admin-token"
+export VPN_ROUTER_TOKEN_SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export VPN_ROUTER_ADMIN_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 ```
+
+Do not run the backend with the placeholder values from `.env.example`; they are rejected by runtime settings validation.
 
 Repository modes:
 
@@ -93,6 +95,7 @@ The worker probes enabled nodes, updates latency/success-rate/health, and future
 
 ```bash
 cp .env.example .env
+# edit .env and replace placeholder secrets before starting the API
 docker compose build
 docker compose up api
 ```

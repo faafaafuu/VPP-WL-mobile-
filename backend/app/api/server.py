@@ -9,19 +9,21 @@ from typing import Any
 from urllib.parse import urlparse
 
 from app.api.service import ApiError, ApiService
+from app.core.settings import load_settings
 from app.domain.config_builder import ConfigBuilder
 from app.repositories.factory import create_repository
 from app.security.tokens import TokenService
 
 
+SETTINGS = load_settings()
 REPOSITORY = create_repository()
-TOKEN_SERVICE = TokenService(os.environ["VPN_ROUTER_TOKEN_SECRET"])
+TOKEN_SERVICE = TokenService(SETTINGS.token_secret)
 CONFIG_BUILDER = ConfigBuilder()
 API_SERVICE = ApiService(
     REPOSITORY,
     TOKEN_SERVICE,
     CONFIG_BUILDER,
-    admin_token=os.environ["VPN_ROUTER_ADMIN_TOKEN"],
+    admin_token=SETTINGS.admin_token,
 )
 
 
@@ -137,7 +139,4 @@ def run(host: str = "127.0.0.1", port: int = 8080) -> None:
 
 
 if __name__ == "__main__":
-    run(
-        host=os.getenv("VPN_ROUTER_HOST", "127.0.0.1"),
-        port=int(os.getenv("VPN_ROUTER_PORT", "8080")),
-    )
+    run(host=SETTINGS.host, port=SETTINGS.port)
