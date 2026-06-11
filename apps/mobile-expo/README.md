@@ -24,6 +24,7 @@ Official docs checked:
 The UI calls a native module contract:
 
 ```ts
+VpnRouterNative.prepare()
 VpnRouterNative.start(configJson)
 VpnRouterNative.stop()
 VpnRouterNative.status()
@@ -39,6 +40,7 @@ Current Android skeleton:
 
 - exposes `start(configJson)`, `stop()`, and `status()` to JavaScript;
 - checks Android VPN permission with `VpnService.prepare`;
+- opens the Android system VPN permission screen through `prepare()`;
 - starts `VpnRouterService` with the backend-provided sing-box config JSON;
 - creates a TUN interface and passes its file descriptor to `SingBoxRunner`;
 - keeps `MissingSingBoxRunner` until the sing-box/libbox distribution and license decision is explicit.
@@ -52,6 +54,7 @@ The same local module also declares an Apple Expo module.
 Current iOS skeleton:
 
 - exposes `start(configJson)`, `stop()`, and `status()` to JavaScript;
+- exposes `prepare()` as a no-op because iOS permission is handled by the saved VPN profile flow;
 - uses `NETunnelProviderManager` to create or load the VPN profile;
 - stores the backend-provided sing-box config JSON in `providerConfiguration`;
 - reads `VpnRouterTunnelProviderBundleIdentifier` from Info.plist;

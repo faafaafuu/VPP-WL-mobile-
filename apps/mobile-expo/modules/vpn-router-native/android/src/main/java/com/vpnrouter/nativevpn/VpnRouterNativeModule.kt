@@ -8,6 +8,18 @@ class VpnRouterNativeModule : Module() {
     override fun definition() = ModuleDefinition {
         Name("VpnRouterNative")
 
+        AsyncFunction("prepare") {
+            val activity = appContext.currentActivity
+                ?: throw IllegalStateException("Current activity is unavailable")
+            val prepareIntent = VpnService.prepare(activity)
+            if (prepareIntent == null) {
+                "granted"
+            } else {
+                activity.startActivity(prepareIntent)
+                "requested"
+            }
+        }
+
         AsyncFunction("start") { configJson: String ->
             val context = appContext.reactContext
                 ?: throw IllegalStateException("React context is unavailable")

@@ -1,14 +1,19 @@
 import { requireNativeModule } from "expo-modules-core";
 
 export type VpnStatus = "disconnected" | "connecting" | "connected" | "error";
+export type VpnPrepareStatus = "granted" | "requested";
 
 export type VpnRouterNativeModule = {
+  prepare(): Promise<VpnPrepareStatus>;
   start(configJson: string): Promise<void>;
   stop(): Promise<void>;
   status(): Promise<VpnStatus>;
 };
 
 const missingRuntime: VpnRouterNativeModule = {
+  async prepare(): Promise<VpnPrepareStatus> {
+    return "granted";
+  },
   async start(): Promise<void> {
     throw new Error("VpnRouterNative runtime is not bundled yet");
   },

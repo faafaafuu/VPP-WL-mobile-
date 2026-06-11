@@ -4,6 +4,10 @@ public class VpnRouterNativeModule: Module {
     public func definition() -> ModuleDefinition {
         Name("VpnRouterNative")
 
+        AsyncFunction("prepare") {
+            "granted"
+        }
+
         AsyncFunction("start") { (configJson: String) async throws in
             try await VpnRouterTunnelController.shared.start(configJson: configJson)
         }

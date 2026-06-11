@@ -121,7 +121,7 @@ Expo is allowed for the shared UI shell and backend contract handling.
 
 - Expo Go is not a target runtime for VPN features.
 - Development builds/EAS builds are required once `VpnRouterNative` is implemented.
-- The JavaScript UI calls `VpnRouterNative.start(configJson)`, `stop()`, and `status()`.
+- The JavaScript UI calls `VpnRouterNative.prepare()`, `start(configJson)`, `stop()`, and `status()`.
 - Android implementation wraps `VpnService`.
 - iOS implementation controls `NETunnelProviderManager`; packet traffic stays inside `NEPacketTunnelProvider`.
 - The UI must not log access tokens, store receipts, or full configs.

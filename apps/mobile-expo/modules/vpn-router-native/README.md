@@ -10,6 +10,7 @@ Do not copy GPL/AGPL client code here. The implementation should either:
 Expected JavaScript contract:
 
 ```ts
+prepare(): Promise<"granted" | "requested">
 start(configJson: string): Promise<void>
 stop(): Promise<void>
 status(): Promise<"disconnected" | "connecting" | "connected" | "error">

@@ -11,6 +11,14 @@ export class VpnController {
   constructor(private readonly configRepository: ConfigRepository) {}
 
   async start(): Promise<StartResult> {
+    const prepareStatus = await VpnRouterNative.prepare();
+    if (prepareStatus === "requested") {
+      return {
+        status: "disconnected",
+        configState: { kind: "error", message: "VPN permission requested. Press connect again after approving it." }
+      };
+    }
+
     const configState = await this.configRepository.loadConfig();
 
     if (configState.kind !== "fresh" && configState.kind !== "last-known-good") {
