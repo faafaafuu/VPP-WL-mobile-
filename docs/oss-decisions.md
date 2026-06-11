@@ -13,12 +13,16 @@ This file records upstream projects checked before larger implementation work. D
 | WireGuard Android | https://github.com/WireGuard/wireguard-android | Apache-2.0 | Allowed as dependency/reference if WireGuard-specific mode is needed. | Official Android tunnel library is permissively licensed and published as a library. Not the primary MVP protocol. |
 | WireGuard Apple | https://github.com/WireGuard/wireguard-apple | MIT | Allowed as reference for iOS/macOS tunnel structure if WireGuard mode is needed. | Permissive license; still not the primary MVP protocol. |
 | Apple NEPacketTunnelProvider docs | https://developer.apple.com/documentation/networkextension/nepackettunnelprovider | Apple documentation | Reference only. | Required iOS API surface for packet tunnel extensions. |
+| React Native | https://github.com/facebook/react-native | MIT | Use for shared mobile UI layer. | Permissive license and practical Windows-friendly UI development path. Native VPN services still require platform modules. |
+| Expo | https://github.com/expo/expo | MIT | Use for UI shell, config plugin, secure storage, and development-build workflow. | Expo Go cannot host the VPN native runtime, but Expo Development Builds/EAS can include custom native modules. |
 | Marzban | https://github.com/Gozargah/Marzban | AGPL-3.0 | Reference or separate deployed component only. | Useful panel/backend reference, but AGPL is not acceptable for copying into closed backend. |
 | 3X-UI | https://github.com/MHSanaei/3x-ui | GPL-3.0 | Reference or separate deployed component only. | Useful Xray node/panel reference; do not copy GPL code. |
 
 ## Current Choice
 
 - Backend emits sing-box-compatible JSON configs.
-- Mobile plan targets Kotlin `VpnService` plus sing-box/libbox runtime, but the distribution/license model must be explicitly approved before bundling GPL sing-box binaries into a closed mobile app.
+- Mobile plan targets a React Native + Expo UI shell with native Android/iOS VPN modules underneath.
+- Android native module targets `VpnService` plus sing-box/libbox runtime.
+- iOS native module targets `NETunnelProviderManager` plus `NEPacketTunnelProvider`.
+- The distribution/license model must be explicitly approved before bundling GPL sing-box binaries into a closed mobile app.
 - GPL/AGPL projects are documentation/reference sources only in this repository.
-

@@ -31,3 +31,18 @@ API service
 ```
 
 Admin health updates and the health-check worker feed node metrics used by node scoring before configs are emitted.
+
+## Mobile UI Chain
+
+The mobile graph should expose this path:
+
+```text
+Expo UI
+  -> config repository
+  -> backend API client
+  -> last-known-good secure storage
+  -> VpnRouterNative boundary
+  -> Android VpnService / iOS NEPacketTunnelProvider
+```
+
+Expo is a UI and orchestration layer only; privileged VPN runtime work remains native.

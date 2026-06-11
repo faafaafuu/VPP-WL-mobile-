@@ -1,6 +1,6 @@
 # Mobile API Contract
 
-This contract is for Android/iOS clients that embed a VPN runtime and request sing-box configs from the backend.
+This contract is for Android/iOS clients that embed a VPN runtime and request sing-box configs from the backend. The current UI direction may use React Native + Expo, but the VPN lifecycle remains a native module on both platforms.
 
 The machine-readable API sketch is tracked in `docs/openapi.yaml`.
 
@@ -114,3 +114,14 @@ Use this for diagnostics/status UI only. The VPN runtime should use `/api/config
 2. Backend excludes disabled/degraded/flaky nodes from future configs.
 3. Client should request a fresh config when connection checks fail repeatedly.
 4. If all nodes fail, client shows a simple service-unavailable state and keeps retrying in the background.
+
+## Expo UI Boundary
+
+Expo is allowed for the shared UI shell and backend contract handling.
+
+- Expo Go is not a target runtime for VPN features.
+- Development builds/EAS builds are required once `VpnRouterNative` is implemented.
+- The JavaScript UI calls `VpnRouterNative.start(configJson)`, `stop()`, and `status()`.
+- Android implementation wraps `VpnService`.
+- iOS implementation controls `NETunnelProviderManager`; packet traffic stays inside `NEPacketTunnelProvider`.
+- The UI must not log access tokens, store receipts, or full configs.
