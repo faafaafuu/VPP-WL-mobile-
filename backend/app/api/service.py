@@ -6,6 +6,7 @@ from http import HTTPStatus
 from typing import Any
 
 from app.domain.config_builder import ConfigBuilder
+from app.domain.config_validation import ConfigValidationError, validate_config_shape
 from app.domain.models import NodeStatus, Platform, ReceiptClaim
 from app.domain.node_selection import choose_preferred_nodes
 from app.repositories.factory import Repository
@@ -73,8 +74,10 @@ class ApiService:
         if self.repository.get_active_subscription(user_id) is None:
             raise ApiError(HTTPStatus.FORBIDDEN, {"error": "active subscription required"})
         try:
-            return self.config_builder.build_client_config(choose_preferred_nodes(self.repository.list_nodes()))
-        except ValueError as exc:
+            config = self.config_builder.build_client_config(choose_preferred_nodes(self.repository.list_nodes()))
+            validate_config_shape(config)
+            return config
+        except (ValueError, ConfigValidationError) as exc:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
 
     def user_id_from_authorization(self, authorization: str) -> str:
