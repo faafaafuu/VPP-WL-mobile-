@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: VPN Router Backend API
+  version: 0.1.0
+  description: MVP backend contract for mobile VPN clients.
+servers:
+  - url: https://api.example.com
+    description: Production placeholder
+  - url: http://127.0.0.1:8080
+    description: Local development
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      summary: Service health
+      responses:
+        "200":
+          description: API is alive
+  /api/auth/init:
+    post:
+      security: []
+      summary: Create or resume a user by device id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInitRequest"
+      responses:
+        "200":
+          description: User id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthInitResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/auth/receipt:
+    post:
+      security: []
+      summary: Activate subscription from a store receipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiptRequest"
+      responses:
+        "200":
+          description: Access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/config:
+    get:
+      summary: Return sing-box config for active subscriber
+      responses:
+        "200":
+          description: sing-box config JSON
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [inbounds, outbounds, route]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/nodes:
+    get:
+      summary: Return usable node metadata for diagnostics
+      responses:
+        "200":
+          description: Node list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [nodes]
+                properties:
+                  nodes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicNode"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/admin/nodes:
+    get:
+      security:
+        - adminToken: []
+      summary: Return all nodes with admin metadata
+      responses:
+        "200":
+          description: Admin node list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/admin/nodes/{node_id}/health:
+    patch:
+      security:
+        - adminToken: []
+      summary: Update node health metrics
+      parameters:
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeHealthUpdateRequest"
+      responses:
+        "200":
+          description: Updated node
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/webhook/apple:
+    post:
+      security: []
+      summary: Apple server notification placeholder
+      responses:
+        "202":
+          description: Accepted
+  /api/webhook/google:
+    post:
+      security: []
+      summary: Google notification placeholder
+      responses:
+        "202":
+          description: Accepted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    adminToken:
+      type: apiKey
+      in: header
+      name: X-Admin-Token
+  responses:
+    BadRequest:
+      description: Invalid request payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Active subscription required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: No usable nodes or invalid generated config
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    AuthInitRequest:
+      type: object
+      required: [device_id]
+      properties:
+        device_id:
+          type: string
+    AuthInitResponse:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: string
+    ReceiptRequest:
+      type: object
+      required: [platform, receipt, device_id]
+      properties:
+        platform:
+          type: string
+          enum: [sandbox, apple, google]
+        receipt:
+          type: string
+        device_id:
+          type: string
+        product_id:
+          type: string
+          default: vpn.monthly
+    ReceiptResponse:
+      type: object
+      required: [access_token, token_type, expires_at]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_at:
+          type: string
+          format: date-time
+    PublicNode:
+      type: object
+      required: [id, region, provider, country_code, protocol, status, health, health_score, success_rate, priority, score]
+      properties:
+        id:
+          type: string
+        region:
+          type: string
+        provider:
+          type: string
+        country_code:
+          type: string
+        protocol:
+          type: string
+        status:
+          type: string
+        health:
+          type: string
+        health_score:
+          type: integer
+        latency_ms:
+          type: integer
+          nullable: true
+        success_rate:
+          type: number
+        priority:
+          type: integer
+        score:
+          type: number
+    NodeHealthUpdateRequest:
+      type: object
+      required: [health_score]
+      properties:
+        health_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        status:
+          type: string
+          enum: [active, draining, disabled]
+        health:
+          type: string
+          enum: [healthy, degraded, disabled]
+        latency_ms:
+          type: integer
+          minimum: 0
+        success_rate:
+          type: number
+          minimum: 0
+          maximum: 1
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+

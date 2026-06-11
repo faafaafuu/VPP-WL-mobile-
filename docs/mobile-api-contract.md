@@ -2,6 +2,8 @@
 
 This contract is for Android/iOS clients that embed a VPN runtime and request sing-box configs from the backend.
 
+The machine-readable API sketch is tracked in `docs/openapi.yaml`.
+
 ## Base Requirements
 
 - All production calls must use HTTPS.
@@ -112,4 +114,3 @@ Use this for diagnostics/status UI only. The VPN runtime should use `/api/config
 2. Backend excludes disabled/degraded/flaky nodes from future configs.
 3. Client should request a fresh config when connection checks fail repeatedly.
 4. If all nodes fail, client shows a simple service-unavailable state and keeps retrying in the background.
-
