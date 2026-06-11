@@ -18,9 +18,9 @@ Graphify is part of the workflow for architecture navigation.
 python3 tools/mini_graphify.py
 ```
 
-## Intended Architecture Chain
+## Backend Architecture Chain
 
-The backend graph should expose this path after the next implementation steps:
+The backend graph should expose this path:
 
 ```text
 API service
@@ -30,3 +30,4 @@ API service
   -> sing-box config
 ```
 
+Admin health updates feed node metrics used by node scoring before configs are emitted.
