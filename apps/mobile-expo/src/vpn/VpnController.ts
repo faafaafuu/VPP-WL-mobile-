@@ -25,8 +25,18 @@ export class VpnController {
       };
     }
 
-    await VpnRouterNative.start(configState.configJson);
-    return { status: "connected", configState };
+    try {
+      await VpnRouterNative.start(configState.configJson);
+      return { status: "connected", configState };
+    } catch (error) {
+      return {
+        status: "error",
+        configState: {
+          kind: "error",
+          message: error instanceof Error ? error.message : "Unable to start VPN"
+        }
+      };
+    }
   }
 
   async stop(): Promise<void> {

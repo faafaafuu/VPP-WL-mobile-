@@ -90,6 +90,7 @@ class ExpoScaffoldTest(unittest.TestCase):
         native_module = (EXPO_ROOT / "src/vpn/VpnRouterNative.ts").read_text(encoding="utf-8")
         module_readme = (EXPO_ROOT / "modules/vpn-router-native/README.md").read_text(encoding="utf-8")
         controller = (EXPO_ROOT / "src/vpn/VpnController.ts").read_text(encoding="utf-8")
+        app = (EXPO_ROOT / "src/App.tsx").read_text(encoding="utf-8")
 
         self.assertIn("requireNativeModule", native_module)
         self.assertIn("VpnRouterNative", native_module)
@@ -97,6 +98,9 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("not bundled yet", native_module)
         self.assertIn("Do not copy GPL/AGPL client code", module_readme)
         self.assertLess(controller.index("loadConfig()"), controller.index("VpnRouterNative.prepare()"))
+        self.assertIn("try {", controller)
+        self.assertIn("Unable to start VPN", controller)
+        self.assertIn("Unable to stop VPN", app)
         self.assertFalse(any(path.name.lower().startswith("sing-box") for path in EXPO_ROOT.rglob("*")))
 
     def test_expo_config_plugin_declares_platform_vpn_hooks(self) -> None:

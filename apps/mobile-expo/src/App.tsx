@@ -31,15 +31,31 @@ export default function App() {
 
   async function toggleVpn() {
     if (status === "connected" || status === "connecting") {
-      await controller.stop();
-      setStatus("disconnected");
+      try {
+        await controller.stop();
+        setStatus("disconnected");
+      } catch (error) {
+        setStatus("error");
+        setConfigState({
+          kind: "error",
+          message: error instanceof Error ? error.message : "Unable to stop VPN"
+        });
+      }
       return;
     }
 
     setStatus("connecting");
-    const result = await controller.start();
-    setConfigState(result.configState);
-    setStatus(result.status);
+    try {
+      const result = await controller.start();
+      setConfigState(result.configState);
+      setStatus(result.status);
+    } catch (error) {
+      setConfigState({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Unable to start VPN"
+      });
+      setStatus("error");
+    }
   }
 
   async function activateSandboxSubscription() {
