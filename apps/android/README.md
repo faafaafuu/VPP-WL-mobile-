@@ -28,6 +28,8 @@ apps/android/
     src/main/java/.../vpn/SingBoxRunner.kt
 ```
 
+The initial scaffold now contains these files, but `SingBoxRunner` is intentionally an interface with a missing-runtime implementation. No sing-box/libbox source or binary is vendored into this repository.
+
 ## VPN Flow
 
 1. User taps connect.
@@ -40,11 +42,26 @@ apps/android/
 
 ## Not Implemented Yet
 
-- Gradle scaffold.
 - sing-box AAR/libbox dependency.
-- Actual `VpnService` implementation.
+- Production `VpnService` runtime wiring.
 - Secure token storage.
-- UI.
+- Subscription UI.
+- Foreground notification/channel.
+- Last-known-good config encryption.
 
-Create the Gradle/Kotlin scaffold after the backend contract stabilizes and the sing-box distribution/license decision is explicit.
+## Build Requirements
 
+This environment did not have Java, Gradle, or Android SDK installed when the scaffold was created. On a development machine, install:
+
+- JDK 17
+- Android Studio or Android SDK command line tools
+- Gradle wrapper or system Gradle
+
+Then run:
+
+```bash
+cd apps/android
+gradle :app:assembleDebug
+```
+
+Before wiring the actual VPN runtime, decide whether the app is GPL-compatible or whether sing-box/libbox is distributed as a separate component.
