@@ -30,6 +30,18 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("Authorization", client)
         self.assertIn("Bearer ${accessToken}", client)
 
+    def test_expo_auth_repository_activates_subscription_without_storing_receipt(self) -> None:
+        auth_repository = (EXPO_ROOT / "src/auth/AuthRepository.ts").read_text(encoding="utf-8")
+        app = (EXPO_ROOT / "src/App.tsx").read_text(encoding="utf-8")
+
+        self.assertIn("activateSandboxReceipt", auth_repository)
+        self.assertIn("platform: \"sandbox\"", auth_repository)
+        self.assertIn("product_id: \"vpn.monthly\"", auth_repository)
+        self.assertIn("saveAccessToken(response.access_token)", auth_repository)
+        self.assertNotIn("saveReceipt", auth_repository)
+        self.assertIn("Активировать sandbox", app)
+        self.assertIn("secureTextEntry", app)
+
     def test_expo_config_repository_uses_lkg_fallback(self) -> None:
         repository = (EXPO_ROOT / "src/config/configRepository.ts").read_text(encoding="utf-8")
         client = (EXPO_ROOT / "src/api/backendClient.ts").read_text(encoding="utf-8")
