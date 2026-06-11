@@ -1,0 +1,18 @@
+[Unit]
+Description=VPN Router node health-check worker
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/vpn-router/backend
+EnvironmentFile=/etc/vpn-router/backend.env
+ExecStart=/usr/bin/python3 -m app.cli.health_check
+User=vpn-router
+Group=vpn-router
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/vpn-router/backend/data
+
