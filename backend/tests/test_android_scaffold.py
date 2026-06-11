@@ -61,6 +61,20 @@ class AndroidScaffoldTest(unittest.TestCase):
         self.assertIn("EncryptedPreferencesFactory.create", config_store)
         self.assertIn("last_known_good_config_json", config_store)
 
+    def test_config_repository_fetches_config_and_uses_lkg_fallback(self) -> None:
+        repository = (
+            ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/config/ConfigRepository.kt"
+        ).read_text(encoding="utf-8")
+        api_client = (
+            ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/api/BackendApiClient.kt"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("apiClient.fetchConfig(token)", repository)
+        self.assertIn("configStore.saveLastKnownGoodConfig", repository)
+        self.assertIn("fallbackConfig()", repository)
+        self.assertIn("AuthRequired", repository)
+        self.assertIn("statusCode == 503 || statusCode >= 500", api_client)
+
 
 if __name__ == "__main__":
     unittest.main()

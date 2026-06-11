@@ -48,3 +48,6 @@ class BackendApiException(
     responseBody: String,
 ) : RuntimeException("Backend request failed: $statusCode $responseBody")
 
+fun BackendApiException.isConfigFallbackAllowed(): Boolean {
+    return statusCode == 503 || statusCode >= 500
+}

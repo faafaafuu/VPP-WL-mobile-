@@ -37,10 +37,11 @@ The initial scaffold now contains these files, but `SingBoxRunner` is intentiona
 1. User taps connect.
 2. App ensures VPN permission through `VpnService.prepare`.
 3. App obtains or refreshes API token.
-4. App calls backend `GET /api/config`.
-5. App stores last known good config through `EncryptedConfigStore`.
-6. `VpnRouterService` starts sing-box/libbox with the config.
-7. Client health checks trigger config refresh or reconnect when repeated failures happen.
+4. `ConfigRepository` calls backend `GET /api/config`.
+5. Fresh configs are stored through `EncryptedConfigStore`.
+6. On network/5xx/503 errors, `ConfigRepository` can return the encrypted last-known-good config.
+7. `VpnRouterService` starts sing-box/libbox with the config.
+8. Client health checks trigger config refresh or reconnect when repeated failures happen.
 
 ## Not Implemented Yet
 
