@@ -15,13 +15,13 @@ from app.security.tokens import TokenService
 
 
 REPOSITORY = create_repository()
-TOKEN_SERVICE = TokenService(os.getenv("VPN_ROUTER_TOKEN_SECRET", "dev-secret-change-me"))
+TOKEN_SERVICE = TokenService(os.environ["VPN_ROUTER_TOKEN_SECRET"])
 CONFIG_BUILDER = ConfigBuilder()
 API_SERVICE = ApiService(
     REPOSITORY,
     TOKEN_SERVICE,
     CONFIG_BUILDER,
-    admin_token=os.getenv("VPN_ROUTER_ADMIN_TOKEN", "dev-admin-token"),
+    admin_token=os.environ["VPN_ROUTER_ADMIN_TOKEN"],
 )
 
 

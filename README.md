@@ -34,6 +34,12 @@ make run
 
 The server listens on `127.0.0.1:8080` by default.
 By default it uses SQLite at `backend/data/vpn-router.db` and creates the schema automatically.
+Set required secrets before running:
+
+```bash
+export VPN_ROUTER_TOKEN_SECRET="replace-with-random-32-byte-secret"
+export VPN_ROUTER_ADMIN_TOKEN="replace-with-random-admin-token"
+```
 
 Repository modes:
 
@@ -42,7 +48,7 @@ VPN_ROUTER_REPOSITORY=sqlite VPN_ROUTER_SQLITE_PATH=data/vpn-router.db make run
 VPN_ROUTER_REPOSITORY=memory make run
 ```
 
-Set `VPN_ROUTER_ADMIN_TOKEN` before exposing admin endpoints outside local development.
+Use `.env.example` as a checklist; do not commit real `.env` files.
 
 Example flow:
 

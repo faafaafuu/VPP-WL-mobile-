@@ -27,8 +27,10 @@ class ApiService:
         repository: Repository,
         token_service: TokenService,
         config_builder: ConfigBuilder,
-        admin_token: str = "dev-admin-token",
+        admin_token: str,
     ) -> None:
+        if not admin_token:
+            raise ValueError("admin token is required")
         self.repository = repository
         self.token_service = token_service
         self.config_builder = config_builder
