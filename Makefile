@@ -1,10 +1,16 @@
 PY ?= python3
 GRAPHIFY ?= graphify
 
-.PHONY: test graphify run docker-build docker-up docker-down docker-health-check
+.PHONY: test compile compose-config graphify run docker-build docker-up docker-down docker-health-check ci
 
 test:
 	cd backend && $(PY) -m unittest discover -s tests
+
+compile:
+	$(PY) -m compileall backend tools
+
+compose-config:
+	VPN_ROUTER_ENV_FILE=.env.example docker compose config >/tmp/vpn-router-compose-config.yml
 
 run:
 	cd backend && VPN_ROUTER_REPOSITORY=sqlite $(PY) -m app.api.server
@@ -23,3 +29,6 @@ docker-health-check:
 
 graphify:
 	$(GRAPHIFY) update . --force --no-cluster || $(PY) tools/mini_graphify.py
+
+ci: test compile compose-config
+	$(PY) -c "import json; json.load(open('graphify-out/graph.json')); print('graphify graph json ok')"

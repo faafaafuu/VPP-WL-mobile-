@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit tests
+        run: make test
+
+      - name: Compile Python files
+        run: make compile
+
+      - name: Validate Docker Compose config
+        run: make compose-config
+
+      - name: Validate graphify artifact
+        run: python3 -c "import json; json.load(open('graphify-out/graph.json')); print('graphify graph json ok')"
+
+      - name: Check volatile graphify files are not tracked
+        run: |
+          ! git ls-files --error-unmatch graphify-out/.graphify_root
+          ! git ls-files --error-unmatch graphify-out/manifest.json
+

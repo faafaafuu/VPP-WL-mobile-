@@ -118,6 +118,12 @@ docker compose --profile jobs run --rm health-check
 make test
 ```
 
+Run the local CI-equivalent checks:
+
+```bash
+make ci
+```
+
 ## Graphify
 
 ```bash
