@@ -24,7 +24,9 @@ apps/android/
     src/main/java/.../MainActivity.kt
     src/main/java/.../VpnRouterService.kt
     src/main/java/.../config/ConfigRepository.kt
+    src/main/java/.../config/EncryptedConfigStore.kt
     src/main/java/.../auth/TokenStore.kt
+    src/main/java/.../auth/EncryptedTokenStore.kt
     src/main/java/.../vpn/SingBoxRunner.kt
 ```
 
@@ -36,7 +38,7 @@ The initial scaffold now contains these files, but `SingBoxRunner` is intentiona
 2. App ensures VPN permission through `VpnService.prepare`.
 3. App obtains or refreshes API token.
 4. App calls backend `GET /api/config`.
-5. App stores last known good config securely.
+5. App stores last known good config through `EncryptedConfigStore`.
 6. `VpnRouterService` starts sing-box/libbox with the config.
 7. Client health checks trigger config refresh or reconnect when repeated failures happen.
 
@@ -44,10 +46,14 @@ The initial scaffold now contains these files, but `SingBoxRunner` is intentiona
 
 - sing-box AAR/libbox dependency.
 - Production `VpnService` runtime wiring.
-- Secure token storage.
 - Subscription UI.
 - Foreground notification/channel.
-- Last-known-good config encryption.
+
+## Local Secure Storage
+
+- `EncryptedTokenStore` stores access tokens using AndroidX Security `EncryptedSharedPreferences`.
+- `EncryptedConfigStore` stores the last-known-good sing-box config and save timestamp using the same encrypted preferences factory.
+- The implementation still needs instrumentation tests on a device/emulator once Android SDK is available in CI.
 
 ## Build Requirements
 
