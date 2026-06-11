@@ -11,6 +11,21 @@ export type ReceiptResponse = {
   expires_at: string;
 };
 
+export type PublicNode = {
+  id: string;
+  region: string;
+  provider: string;
+  country_code: string;
+  protocol: string;
+  status: string;
+  health: string;
+  health_score: number;
+  latency_ms: number | null;
+  success_rate: number;
+  priority: number;
+  score: number;
+};
+
 export class BackendApiError extends Error {
   constructor(
     public readonly statusCode: number,
@@ -39,6 +54,21 @@ export class BackendApiClient {
     }
 
     return JSON.stringify(await response.json());
+  }
+
+  async fetchNodes(accessToken: string): Promise<PublicNode[]> {
+    const response = await fetch(`${this.baseUrl}/api/nodes`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new BackendApiError(response.status, await safeErrorMessage(response));
+    }
+
+    const payload = await response.json();
+    return Array.isArray(payload.nodes) ? (payload.nodes as PublicNode[]) : [];
   }
 
   async submitReceipt(payload: ReceiptRequest): Promise<ReceiptResponse> {

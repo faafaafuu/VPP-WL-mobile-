@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Tex
 import { BackendApiClient } from "./api/backendClient";
 import { AuthRepository, AuthState } from "./auth/AuthRepository";
 import { ConfigRepository, ConfigState } from "./config/configRepository";
+import { NodeRepository, NodesState } from "./nodes/NodeRepository";
 import { SecureTokenStore } from "./storage/secureStore";
 import { VpnController } from "./vpn/VpnController";
 import { VpnStatus } from "./vpn/VpnRouterNative";
@@ -15,10 +16,12 @@ export default function App() {
   const tokenStore = useMemo(() => new SecureTokenStore(), []);
   const authRepository = useMemo(() => new AuthRepository(apiClient, tokenStore), [apiClient, tokenStore]);
   const configRepository = useMemo(() => new ConfigRepository(apiClient, tokenStore), [apiClient, tokenStore]);
+  const nodeRepository = useMemo(() => new NodeRepository(apiClient, tokenStore), [apiClient, tokenStore]);
   const controller = useMemo(() => new VpnController(configRepository), [configRepository]);
   const [status, setStatus] = useState<VpnStatus>("disconnected");
   const [configState, setConfigState] = useState<ConfigState>({ kind: "idle" });
   const [authState, setAuthState] = useState<AuthState>({ kind: "idle" });
+  const [nodesState, setNodesState] = useState<NodesState>({ kind: "idle" });
   const [deviceId, setDeviceId] = useState("device-1");
   const [receipt, setReceipt] = useState("demo");
 
@@ -46,6 +49,11 @@ export default function App() {
     if (result.kind === "active") {
       setConfigState({ kind: "idle" });
     }
+  }
+
+  async function refreshNodes() {
+    setNodesState({ kind: "loading" });
+    setNodesState(await nodeRepository.loadNodes());
   }
 
   const buttonLabel = status === "connected" || status === "connecting" ? "Отключить" : "Подключить";
@@ -100,6 +108,20 @@ export default function App() {
           </Pressable>
           <Text style={styles.detailText}>{describeAuthState(authState)}</Text>
         </View>
+
+        <View style={styles.subscriptionPanel}>
+          <Text style={styles.panelTitle}>Узлы</Text>
+          <Pressable
+            disabled={nodesState.kind === "loading"}
+            onPress={refreshNodes}
+            style={[styles.secondaryButton, nodesState.kind === "loading" ? styles.disabledButton : null]}
+          >
+            <Text style={styles.secondaryButtonText}>
+              {nodesState.kind === "loading" ? "Обновление..." : "Обновить узлы"}
+            </Text>
+          </Pressable>
+          {renderNodes(nodesState)}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -134,6 +156,38 @@ function describeAuthState(state: AuthState): string {
     case "idle":
     default:
       return "Receipt не сохраняется на устройстве; сохраняется только access token.";
+  }
+}
+
+function renderNodes(state: NodesState) {
+  switch (state.kind) {
+    case "ready":
+      if (state.nodes.length === 0) {
+        return <Text style={styles.detailText}>Нет доступных узлов.</Text>;
+      }
+      return (
+        <View style={styles.nodeList}>
+          {state.nodes.slice(0, 4).map((node) => (
+            <View key={node.id} style={styles.nodeRow}>
+              <Text style={styles.nodeTitle}>
+                {node.region} · {node.protocol}
+              </Text>
+              <Text style={styles.detailText}>
+                {node.provider} · {node.health} · score {node.score} · {node.latency_ms ?? "n/a"} ms
+              </Text>
+            </View>
+          ))}
+        </View>
+      );
+    case "loading":
+      return <Text style={styles.detailText}>Загружаем список узлов.</Text>;
+    case "auth-required":
+      return <Text style={styles.detailText}>Сначала активируйте подписку.</Text>;
+    case "error":
+      return <Text style={styles.detailText}>{state.message}</Text>;
+    case "idle":
+    default:
+      return <Text style={styles.detailText}>Список узлов нужен только для диагностики.</Text>;
   }
 }
 
@@ -226,6 +280,21 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  nodeList: {
+    gap: 10
+  },
+  nodeRow: {
+    borderColor: "#e2e2dc",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 4,
+    padding: 12
+  },
+  nodeTitle: {
+    color: "#202124",
     fontSize: 15,
     fontWeight: "700"
   },

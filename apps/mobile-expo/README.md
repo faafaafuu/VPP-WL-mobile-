@@ -74,6 +74,8 @@ iOS still needs EAS or a macOS/Xcode runner for actual builds.
 
 The current UI includes a sandbox receipt activation panel for MVP testing. It sends the receipt to `/api/auth/receipt`, stores only the returned access token, and does not persist the receipt.
 
+The UI also includes a diagnostics-only node panel backed by `GET /api/nodes`. The VPN runtime should still use `/api/config` for actual routing and failover.
+
 ## Local Development
 
 Install dependencies only when Node tooling is available:
