@@ -1,0 +1,112 @@
+{
+  "backend/app/__init__.py": {
+    "mtime": 1781174744.891782,
+    "ast_hash": "9f5827234cbeb1ac6bd26e225417e776",
+    "semantic_hash": ""
+  },
+  "backend/app/api/__init__.py": {
+    "mtime": 1781174747.9277213,
+    "ast_hash": "40269ce076063634f1382953a9683159",
+    "semantic_hash": ""
+  },
+  "backend/app/api/server.py": {
+    "mtime": 1781178497.5305512,
+    "ast_hash": "a49a575e6ed2aeedb810d7de8e0abd80",
+    "semantic_hash": ""
+  },
+  "backend/app/api/service.py": {
+    "mtime": 1781178495.8095865,
+    "ast_hash": "6d98752f11359e8bf6822ab2d5c43633",
+    "semantic_hash": ""
+  },
+  "backend/app/domain/__init__.py": {
+    "mtime": 1781174746.7317452,
+    "ast_hash": "09158c4437e72e2516028afe576c15ec",
+    "semantic_hash": ""
+  },
+  "backend/app/domain/config_builder.py": {
+    "mtime": 1781174754.734585,
+    "ast_hash": "e9d084b576ca25e59a7cc761a14d0f15",
+    "semantic_hash": ""
+  },
+  "backend/app/domain/models.py": {
+    "mtime": 1781174754.180596,
+    "ast_hash": "a58d850b068d2b0b70d67f6bb738afaf",
+    "semantic_hash": ""
+  },
+  "backend/app/domain/node_selection.py": {
+    "mtime": 1781174756.7535446,
+    "ast_hash": "a3f17025a8642aaea156e1149879e97c",
+    "semantic_hash": ""
+  },
+  "backend/app/repositories/__init__.py": {
+    "mtime": 1781174751.3486528,
+    "ast_hash": "591f8f20c9cb21958d3a611e0a4932da",
+    "semantic_hash": ""
+  },
+  "backend/app/repositories/memory.py": {
+    "mtime": 1781178492.6066525,
+    "ast_hash": "81bbcd47869aa59ed30a559e66f2a351",
+    "semantic_hash": ""
+  },
+  "backend/app/security/__init__.py": {
+    "mtime": 1781174753.4126115,
+    "ast_hash": "b9f01f6450af6f5e7ea479ecfd4cef93",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_api_server.py": {
+    "mtime": 1781178546.6675413,
+    "ast_hash": "26d45b9be5ac66a75f583f40083cedb1",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_config_builder.py": {
+    "mtime": 1781174766.8813417,
+    "ast_hash": "1c606897ab8c521477886e65bb2f8b02",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_node_selection.py": {
+    "mtime": 1781174768.8543022,
+    "ast_hash": "b63eda14b3dcd55a3622c2ad825709ce",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_repository.py": {
+    "mtime": 1781178547.657521,
+    "ast_hash": "91d4170b44a954384775d79ea3b43e92",
+    "semantic_hash": ""
+  },
+  "tools/mini_graphify.py": {
+    "mtime": 1781175162.6264055,
+    "ast_hash": "36c76653b88ecc950ac3b46fbf13dc9a",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1781178672.1059759,
+    "ast_hash": "3de71f50d005bcbb96aeb3a488fd7ab6",
+    "semantic_hash": ""
+  },
+  "docs/mvp-review.md": {
+    "mtime": 1781178673.6469443,
+    "ast_hash": "95319fa4f4ef585ccbf6a00194421f33",
+    "semantic_hash": ""
+  },
+  "backend/app/repositories/factory.py": {
+    "mtime": 1781178495.0266027,
+    "ast_hash": "9662fcf906b0308ab79616d11cea2b9c",
+    "semantic_hash": ""
+  },
+  "backend/app/repositories/sqlite.py": {
+    "mtime": 1781178493.5016341,
+    "ast_hash": "8e7ca13e500280116c82b26b5c100820",
+    "semantic_hash": ""
+  },
+  "backend/migrations/001_initial.sql": {
+    "mtime": 1781176639.503523,
+    "ast_hash": "bb9b6f57ff3218b19119a070fc40a82a",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_sqlite_repository.py": {
+    "mtime": 1781178548.530503,
+    "ast_hash": "8ad9f0007dfcea3623aea784ea457bf8",
+    "semantic_hash": ""
+  }
+}
