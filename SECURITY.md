@@ -12,6 +12,7 @@
 - SQLite is for MVP/local operation only. Production should move to PostgreSQL with managed backups and migration tooling.
 - Admin endpoints currently use a shared token; production needs operator auth, scoped service tokens, and audit logs.
 - Config delivery must stay over HTTPS in production.
+- Health-check workers must not log VPN credentials, generated configs, or user identifiers.
 
 ## Privacy By Design
 
@@ -19,4 +20,3 @@
 - Keep traffic logs out of the product by default.
 - Keep user deletion/export requirements in the mobile API and backend roadmap.
 - Crash/error reporting must redact tokens, receipts, endpoint secrets, and user traffic metadata.
-

@@ -30,4 +30,4 @@ API service
   -> sing-box config
 ```
 
-Admin health updates feed node metrics used by node scoring before configs are emitted.
+Admin health updates and the health-check worker feed node metrics used by node scoring before configs are emitted.

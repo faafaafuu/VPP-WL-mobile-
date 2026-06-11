@@ -79,6 +79,16 @@ curl -s -X PATCH http://127.0.0.1:8080/api/admin/nodes/node_eu_1/health \
 
 Disabled nodes are excluded from subsequent user configs.
 
+Run one automated node health-check pass:
+
+```bash
+cd backend
+VPN_ROUTER_REPOSITORY=sqlite VPN_ROUTER_SQLITE_PATH=data/vpn-router.db \
+  python3 -m app.cli.health_check
+```
+
+The worker probes enabled nodes, updates latency/success-rate/health, and future `/api/config` responses use the updated scores.
+
 ## Test
 
 ```bash
