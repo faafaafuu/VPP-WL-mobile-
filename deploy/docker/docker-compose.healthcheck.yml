@@ -4,8 +4,10 @@ services:
     command: ["python3", "-m", "app.cli.health_check"]
     working_dir: /app/backend
     env_file:
-      - ../../.env
+      - ${VPN_ROUTER_ENV_FILE:-.env}
     volumes:
-      - ../../backend/data:/app/backend/data
+      - backend-data:/app/backend/data
     restart: "no"
 
+volumes:
+  backend-data:

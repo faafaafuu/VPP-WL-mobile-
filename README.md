@@ -89,6 +89,26 @@ VPN_ROUTER_REPOSITORY=sqlite VPN_ROUTER_SQLITE_PATH=data/vpn-router.db \
 
 The worker probes enabled nodes, updates latency/success-rate/health, and future `/api/config` responses use the updated scores.
 
+## Docker
+
+```bash
+cp .env.example .env
+docker compose build
+docker compose up api
+```
+
+For syntax checks without a real `.env`:
+
+```bash
+VPN_ROUTER_ENV_FILE=.env.example docker compose config
+```
+
+Run a one-shot health-check job against the same SQLite volume:
+
+```bash
+docker compose --profile jobs run --rm health-check
+```
+
 ## Test
 
 ```bash

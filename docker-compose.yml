@@ -1,0 +1,39 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: vpn-router-backend:latest
+    env_file:
+      - ${VPN_ROUTER_ENV_FILE:-.env}
+    environment:
+      VPN_ROUTER_REPOSITORY: sqlite
+      VPN_ROUTER_SQLITE_PATH: data/vpn-router.db
+      VPN_ROUTER_HOST: 0.0.0.0
+      VPN_ROUTER_PORT: 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend-data:/app/backend/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  health-check:
+    image: vpn-router-backend:latest
+    profiles: ["jobs"]
+    env_file:
+      - ${VPN_ROUTER_ENV_FILE:-.env}
+    environment:
+      VPN_ROUTER_REPOSITORY: sqlite
+      VPN_ROUTER_SQLITE_PATH: data/vpn-router.db
+    volumes:
+      - backend-data:/app/backend/data
+    command: ["python3", "-m", "app.cli.health_check"]
+    restart: "no"
+
+volumes:
+  backend-data:
