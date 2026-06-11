@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.domain.models import (
     NodeHealth,
+    NodeHealthEvent,
     NodeStatus,
     Platform,
     Protocol,
@@ -24,6 +25,7 @@ class InMemoryRepository:
         self.users_by_device_id: dict[str, str] = {}
         self.subscriptions_by_user_id: dict[str, Subscription] = {}
         self.nodes_by_id: dict[str, VpnNode] = {}
+        self.health_events_by_node_id: dict[str, list[NodeHealthEvent]] = {}
         self._seed_nodes()
 
     def get_or_create_user(self, device_id: str) -> User:
@@ -93,6 +95,12 @@ class InMemoryRepository:
         )
         self.nodes_by_id[node_id] = updated
         return updated
+
+    def add_node_health_event(self, event: NodeHealthEvent) -> None:
+        self.health_events_by_node_id.setdefault(event.node_id, []).insert(0, event)
+
+    def list_node_health_events(self, node_id: str, limit: int = 50) -> list[NodeHealthEvent]:
+        return self.health_events_by_node_id.get(node_id, [])[:limit]
 
     def _seed_nodes(self) -> None:
         nodes = [

@@ -33,6 +33,10 @@ class HealthCheckWorkerTest(unittest.TestCase):
         self.assertEqual(summary.skipped, 1)
         self.assertEqual(summary.failures, 0)
         self.assertEqual(repo.get_node("node_eu_1").latency_ms, 33)  # type: ignore[union-attr]
+        events = repo.list_node_health_events("node_eu_1")
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0].new_latency_ms, 33)
+        self.assertIsNone(events[0].error)
 
     def test_failed_probe_updates_failure_counts(self) -> None:
         repo = InMemoryRepository()
@@ -41,6 +45,7 @@ class HealthCheckWorkerTest(unittest.TestCase):
         self.assertEqual(summary.failures, 3)
         self.assertEqual(summary.updated, 3)
         self.assertLess(repo.get_node("node_eu_1").success_rate, 0.99)  # type: ignore[union-attr]
+        self.assertEqual(repo.list_node_health_events("node_eu_1")[0].error, "failed")
 
     def test_can_include_disabled_nodes(self) -> None:
         repo = InMemoryRepository()
@@ -54,4 +59,3 @@ class HealthCheckWorkerTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

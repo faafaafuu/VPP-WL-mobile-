@@ -22,6 +22,7 @@ def main() -> None:
                 "updated": summary.updated,
                 "skipped": summary.skipped,
                 "failures": summary.failures,
+                "events_written": summary.updated,
                 "updates": [
                     {
                         "node_id": update.node_id,
@@ -43,4 +44,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

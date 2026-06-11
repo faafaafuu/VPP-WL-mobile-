@@ -9,6 +9,7 @@ from typing import Any
 from app.domain.models import (
     Hysteria2Options,
     NodeHealth,
+    NodeHealthEvent,
     NodeStatus,
     Platform,
     Protocol,
@@ -225,6 +226,48 @@ class SqliteRepository:
         self.connection.commit()
         return self.get_node(node_id)
 
+    def add_node_health_event(self, event: NodeHealthEvent) -> None:
+        self.connection.execute(
+            """
+            INSERT INTO node_health_events
+                (id, node_id, checked_at, old_health, new_health, old_status, new_status,
+                 old_success_rate, new_success_rate, old_latency_ms, new_latency_ms,
+                 health_score, error)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event.id,
+                event.node_id,
+                _dt_to_text(event.checked_at),
+                event.old_health.value if event.old_health else None,
+                event.new_health.value,
+                event.old_status.value if event.old_status else None,
+                event.new_status.value,
+                event.old_success_rate,
+                event.new_success_rate,
+                event.old_latency_ms,
+                event.new_latency_ms,
+                event.health_score,
+                event.error,
+            ),
+        )
+        self.connection.commit()
+
+    def list_node_health_events(self, node_id: str, limit: int = 50) -> list[NodeHealthEvent]:
+        rows = self.connection.execute(
+            """
+            SELECT id, node_id, checked_at, old_health, new_health, old_status, new_status,
+                   old_success_rate, new_success_rate, old_latency_ms, new_latency_ms,
+                   health_score, error
+            FROM node_health_events
+            WHERE node_id = ?
+            ORDER BY checked_at DESC
+            LIMIT ?
+            """,
+            (node_id, limit),
+        ).fetchall()
+        return [_health_event_from_row(row) for row in rows]
+
     def seed_nodes_if_empty(self) -> None:
         count = self.connection.execute("SELECT COUNT(*) AS count FROM nodes").fetchone()["count"]
         if count:
@@ -283,6 +326,24 @@ def _node_from_row(row: sqlite3.Row) -> VpnNode:
         last_check_at=_dt_from_text(row["last_check_at"]) if row["last_check_at"] else None,
         health=NodeHealth(row["health"]),
         options=_options_from_json(protocol, row["options_json"]),
+    )
+
+
+def _health_event_from_row(row: sqlite3.Row) -> NodeHealthEvent:
+    return NodeHealthEvent(
+        id=row["id"],
+        node_id=row["node_id"],
+        checked_at=_dt_from_text(row["checked_at"]),
+        old_health=NodeHealth(row["old_health"]) if row["old_health"] else None,
+        new_health=NodeHealth(row["new_health"]),
+        old_status=NodeStatus(row["old_status"]) if row["old_status"] else None,
+        new_status=NodeStatus(row["new_status"]),
+        old_success_rate=float(row["old_success_rate"]) if row["old_success_rate"] is not None else None,
+        new_success_rate=float(row["new_success_rate"]),
+        old_latency_ms=int(row["old_latency_ms"]) if row["old_latency_ms"] is not None else None,
+        new_latency_ms=int(row["new_latency_ms"]) if row["new_latency_ms"] is not None else None,
+        health_score=int(row["health_score"]),
+        error=row["error"],
     )
 
 

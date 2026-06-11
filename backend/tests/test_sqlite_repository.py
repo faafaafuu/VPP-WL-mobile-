@@ -2,9 +2,20 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
-from app.domain.models import NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode
+from app.domain.models import (
+    NodeHealth,
+    NodeHealthEvent,
+    NodeStatus,
+    Platform,
+    Protocol,
+    ReceiptClaim,
+    VlessOptions,
+    VpnNode,
+    new_id,
+)
 from app.repositories.sqlite import SqliteRepository
 
 
@@ -70,6 +81,31 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertEqual(reloaded.latency_ms, 500)
         self.assertEqual(reloaded.success_rate, 0.2)
         self.assertEqual(reloaded.health, NodeHealth.DISABLED)
+
+    def test_persists_node_health_events(self) -> None:
+        event = NodeHealthEvent(
+            id=new_id("nhe"),
+            node_id="node_eu_1",
+            checked_at=datetime.now(timezone.utc),
+            old_health=NodeHealth.HEALTHY,
+            new_health=NodeHealth.DEGRADED,
+            old_status=NodeStatus.ACTIVE,
+            new_status=NodeStatus.ACTIVE,
+            old_success_rate=0.99,
+            new_success_rate=0.44,
+            old_latency_ms=55,
+            new_latency_ms=300,
+            health_score=42,
+            error="timeout",
+        )
+
+        self.repo.add_node_health_event(event)
+        events = self.repo.list_node_health_events("node_eu_1")
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0].id, event.id)
+        self.assertEqual(events[0].new_health, NodeHealth.DEGRADED)
+        self.assertEqual(events[0].error, "timeout")
 
 
 if __name__ == "__main__":

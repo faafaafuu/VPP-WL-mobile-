@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from app.domain.models import Platform, ReceiptClaim
-from app.domain.models import NodeStatus
+from datetime import datetime, timezone
+
+from app.domain.models import NodeHealth, NodeHealthEvent, NodeStatus, Platform, ReceiptClaim, new_id
 from app.repositories.memory import InMemoryRepository
 
 
@@ -30,6 +31,28 @@ class InMemoryRepositoryTest(unittest.TestCase):
         self.assertIsNotNone(node)
         self.assertEqual(node.health_score, 35)
         self.assertEqual(node.status, NodeStatus.DRAINING)
+
+    def test_stores_node_health_events(self) -> None:
+        repo = InMemoryRepository()
+        event = NodeHealthEvent(
+            id=new_id("nhe"),
+            node_id="node_eu_1",
+            checked_at=datetime.now(timezone.utc),
+            old_health=NodeHealth.HEALTHY,
+            new_health=NodeHealth.DEGRADED,
+            old_status=NodeStatus.ACTIVE,
+            new_status=NodeStatus.ACTIVE,
+            old_success_rate=0.99,
+            new_success_rate=0.5,
+            old_latency_ms=50,
+            new_latency_ms=500,
+            health_score=30,
+            error="timeout",
+        )
+
+        repo.add_node_health_event(event)
+
+        self.assertEqual(repo.list_node_health_events("node_eu_1"), [event])
 
 
 if __name__ == "__main__":

@@ -119,5 +119,22 @@ class ReceiptClaim:
     product_id: str = "vpn.monthly"
 
 
+@dataclass(frozen=True)
+class NodeHealthEvent:
+    id: str
+    node_id: str
+    checked_at: datetime
+    old_health: NodeHealth | None
+    new_health: NodeHealth
+    old_status: NodeStatus | None
+    new_status: NodeStatus
+    old_success_rate: float | None
+    new_success_rate: float
+    old_latency_ms: int | None
+    new_latency_ms: int | None
+    health_score: int
+    error: str | None = None
+
+
 def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid4().hex}"

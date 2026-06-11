@@ -33,3 +33,22 @@ CREATE TABLE IF NOT EXISTS nodes (
 );
 
 CREATE INDEX IF NOT EXISTS idx_nodes_status_priority ON nodes(status, priority);
+
+CREATE TABLE IF NOT EXISTS node_health_events (
+    id TEXT PRIMARY KEY,
+    node_id TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+    checked_at TEXT NOT NULL,
+    old_health TEXT,
+    new_health TEXT NOT NULL,
+    old_status TEXT,
+    new_status TEXT NOT NULL,
+    old_success_rate REAL,
+    new_success_rate REAL NOT NULL,
+    old_latency_ms INTEGER,
+    new_latency_ms INTEGER,
+    health_score INTEGER NOT NULL,
+    error TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_node_health_events_node_checked
+ON node_health_events(node_id, checked_at DESC);

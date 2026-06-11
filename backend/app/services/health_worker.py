@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.domain.health_checker import HealthUpdate, NodeHealthEvaluator, TcpNodeProbe
-from app.domain.models import NodeStatus
+from app.domain.models import NodeHealthEvent, NodeStatus, new_id
 from app.repositories.factory import Repository
 
 
@@ -55,6 +55,23 @@ class HealthCheckWorker:
                 last_check_at=health_update.last_check_at,
             )
             if saved is not None:
+                self.repository.add_node_health_event(
+                    NodeHealthEvent(
+                        id=new_id("nhe"),
+                        node_id=node.id,
+                        checked_at=health_update.last_check_at,
+                        old_health=node.health,
+                        new_health=health_update.health,
+                        old_status=node.status,
+                        new_status=health_update.status or node.status,
+                        old_success_rate=node.success_rate,
+                        new_success_rate=health_update.success_rate,
+                        old_latency_ms=node.latency_ms,
+                        new_latency_ms=health_update.latency_ms,
+                        health_score=health_update.health_score,
+                        error=health_update.error,
+                    )
+                )
                 updated += 1
 
         return HealthCheckSummary(
