@@ -1,0 +1,27 @@
+import type { ExpoConfig } from "expo/config";
+
+const config: ExpoConfig = {
+  name: "VPN Router",
+  slug: "vpn-router",
+  scheme: "vpnrouter",
+  version: "0.1.0",
+  orientation: "portrait",
+  userInterfaceStyle: "automatic",
+  ios: {
+    bundleIdentifier: "com.vpnrouter.app",
+    supportsTablet: false,
+    infoPlist: {
+      NSVpnUsageDescription: "VPN Router uses a packet tunnel to route traffic according to the selected subscription config."
+    }
+  },
+  android: {
+    package: "com.vpnrouter.app",
+    permissions: ["INTERNET", "FOREGROUND_SERVICE"]
+  },
+  plugins: ["./plugins/withVpnRouterNative"],
+  extra: {
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8080"
+  }
+};
+
+export default config;

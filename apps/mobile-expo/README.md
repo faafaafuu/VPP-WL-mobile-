@@ -1,0 +1,68 @@
+# Mobile Expo UI
+
+This is the React Native + Expo UI shell for the VPN client.
+
+It is intentionally separate from `apps/android` and `apps/ios` because the VPN runtime still needs native platform code:
+
+- Android: `VpnService` plus sing-box/libbox integration.
+- iOS: `NEPacketTunnelProvider` plus sing-box/libbox integration.
+- Expo Go is not enough because it cannot include custom native VPN services, app entitlements, or Network Extension targets.
+- Use Expo Development Builds / EAS builds for devices that need the VPN module.
+
+## Why Expo Here
+
+The UI can be developed on Windows with Metro and Android tooling while iOS native project work is handled later by EAS or a macOS CI runner. This keeps the user-facing application in TypeScript/React Native and leaves the privileged VPN lifecycle in native modules.
+
+Official docs checked:
+
+- Expo development builds: https://docs.expo.dev/develop/development-builds/introduction/
+- Expo Modules API: https://docs.expo.dev/modules/overview/
+- Expo config plugins: https://docs.expo.dev/config-plugins/introduction/
+
+## Runtime Boundary
+
+The UI calls a native module contract:
+
+```ts
+VpnRouterNative.start(configJson)
+VpnRouterNative.stop()
+VpnRouterNative.status()
+```
+
+The module must be implemented per platform. This scaffold only defines the TypeScript boundary and a clear missing-runtime error. It does not vendor sing-box, Xray, v2rayNG, ClashMetaForAndroid, Marzban, or 3X-UI code.
+
+## Backend Flow
+
+1. Store an access token in secure storage.
+2. Fetch `GET /api/config` with `Authorization: Bearer <token>`.
+3. Save the returned sing-box JSON as last-known-good config.
+4. Start the native VPN module with that config.
+5. On `503` or `5xx`, fall back to the encrypted last-known-good config if present.
+6. On `401`, clear auth and show the subscription/auth state.
+7. On `403`, stop VPN and show subscription required.
+
+## Local Development
+
+Install dependencies only when Node tooling is available:
+
+```bash
+npm install
+npm run start
+```
+
+For native VPN testing, create a development build:
+
+```bash
+npx expo prebuild
+npx eas build --profile development --platform android
+npx eas build --profile development --platform ios
+```
+
+Windows developers can run Metro and Android builds locally. iOS builds require EAS or macOS/Xcode.
+
+## Files To Add Later
+
+- Native Android implementation of `VpnRouterNative`.
+- Native iOS Expo module that controls the app-side `NETunnelProviderManager`.
+- iOS Network Extension target generated/maintained through config plugin or dedicated native project.
+- Store purchase UI and receipt flow.
