@@ -24,6 +24,7 @@ backend/
   tests/             unittest test suite
 docs/
   mvp-review.md      narrowed MVP, risks, and next decisions
+  backend-readiness.md  checklist before mobile development
 ```
 
 ## Run Locally

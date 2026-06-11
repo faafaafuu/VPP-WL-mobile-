@@ -17,6 +17,16 @@ The worker:
 - writes a node health audit event;
 - does not log user identifiers, generated configs, access tokens, admin tokens, or VPN credentials.
 
+## Backend Release Gate
+
+Before handing the backend to mobile development, verify:
+
+```bash
+make ci
+```
+
+Then deploy the API and run one health-check pass in the target environment.
+
 ## systemd Timer
 
 Example units are in `deploy/systemd/`.
@@ -37,4 +47,3 @@ Expected env file: `/etc/vpn-router/backend.env`.
 Example override is in `deploy/docker/docker-compose.healthcheck.yml`.
 
 For production, prefer a scheduler such as systemd timer, Kubernetes CronJob, Nomad periodic job, or cloud scheduler rather than a long-running loop inside the application container.
-
