@@ -13,6 +13,8 @@ class ExpoScaffoldTest(unittest.TestCase):
         readme = (EXPO_ROOT / "README.md").read_text(encoding="utf-8")
         package_json = json.loads((EXPO_ROOT / "package.json").read_text(encoding="utf-8"))
         app_config = (EXPO_ROOT / "app.config.ts").read_text(encoding="utf-8")
+        eas = json.loads((EXPO_ROOT / "eas.json").read_text(encoding="utf-8"))
+        env_example = (EXPO_ROOT / ".env.example").read_text(encoding="utf-8")
 
         self.assertIn("Expo Development Builds", readme)
         self.assertIn("Expo Go is not enough", readme)
@@ -21,6 +23,9 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("expo-modules-core", package_json["dependencies"])
         self.assertEqual("file:./modules/vpn-router-native", package_json["dependencies"]["vpn-router-native"])
         self.assertIn("./plugins/withVpnRouterNative", app_config)
+        self.assertTrue(eas["build"]["development"]["developmentClient"])
+        self.assertEqual("internal", eas["build"]["development"]["distribution"])
+        self.assertIn("EXPO_PUBLIC_API_BASE_URL", env_example)
 
     def test_expo_backend_client_uses_mobile_api_contract(self) -> None:
         client = (EXPO_ROOT / "src/api/backendClient.ts").read_text(encoding="utf-8")

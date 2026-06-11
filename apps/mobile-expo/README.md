@@ -80,6 +80,12 @@ npm install
 npm run start
 ```
 
+Copy `.env.example` to `.env.local` and set the backend URL:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:8080
+```
+
 For native VPN testing, create a development build:
 
 ```bash
@@ -89,6 +95,12 @@ npx eas build --profile development --platform ios
 ```
 
 Windows developers can run Metro and Android builds locally. iOS builds require EAS or macOS/Xcode.
+
+`eas.json` contains three profiles:
+
+- `development`: internal development client with native VPN module included.
+- `preview`: internal APK/TestFlight-style validation.
+- `production`: store-oriented build with local app versioning.
 
 ## Files To Add Later
 
