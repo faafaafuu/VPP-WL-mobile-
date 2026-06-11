@@ -1,4 +1,4 @@
-import { NativeModules } from "react-native";
+import { requireNativeModule } from "expo-modules-core";
 
 export type VpnStatus = "disconnected" | "connecting" | "connected" | "error";
 
@@ -20,5 +20,12 @@ const missingRuntime: VpnRouterNativeModule = {
   }
 };
 
-export const VpnRouterNative: VpnRouterNativeModule =
-  (NativeModules.VpnRouterNative as VpnRouterNativeModule | undefined) ?? missingRuntime;
+function loadNativeModule(): VpnRouterNativeModule {
+  try {
+    return requireNativeModule<VpnRouterNativeModule>("VpnRouterNative");
+  } catch {
+    return missingRuntime;
+  }
+}
+
+export const VpnRouterNative: VpnRouterNativeModule = loadNativeModule();

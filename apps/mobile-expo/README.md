@@ -31,6 +31,20 @@ VpnRouterNative.status()
 
 The module must be implemented per platform. This scaffold only defines the TypeScript boundary and a clear missing-runtime error. It does not vendor sing-box, Xray, v2rayNG, ClashMetaForAndroid, Marzban, or 3X-UI code.
 
+## Android Native Module
+
+`modules/vpn-router-native` declares an Expo local module named `VpnRouterNative`.
+
+Current Android skeleton:
+
+- exposes `start(configJson)`, `stop()`, and `status()` to JavaScript;
+- checks Android VPN permission with `VpnService.prepare`;
+- starts `VpnRouterService` with the backend-provided sing-box config JSON;
+- creates a TUN interface and passes its file descriptor to `SingBoxRunner`;
+- keeps `MissingSingBoxRunner` until the sing-box/libbox distribution and license decision is explicit.
+
+This gives the UI a stable native boundary without bundling the proxy runtime yet.
+
 ## Backend Flow
 
 1. Store an access token in secure storage.

@@ -18,6 +18,7 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("Expo Go is not enough", readme)
         self.assertIn("react-native", package_json["dependencies"])
         self.assertIn("expo-secure-store", package_json["dependencies"])
+        self.assertIn("expo-modules-core", package_json["dependencies"])
         self.assertIn("./plugins/withVpnRouterNative", app_config)
 
     def test_expo_backend_client_uses_mobile_api_contract(self) -> None:
@@ -50,7 +51,8 @@ class ExpoScaffoldTest(unittest.TestCase):
         native_module = (EXPO_ROOT / "src/vpn/VpnRouterNative.ts").read_text(encoding="utf-8")
         module_readme = (EXPO_ROOT / "modules/vpn-router-native/README.md").read_text(encoding="utf-8")
 
-        self.assertIn("NativeModules.VpnRouterNative", native_module)
+        self.assertIn("requireNativeModule", native_module)
+        self.assertIn("VpnRouterNative", native_module)
         self.assertIn("not bundled yet", native_module)
         self.assertIn("Do not copy GPL/AGPL client code", module_readme)
         self.assertFalse(any(path.name.lower().startswith("sing-box") for path in EXPO_ROOT.rglob("*")))
@@ -62,6 +64,33 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("withEntitlementsPlist", plugin)
         self.assertIn("packet-tunnel-provider", plugin)
         self.assertIn("android.permission.FOREGROUND_SERVICE", plugin)
+        self.assertIn("android.permission.BIND_VPN_SERVICE", plugin)
+        self.assertIn("com.vpnrouter.nativevpn.VpnRouterService", plugin)
+
+    def test_expo_android_native_module_declares_vpn_service(self) -> None:
+        module_config = json.loads(
+            (EXPO_ROOT / "modules/vpn-router-native/expo-module.config.json").read_text(encoding="utf-8")
+        )
+        manifest = (
+            EXPO_ROOT / "modules/vpn-router-native/android/src/main/AndroidManifest.xml"
+        ).read_text(encoding="utf-8")
+        native_module = (
+            EXPO_ROOT
+            / "modules/vpn-router-native/android/src/main/java/com/vpnrouter/nativevpn/VpnRouterNativeModule.kt"
+        ).read_text(encoding="utf-8")
+        service = (
+            EXPO_ROOT / "modules/vpn-router-native/android/src/main/java/com/vpnrouter/nativevpn/VpnRouterService.kt"
+        ).read_text(encoding="utf-8")
+
+        self.assertEqual(["com.vpnrouter.nativevpn.VpnRouterNativeModule"], module_config["android"]["modules"])
+        self.assertIn("android.permission.BIND_VPN_SERVICE", manifest)
+        self.assertIn("android.net.VpnService", manifest)
+        self.assertIn("Name(\"VpnRouterNative\")", native_module)
+        self.assertIn("AsyncFunction(\"start\")", native_module)
+        self.assertIn("VpnService.prepare", native_module)
+        self.assertIn("class VpnRouterService : VpnService()", service)
+        self.assertIn("EXTRA_CONFIG_JSON", service)
+        self.assertIn("runner.start(configJson, fd)", service)
 
 
 if __name__ == "__main__":

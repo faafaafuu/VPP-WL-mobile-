@@ -13,6 +13,7 @@
   "dependencies": {
     "expo": "latest",
     "expo-constants": "latest",
+    "expo-modules-core": "latest",
     "expo-secure-store": "latest",
     "react": "latest",
     "react-native": "latest"
