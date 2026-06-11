@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Any
 
 from app.domain.models import (
@@ -11,44 +10,12 @@ from app.domain.models import (
     VpnNode,
     WireGuardOptions,
 )
-
-
-@dataclass(frozen=True)
-class RoutingPolicy:
-    direct_domain_suffixes: list[str] = field(default_factory=lambda: ["ru", "su", "xn--p1ai"])
-    direct_domains: list[str] = field(
-        default_factory=lambda: [
-            "gosuslugi.ru",
-            "nalog.gov.ru",
-            "cbr.ru",
-            "sberbank.ru",
-            "vtb.ru",
-            "tinkoff.ru",
-        ]
-    )
-    rule_sets: list[dict[str, Any]] = field(
-        default_factory=lambda: [
-            {
-                "tag": "geosite-ru",
-                "type": "remote",
-                "format": "binary",
-                "url": "https://example.invalid/rules/geosite-ru.srs",
-                "download_detour": "direct",
-            },
-            {
-                "tag": "geoip-ru",
-                "type": "remote",
-                "format": "binary",
-                "url": "https://example.invalid/rules/geoip-ru.srs",
-                "download_detour": "direct",
-            },
-        ]
-    )
+from app.domain.rules_engine import RulesEngine
 
 
 class ConfigBuilder:
-    def __init__(self, routing_policy: RoutingPolicy | None = None) -> None:
-        self.routing_policy = routing_policy or RoutingPolicy()
+    def __init__(self, rules_engine: RulesEngine | None = None) -> None:
+        self.rules_engine = rules_engine or RulesEngine()
 
     def build_client_config(self, nodes: list[VpnNode]) -> dict[str, Any]:
         usable_nodes = sorted(
@@ -98,14 +65,7 @@ class ConfigBuilder:
                 {"tag": "remote-dns", "address": "https://1.1.1.1/dns-query", "detour": "auto"},
             ],
             "rules": [
-                {
-                    "domain_suffix": self.routing_policy.direct_domain_suffixes,
-                    "server": "ru-dns",
-                },
-                {
-                    "domain": self.routing_policy.direct_domains,
-                    "server": "ru-dns",
-                },
+                *self.rules_engine.dns_rules("ru-dns"),
             ],
             "final": "remote-dns",
             "strategy": "prefer_ipv4",
@@ -113,19 +73,8 @@ class ConfigBuilder:
 
     def _route_config(self) -> dict[str, Any]:
         return {
-            "rules": [
-                {"protocol": "dns", "outbound": "direct"},
-                {
-                    "domain_suffix": self.routing_policy.direct_domain_suffixes,
-                    "outbound": "direct",
-                },
-                {
-                    "domain": self.routing_policy.direct_domains,
-                    "outbound": "direct",
-                },
-                {"rule_set": ["geosite-ru", "geoip-ru"], "outbound": "direct"},
-            ],
-            "rule_set": self.routing_policy.rule_sets,
+            "rules": self.rules_engine.route_rules(),
+            "rule_set": self.rules_engine.remote_rule_sets,
             "final": "auto",
             "auto_detect_interface": True,
         }
@@ -206,4 +155,3 @@ class ConfigBuilder:
             "password": node.options.password,
             "tls": {"enabled": True, "server_name": node.options.server_name},
         }
-
