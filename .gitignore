@@ -6,3 +6,5 @@ __pycache__/
 backend/data/*.db
 backend/data/*.db-*
 graphify-out/cache/
+graphify-out/.graphify_root
+graphify-out/manifest.json
