@@ -38,7 +38,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 
 - Mobile team accepts `docs/mobile-api-contract.md`.
 - Android team accepts `apps/android/README.md` architecture.
+- iOS team accepts `apps/ios/README.md` architecture and Network Extension scaffold.
 - Product/legal explicitly decides how sing-box/libbox GPL distribution will be handled.
 - A staging API URL is deployed from this backend image.
 - A non-placeholder `.env` exists in staging secret storage.
-
