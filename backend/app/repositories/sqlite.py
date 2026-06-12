@@ -295,6 +295,14 @@ class SqliteRepository:
         ).fetchall()
         return [_health_event_from_row(row) for row in rows]
 
+    def prune_node_health_events(self, cutoff: datetime) -> int:
+        cursor = self.connection.execute(
+            "DELETE FROM node_health_events WHERE checked_at < ?",
+            (_dt_to_text(cutoff),),
+        )
+        self.connection.commit()
+        return cursor.rowcount
+
     def seed_nodes_if_empty(self) -> None:
         count = self.connection.execute("SELECT COUNT(*) AS count FROM nodes").fetchone()["count"]
         if count:

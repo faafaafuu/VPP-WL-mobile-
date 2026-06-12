@@ -13,10 +13,11 @@
 - Admin endpoints currently use a shared token; production needs operator auth, scoped service tokens, and audit logs.
 - Config delivery must stay over HTTPS in production.
 - Health-check workers must not log VPN credentials, generated configs, or user identifiers.
+- Health-check audit events are retained according to `VPN_ROUTER_AUDIT_RETENTION_DAYS`; use `0` only for local debugging.
 
 ## Privacy By Design
 
 - Collect the minimum data needed for subscription state, support, and abuse prevention.
 - Keep traffic logs out of the product by default.
-- Keep user deletion/export requirements in the mobile API and backend roadmap.
+- Keep user deletion/export available through the mobile API and backend.
 - Crash/error reporting must redact tokens, receipts, endpoint secrets, and user traffic metadata.

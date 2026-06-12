@@ -124,6 +124,17 @@ class InMemoryRepository:
     def list_node_health_events(self, node_id: str, limit: int = 50) -> list[NodeHealthEvent]:
         return self.health_events_by_node_id.get(node_id, [])[:limit]
 
+    def prune_node_health_events(self, cutoff: datetime) -> int:
+        deleted = 0
+        for node_id, events in list(self.health_events_by_node_id.items()):
+            kept = [event for event in events if event.checked_at >= cutoff]
+            deleted += len(events) - len(kept)
+            if kept:
+                self.health_events_by_node_id[node_id] = kept
+            else:
+                self.health_events_by_node_id.pop(node_id, None)
+        return deleted
+
     def _seed_nodes(self) -> None:
         nodes = [
             VpnNode(

@@ -56,6 +56,9 @@ class Repository(TypingProtocol):
     def list_node_health_events(self, node_id: str, limit: int = 50) -> list[NodeHealthEvent]:
         ...
 
+    def prune_node_health_events(self, cutoff: datetime) -> int:
+        ...
+
 
 def create_repository() -> Repository:
     backend = os.getenv("VPN_ROUTER_REPOSITORY", "sqlite").lower()

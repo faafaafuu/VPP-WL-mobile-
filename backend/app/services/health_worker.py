@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 from app.domain.health_checker import HealthUpdate, NodeHealthEvaluator, TcpNodeProbe
 from app.domain.models import NodeHealthEvent, NodeStatus, new_id
@@ -13,6 +14,7 @@ class HealthCheckSummary:
     updated: int
     skipped: int
     failures: int
+    pruned_events: int
     updates: list[HealthUpdate]
 
 
@@ -22,16 +24,19 @@ class HealthCheckWorker:
         repository: Repository,
         probe: TcpNodeProbe | None = None,
         evaluator: NodeHealthEvaluator | None = None,
+        retention_days: int | None = None,
     ) -> None:
         self.repository = repository
         self.probe = probe or TcpNodeProbe()
         self.evaluator = evaluator or NodeHealthEvaluator()
+        self.retention_days = retention_days
 
     def run_once(self, include_disabled: bool = False) -> HealthCheckSummary:
         checked = 0
         updated = 0
         skipped = 0
         failures = 0
+        pruned_events = 0
         updates: list[HealthUpdate] = []
 
         for node in self.repository.list_nodes():
@@ -74,10 +79,18 @@ class HealthCheckWorker:
                 )
                 updated += 1
 
+        if self.retention_days is not None and self.retention_days > 0:
+            newest_check = max((update.last_check_at for update in updates), default=None)
+            if newest_check is not None:
+                pruned_events = self.repository.prune_node_health_events(
+                    newest_check - timedelta(days=self.retention_days)
+                )
+
         return HealthCheckSummary(
             checked=checked,
             updated=updated,
             skipped=skipped,
             failures=failures,
+            pruned_events=pruned_events,
             updates=updates,
         )

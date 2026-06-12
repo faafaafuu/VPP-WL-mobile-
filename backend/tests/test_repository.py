@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from app.domain.models import NodeHealth, NodeHealthEvent, NodeStatus, Platform, ReceiptClaim, new_id
 from app.repositories.memory import InMemoryRepository
@@ -68,6 +68,47 @@ class InMemoryRepositoryTest(unittest.TestCase):
         repo.add_node_health_event(event)
 
         self.assertEqual(repo.list_node_health_events("node_eu_1"), [event])
+
+    def test_prunes_old_node_health_events(self) -> None:
+        repo = InMemoryRepository()
+        old_event = NodeHealthEvent(
+            id=new_id("nhe"),
+            node_id="node_eu_1",
+            checked_at=datetime.now(timezone.utc) - timedelta(days=10),
+            old_health=None,
+            new_health=NodeHealth.DEGRADED,
+            old_status=None,
+            new_status=NodeStatus.ACTIVE,
+            old_success_rate=None,
+            new_success_rate=0.4,
+            old_latency_ms=None,
+            new_latency_ms=None,
+            health_score=20,
+            error="old",
+        )
+        new_event = NodeHealthEvent(
+            id=new_id("nhe"),
+            node_id="node_eu_1",
+            checked_at=datetime.now(timezone.utc),
+            old_health=None,
+            new_health=NodeHealth.HEALTHY,
+            old_status=None,
+            new_status=NodeStatus.ACTIVE,
+            old_success_rate=None,
+            new_success_rate=0.99,
+            old_latency_ms=None,
+            new_latency_ms=33,
+            health_score=99,
+            error=None,
+        )
+
+        repo.add_node_health_event(old_event)
+        repo.add_node_health_event(new_event)
+        deleted = repo.prune_node_health_events(datetime.now(timezone.utc) - timedelta(days=1))
+
+        events = repo.list_node_health_events("node_eu_1", limit=10)
+        self.assertEqual(deleted, 1)
+        self.assertEqual([event.id for event in events], [new_event.id])
 
 
 if __name__ == "__main__":

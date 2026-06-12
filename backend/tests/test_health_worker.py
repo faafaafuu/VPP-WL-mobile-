@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from app.domain.health_checker import ProbeResult
-from app.domain.models import NodeStatus
+from app.domain.models import NodeHealth, NodeHealthEvent, NodeStatus, new_id
 from app.repositories.memory import InMemoryRepository
 from app.services.health_worker import HealthCheckWorker
 
@@ -55,6 +55,32 @@ class HealthCheckWorkerTest(unittest.TestCase):
         self.assertEqual(summary.skipped, 0)
         self.assertIsNotNone(repo.get_node("node_bad_1").last_check_at)
         self.assertEqual(repo.get_node("node_bad_1").status, NodeStatus.DISABLED)  # type: ignore[union-attr]
+
+    def test_prunes_old_health_events_when_retention_is_enabled(self) -> None:
+        repo = InMemoryRepository()
+        repo.add_node_health_event(
+            NodeHealthEvent(
+                id=new_id("nhe"),
+                node_id="node_eu_1",
+                checked_at=datetime.now(timezone.utc) - timedelta(days=10),
+                old_health=None,
+                new_health=NodeHealth.DEGRADED,
+                old_status=None,
+                new_status=NodeStatus.ACTIVE,
+                old_success_rate=None,
+                new_success_rate=0.2,
+                old_latency_ms=None,
+                new_latency_ms=None,
+                health_score=10,
+                error="old",
+            )
+        )
+
+        summary = HealthCheckWorker(repo, probe=FakeProbe(ok=True, latency_ms=44), retention_days=1).run_once()
+        events = repo.list_node_health_events("node_eu_1", limit=10)
+
+        self.assertEqual(summary.pruned_events, 1)
+        self.assertTrue(all(event.error != "old" for event in events))
 
 
 if __name__ == "__main__":

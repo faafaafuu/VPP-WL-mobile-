@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from app.domain.models import (
@@ -120,6 +120,46 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertEqual(events[0].id, event.id)
         self.assertEqual(events[0].new_health, NodeHealth.DEGRADED)
         self.assertEqual(events[0].error, "timeout")
+
+    def test_prunes_old_node_health_events(self) -> None:
+        old_event = NodeHealthEvent(
+            id=new_id("nhe"),
+            node_id="node_eu_1",
+            checked_at=datetime.now(timezone.utc) - timedelta(days=10),
+            old_health=None,
+            new_health=NodeHealth.DEGRADED,
+            old_status=None,
+            new_status=NodeStatus.ACTIVE,
+            old_success_rate=None,
+            new_success_rate=0.3,
+            old_latency_ms=None,
+            new_latency_ms=None,
+            health_score=15,
+            error="old",
+        )
+        new_event = NodeHealthEvent(
+            id=new_id("nhe"),
+            node_id="node_eu_1",
+            checked_at=datetime.now(timezone.utc),
+            old_health=None,
+            new_health=NodeHealth.HEALTHY,
+            old_status=None,
+            new_status=NodeStatus.ACTIVE,
+            old_success_rate=None,
+            new_success_rate=0.99,
+            old_latency_ms=None,
+            new_latency_ms=22,
+            health_score=95,
+            error=None,
+        )
+
+        self.repo.add_node_health_event(old_event)
+        self.repo.add_node_health_event(new_event)
+        deleted = self.repo.prune_node_health_events(datetime.now(timezone.utc) - timedelta(days=1))
+
+        events = self.repo.list_node_health_events("node_eu_1", limit=10)
+        self.assertEqual(deleted, 1)
+        self.assertEqual([event.id for event in events], [new_event.id])
 
 
 if __name__ == "__main__":

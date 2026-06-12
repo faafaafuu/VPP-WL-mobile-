@@ -15,6 +15,7 @@ The worker:
 - probes enabled VPN nodes;
 - updates latency, success rate, health score, health state, and last check timestamp;
 - writes a node health audit event;
+- prunes old node health audit events using `VPN_ROUTER_AUDIT_RETENTION_DAYS` (default 30, `0` disables cleanup);
 - does not log user identifiers, generated configs, access tokens, admin tokens, or VPN credentials.
 
 ## Backend Release Gate

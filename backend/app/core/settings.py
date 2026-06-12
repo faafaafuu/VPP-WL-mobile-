@@ -24,6 +24,7 @@ class Settings:
     cors_origins: tuple[str, ...] = ()
     allowed_product_ids: tuple[str, ...] = ("vpn.monthly",)
     rate_limit_per_minute: int = 120
+    audit_retention_days: int = 30
     hsts_enabled: bool = False
 
 
@@ -41,6 +42,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         source.get("VPN_ROUTER_RATE_LIMIT_PER_MINUTE", "120"),
         "VPN_ROUTER_RATE_LIMIT_PER_MINUTE",
     )
+    audit_retention_days = _non_negative_int(
+        source.get("VPN_ROUTER_AUDIT_RETENTION_DAYS", "30"),
+        "VPN_ROUTER_AUDIT_RETENTION_DAYS",
+    )
     hsts_enabled = _bool(source.get("VPN_ROUTER_HSTS_ENABLED", "false"), "VPN_ROUTER_HSTS_ENABLED")
     return Settings(
         token_secret=token_secret,
@@ -50,6 +55,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         cors_origins=cors_origins,
         allowed_product_ids=allowed_product_ids,
         rate_limit_per_minute=rate_limit_per_minute,
+        audit_retention_days=audit_retention_days,
         hsts_enabled=hsts_enabled,
     )
 
