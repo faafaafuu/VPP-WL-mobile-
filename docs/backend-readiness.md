@@ -21,6 +21,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - SQLite persistence works for MVP/local/staging.
 - Docker image and Docker Compose config exist.
 - systemd timer/service snippets exist for health checks.
+- Prometheus alert rules and a Grafana dashboard template exist under `deploy/monitoring/`.
 - OpenAPI sketch exists in `docs/openapi.yaml`.
 - Mobile API contract exists in `docs/mobile-api-contract.md`.
 - CI runs unit tests, compileall, compose config validation, and graphify JSON sanity.
@@ -35,7 +36,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Replace rule-set placeholder host/checksums with signed real artifacts.
 - Run sing-box binary validation against the pinned sing-box version.
 - Add TLS/HTTPS deployment in front of API.
-- Add monitoring dashboards and alerts for API, DB, and health-check job failures.
+- Deploy monitoring dashboards and alerts for API, DB, and health-check job failures.
 - Complete privacy policy, terms, and store compliance review.
 
 ## Mobile Can Start When

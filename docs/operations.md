@@ -52,3 +52,13 @@ Expected env file: `/etc/vpn-router/backend.env`.
 Example override is in `deploy/docker/docker-compose.healthcheck.yml`.
 
 For production, prefer a scheduler such as systemd timer, Kubernetes CronJob, Nomad periodic job, or cloud scheduler rather than a long-running loop inside the application container.
+
+## Monitoring
+
+Prometheus and Grafana starter assets are in `deploy/monitoring/`.
+
+- `prometheus.yml` defines blackbox probes for the API health endpoint and VPN node TCP ports.
+- `vpn-router-alerts.yml` alerts on API down, node down, and sustained high node probe latency.
+- `grafana-dashboard.json` provides API health and node probe panels.
+
+Before production, replace placeholder targets with real API and node endpoints, add database/job metrics, and wire alert notifications to the on-call channel.

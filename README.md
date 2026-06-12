@@ -31,6 +31,8 @@ docs/
   terms-draft.md  terms draft for legal review
   store-readiness.md  app store submission checklist
   runtime-integration-plan.md  VPN runtime licensing and integration plan
+deploy/
+  monitoring/        Prometheus alerts and Grafana dashboard templates
 ```
 
 ## Run Locally
@@ -121,6 +123,8 @@ Run a one-shot health-check job against the same SQLite volume:
 ```bash
 docker compose --profile jobs run --rm health-check
 ```
+
+Monitoring templates are in `deploy/monitoring/`. Replace placeholder API/node targets before deploying Prometheus or Grafana.
 
 ## Test
 

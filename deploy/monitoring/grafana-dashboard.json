@@ -1,0 +1,58 @@
+{
+  "title": "VPN Router Operations",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "timezone": "browser",
+  "tags": ["vpn-router", "mvp"],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "API Health",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "probe_success{job=\"vpn-router-api\"}",
+          "legendFormat": "{{ instance }}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "options": {"0": {"text": "down"}, "1": {"text": "up"}}}
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 1}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Node Probe Success",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "targets": [
+        {
+          "expr": "probe_success{job=\"vpn-router-nodes\"}",
+          "legendFormat": "{{ instance }}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Node Probe Latency",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"vpn-router-nodes\"}",
+          "legendFormat": "{{ instance }}"
+        }
+      ]
+    }
+  ]
+}

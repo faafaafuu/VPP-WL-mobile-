@@ -1,0 +1,32 @@
+groups:
+  - name: vpn-router-availability
+    rules:
+      - alert: VpnRouterApiDown
+        expr: probe_success{job="vpn-router-api"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: vpn-router
+        annotations:
+          summary: VPN Router API health check is failing
+          description: "Blackbox probe for {{ $labels.instance }} has failed for more than 5 minutes."
+
+      - alert: VpnRouterNodeDown
+        expr: probe_success{job="vpn-router-nodes"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: vpn-router
+        annotations:
+          summary: VPN node probe is failing
+          description: "TCP probe for {{ $labels.instance }} has failed for more than 5 minutes."
+
+      - alert: VpnRouterNodeHighLatency
+        expr: probe_duration_seconds{job="vpn-router-nodes"} > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          service: vpn-router
+        annotations:
+          summary: VPN node probe latency is high
+          description: "TCP probe latency for {{ $labels.instance }} is above 1.5s for more than 10 minutes."
