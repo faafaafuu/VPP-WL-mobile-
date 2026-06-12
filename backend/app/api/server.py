@@ -13,6 +13,7 @@ from app.core.settings import load_settings
 from app.domain.config_builder import ConfigBuilder
 from app.repositories.factory import create_repository
 from app.security.tokens import TokenService
+from app.services.receipt_verifier import MvpReceiptVerifier
 
 
 SETTINGS = load_settings()
@@ -24,6 +25,7 @@ API_SERVICE = ApiService(
     TOKEN_SERVICE,
     CONFIG_BUILDER,
     admin_token=SETTINGS.admin_token,
+    receipt_verifier=MvpReceiptVerifier(SETTINGS.allowed_product_ids),
 )
 
 

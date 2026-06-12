@@ -55,6 +55,7 @@ Response:
 ```
 
 Production platforms will be `apple` and `google` after store validation is implemented.
+`product_id` must be one of the backend allowlisted products, configured through `VPN_ROUTER_ALLOWED_PRODUCT_IDS`.
 
 ## Config Flow
 

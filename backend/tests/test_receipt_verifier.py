@@ -24,6 +24,19 @@ class ReceiptVerifierTest(unittest.TestCase):
                 )
             )
 
+    def test_rejects_unlisted_product_ids(self) -> None:
+        verifier = MvpReceiptVerifier(("vpn.monthly",))
+
+        with self.assertRaises(ReceiptVerificationError):
+            verifier.verify(
+                ReceiptClaim(
+                    platform=Platform.SANDBOX,
+                    receipt="demo",
+                    device_id="device-1",
+                    product_id="unknown.product",
+                )
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

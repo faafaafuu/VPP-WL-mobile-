@@ -22,6 +22,7 @@ class Settings:
     host: str = "127.0.0.1"
     port: int = 8080
     cors_origins: tuple[str, ...] = ()
+    allowed_product_ids: tuple[str, ...] = ("vpn.monthly",)
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -31,12 +32,16 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     host = source.get("VPN_ROUTER_HOST", "127.0.0.1")
     port = _port(source.get("VPN_ROUTER_PORT", "8080"))
     cors_origins = _csv(source.get("VPN_ROUTER_CORS_ORIGINS", ""))
+    allowed_product_ids = _csv(source.get("VPN_ROUTER_ALLOWED_PRODUCT_IDS", "vpn.monthly"))
+    if not allowed_product_ids:
+        raise SettingsError("VPN_ROUTER_ALLOWED_PRODUCT_IDS must not be empty")
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
         host=host,
         port=port,
         cors_origins=cors_origins,
+        allowed_product_ids=allowed_product_ids,
     )
 
 

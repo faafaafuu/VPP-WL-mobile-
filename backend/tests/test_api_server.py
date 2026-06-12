@@ -57,6 +57,20 @@ class ApiServerTest(unittest.TestCase):
         self.assertEqual(context.exception.status, HTTPStatus.BAD_REQUEST)
         self.assertIn("not configured", context.exception.payload["error"])
 
+    def test_unknown_product_id_is_rejected(self) -> None:
+        with self.assertRaises(ApiError) as context:
+            self.service.auth_receipt(
+                {
+                    "platform": "sandbox",
+                    "receipt": "demo",
+                    "device_id": "device-1",
+                    "product_id": "unknown.product",
+                }
+            )
+
+        self.assertEqual(context.exception.status, HTTPStatus.BAD_REQUEST)
+        self.assertIn("product_id", context.exception.payload["error"])
+
     def test_config_rejects_user_without_subscription(self) -> None:
         init_response = self.service.auth_init({"device_id": "device-2"})
         me = self.service.me(init_response["user_id"])
