@@ -14,6 +14,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Admin health update endpoint is protected by env-provided admin token.
 - Automated health-check worker updates node metrics.
 - Health-check events are audited without user traffic logs.
+- Self-service account export/delete endpoints exist for privacy flows.
 - SQLite persistence works for MVP/local/staging.
 - Docker image and Docker Compose config exist.
 - systemd timer/service snippets exist for health checks.
@@ -28,7 +29,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Replace sandbox receipt validation with real Apple/Google validation.
 - Move from SQLite to PostgreSQL with managed backups and migration tooling.
 - Replace shared admin token with operator auth and scoped service tokens.
-- Add audit retention policy and export/delete flows.
+- Add audit retention policy for backend health/admin events.
 - Replace rule-set placeholder URLs with signed/versioned real artifacts.
 - Run sing-box binary validation against the pinned sing-box version.
 - Add TLS/HTTPS deployment in front of API.

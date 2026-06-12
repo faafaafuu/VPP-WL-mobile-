@@ -45,6 +45,8 @@ class ApiServerTest(unittest.TestCase):
         self.assertEqual(version["config_format"], "sing-box")
         self.assertEqual(version["config_version"], 1)
         self.assertIn("smart-routing", version["features"])
+        self.assertIn("account-data-export", version["features"])
+        self.assertIn("account-deletion", version["features"])
 
     def test_user_can_export_and_delete_account_data(self) -> None:
         receipt_response = self.service.auth_receipt(

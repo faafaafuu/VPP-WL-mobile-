@@ -57,6 +57,8 @@ class ApiService:
                 "node-scoring",
                 "last-known-good-config",
                 "expo-native-vpn-boundary",
+                "account-data-export",
+                "account-deletion",
             ],
         }
 

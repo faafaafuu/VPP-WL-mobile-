@@ -10,6 +10,15 @@ The machine-readable API sketch is tracked in `docs/openapi.yaml`.
 
 Use this endpoint before rollout testing and after app updates to check API/config compatibility. It returns API version, sing-box config version, minimum supported client version, and feature flags.
 
+Current feature flags:
+
+- `smart-routing`
+- `node-scoring`
+- `last-known-good-config`
+- `expo-native-vpn-boundary`
+- `account-data-export`
+- `account-deletion`
+
 ## Base Requirements
 
 - All production calls must use HTTPS.
