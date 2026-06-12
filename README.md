@@ -28,6 +28,7 @@ docs/
   backend-readiness.md  checklist before mobile development
   privacy-policy-draft.md  privacy policy draft for legal review
   terms-draft.md  terms draft for legal review
+  store-readiness.md  app store submission checklist
 ```
 
 ## Run Locally

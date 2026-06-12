@@ -29,6 +29,17 @@ class LegalDocsTest(unittest.TestCase):
         self.assertIn("Acceptable Use", terms)
         self.assertIn("does not store traffic content logs", terms)
 
+    def test_store_readiness_covers_vpn_store_requirements(self) -> None:
+        checklist = (DOCS_ROOT / "store-readiness.md").read_text(encoding="utf-8")
+
+        self.assertIn("Network Extension", checklist)
+        self.assertIn("BIND_VPN_SERVICE", checklist)
+        self.assertIn("Privacy Policy URL", checklist)
+        self.assertIn("Google Play Billing", checklist)
+        self.assertIn("Apple IAP", checklist)
+        self.assertIn("Data Safety", checklist)
+        self.assertIn("sing-box/libbox distribution and license decision", checklist)
+
 
 if __name__ == "__main__":
     unittest.main()
