@@ -33,6 +33,7 @@ docs/
   runtime-integration-plan.md  VPN runtime licensing and integration plan
 deploy/
   monitoring/        Prometheus alerts and Grafana dashboard templates
+  nginx/             HTTPS reverse proxy template for production
 ```
 
 ## Run Locally

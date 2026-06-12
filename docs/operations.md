@@ -63,3 +63,9 @@ Prometheus and Grafana starter assets are in `deploy/monitoring/`.
 - `grafana-dashboard.json` provides API health and node probe panels.
 
 Before production, replace placeholder targets with real API and node endpoints, add database/job metrics, and wire alert notifications to the on-call channel.
+
+## HTTPS Reverse Proxy
+
+`deploy/nginx/vpn-router-api.conf` is a production-oriented nginx template for terminating TLS in front of the backend on `127.0.0.1:8080`.
+
+Before production, replace `api.example.com`, install real certificates, enable `VPN_ROUTER_HSTS_ENABLED=true`, and verify that the proxy preserves `X-Forwarded-Proto: https`.

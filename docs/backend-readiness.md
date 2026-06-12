@@ -23,6 +23,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - systemd timer/service snippets exist for health checks.
 - Prometheus alert rules and a Grafana dashboard template exist under `deploy/monitoring/`.
 - `/metrics` exposes aggregate backend/node metrics without user traffic data or node secrets.
+- HTTPS reverse proxy template exists under `deploy/nginx/`.
 - OpenAPI sketch exists in `docs/openapi.yaml`.
 - Mobile API contract exists in `docs/mobile-api-contract.md`.
 - CI runs unit tests, compileall, compose config validation, and graphify JSON sanity.
@@ -36,7 +37,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Replace shared admin token with operator auth and scoped service tokens.
 - Replace rule-set placeholder host/checksums with signed real artifacts.
 - Run sing-box binary validation against the pinned sing-box version.
-- Add TLS/HTTPS deployment in front of API.
+- Deploy TLS/HTTPS reverse proxy with real certificates and production hostname.
 - Deploy monitoring dashboards and alerts for API, DB, and health-check job failures.
 - Complete privacy policy, terms, and store compliance review.
 
