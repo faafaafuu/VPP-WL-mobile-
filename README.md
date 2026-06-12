@@ -30,6 +30,7 @@ docs/
   privacy-policy-draft.md  privacy policy draft for legal review
   terms-draft.md  terms draft for legal review
   store-readiness.md  app store submission checklist
+  runtime-integration-plan.md  VPN runtime licensing and integration plan
 ```
 
 ## Run Locally

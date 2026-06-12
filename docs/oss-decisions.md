@@ -26,3 +26,4 @@ This file records upstream projects checked before larger implementation work. D
 - iOS native module targets `NETunnelProviderManager` plus `NEPacketTunnelProvider`.
 - The distribution/license model must be explicitly approved before bundling GPL sing-box binaries into a closed mobile app.
 - GPL/AGPL projects are documentation/reference sources only in this repository.
+- Runtime integration decision details are tracked in `docs/runtime-integration-plan.md`.

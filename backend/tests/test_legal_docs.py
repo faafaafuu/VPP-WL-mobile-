@@ -40,6 +40,15 @@ class LegalDocsTest(unittest.TestCase):
         self.assertIn("Data Safety", checklist)
         self.assertIn("sing-box/libbox distribution and license decision", checklist)
 
+    def test_runtime_integration_plan_records_gpl_blocker(self) -> None:
+        plan = (DOCS_ROOT / "runtime-integration-plan.md").read_text(encoding="utf-8")
+
+        self.assertIn("blocked on product/legal decision", plan)
+        self.assertIn("GPL-3.0-or-later", plan)
+        self.assertIn("MissingSingBoxRunner", plan)
+        self.assertIn("Android development build starts a real tunnel", plan)
+        self.assertIn("iOS development build starts a real Packet Tunnel", plan)
+
 
 if __name__ == "__main__":
     unittest.main()
