@@ -23,6 +23,9 @@ jobs:
       - name: Validate Docker Compose config
         run: make compose-config
 
+      - name: Check generated and secret-like files are not tracked
+        run: make check-tracked-artifacts
+
       - name: Validate graphify artifact
         run: python3 -c "import json; json.load(open('graphify-out/graph.json')); print('graphify graph json ok')"
 
@@ -30,4 +33,3 @@ jobs:
         run: |
           ! git ls-files --error-unmatch graphify-out/.graphify_root
           ! git ls-files --error-unmatch graphify-out/manifest.json
-
