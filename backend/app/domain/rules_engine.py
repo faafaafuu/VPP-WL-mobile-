@@ -4,6 +4,31 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+RULE_SET_VERSION = "v2026.06.12"
+RULE_SET_BASE_URL = "https://rules.vpn.example.com/sing-box"
+
+
+@dataclass(frozen=True)
+class RuleSetArtifact:
+    tag: str
+    filename: str
+    sha256: str
+    version: str = RULE_SET_VERSION
+    format: str = "binary"
+    download_detour: str = "direct"
+    update_interval: str = "24h"
+
+    def to_remote_rule_set(self) -> dict[str, Any]:
+        return {
+            "tag": self.tag,
+            "type": "remote",
+            "format": self.format,
+            "url": f"{RULE_SET_BASE_URL}/{self.version}/{self.filename}?sha256={self.sha256}",
+            "download_detour": self.download_detour,
+            "update_interval": self.update_interval,
+        }
+
+
 @dataclass(frozen=True)
 class RuleCategory:
     name: str
@@ -35,7 +60,13 @@ class RuleCategory:
 class RulesEngine:
     direct: RuleCategory = field(default_factory=lambda: DEFAULT_DIRECT)
     proxy: RuleCategory = field(default_factory=lambda: DEFAULT_PROXY)
-    remote_rule_sets: list[dict[str, Any]] = field(default_factory=lambda: list(DEFAULT_REMOTE_RULE_SETS))
+    remote_rule_set_artifacts: list[RuleSetArtifact] = field(
+        default_factory=lambda: list(DEFAULT_REMOTE_RULE_SET_ARTIFACTS)
+    )
+
+    @property
+    def remote_rule_sets(self) -> list[dict[str, Any]]:
+        return [artifact.to_remote_rule_set() for artifact in self.remote_rule_set_artifacts]
 
     def route_rules(self) -> list[dict[str, Any]]:
         return [
@@ -113,20 +144,15 @@ DEFAULT_PROXY = RuleCategory(
 )
 
 
-DEFAULT_REMOTE_RULE_SETS = [
-    {
-        "tag": "geosite-ru",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://example.invalid/rules/geosite-ru.srs",
-        "download_detour": "direct",
-    },
-    {
-        "tag": "geoip-ru",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://example.invalid/rules/geoip-ru.srs",
-        "download_detour": "direct",
-    },
+DEFAULT_REMOTE_RULE_SET_ARTIFACTS = [
+    RuleSetArtifact(
+        tag="geosite-ru",
+        filename="geosite-ru.srs",
+        sha256="1111111111111111111111111111111111111111111111111111111111111111",
+    ),
+    RuleSetArtifact(
+        tag="geoip-ru",
+        filename="geoip-ru.srs",
+        sha256="2222222222222222222222222222222222222222222222222222222222222222",
+    ),
 ]
-

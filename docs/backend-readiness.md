@@ -9,6 +9,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Protected `/api/config` returns validated sing-box JSON.
 - Routing rules engine emits direct/proxy categories.
 - RU direct placeholders and common proxy fallback domains are present.
+- RU remote rule-set artifacts are versioned and checksum-addressed in generated configs.
 - Node model supports provider, protocol, latency, success rate, last check time, health state, and score.
 - Config includes only usable nodes sorted by score.
 - Admin health update endpoint is protected by env-provided admin token.
@@ -30,7 +31,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Replace sandbox receipt validation with real Apple/Google validation.
 - Move from SQLite to PostgreSQL with managed backups and migration tooling.
 - Replace shared admin token with operator auth, scoped service tokens, and admin audit logs.
-- Replace rule-set placeholder URLs with signed/versioned real artifacts.
+- Replace rule-set placeholder host/checksums with signed real artifacts.
 - Run sing-box binary validation against the pinned sing-box version.
 - Add TLS/HTTPS deployment in front of API.
 - Add monitoring dashboards and alerts for API, DB, and health-check job failures.

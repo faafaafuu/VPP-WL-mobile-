@@ -43,6 +43,14 @@ class RulesEngineTest(unittest.TestCase):
         self.assertTrue(any(rule.get("outbound") == "auto" for rule in route_rules))
         self.assertTrue(any(rule_set["tag"] == "geoip-ru" for rule_set in config["route"]["rule_set"]))
 
+    def test_remote_rule_sets_are_versioned_and_checksum_addressed(self) -> None:
+        rule_sets = RulesEngine().remote_rule_sets
+
+        self.assertTrue(all("example.invalid" not in rule_set["url"] for rule_set in rule_sets))
+        self.assertTrue(all("/v2026.06.12/" in rule_set["url"] for rule_set in rule_sets))
+        self.assertTrue(all("?sha256=" in rule_set["url"] for rule_set in rule_sets))
+        self.assertTrue(all(rule_set["update_interval"] == "24h" for rule_set in rule_sets))
+
 
 def _node() -> VpnNode:
     return VpnNode(

@@ -27,7 +27,7 @@ The first releasable technical slice should be small:
 - iOS Network Extension entitlements can block release if the developer account and VPN capability are not approved early.
 - Domain-based split tunneling depends on DNS handling. Leaks and incorrect direct/proxy decisions need device-level tests.
 - "Protocol fallback" is not just a config problem. It needs client-side health checks, protocol-specific errors, and controlled rollout.
-- RU direct lists require an update channel, versioning, and rollback because banking/government domains change.
+- RU direct lists require a real artifact host and signing process; the config contract already includes versioned checksum-addressed rule-set URLs for rollback-ready updates.
 
 ## Compliance Risks
 

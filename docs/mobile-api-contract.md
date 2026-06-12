@@ -97,6 +97,7 @@ The response is a sing-box client config. It includes:
 - `direct` outbound for RU domains/rule sets.
 - `auto` outbound group for proxy nodes.
 - Explicit proxy rules for Telegram, Instagram, YouTube, OpenAI, X, Discord, and GitHub.
+- Remote RU rule sets use versioned URLs with checksum query parameters and a 24h update interval.
 - Only usable backend nodes sorted by score.
 
 ## Nodes Flow
