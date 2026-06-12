@@ -77,6 +77,8 @@ Privacy and terms links are shown before activation/purchase and are configured 
 
 The UI also includes a diagnostics-only node panel backed by `GET /api/nodes`. The VPN runtime should still use `/api/config` for actual routing and failover.
 
+The account panel calls `GET /api/me/export` for self-service data export and `DELETE /api/me` for account deletion. A successful deletion clears the stored access token and last-known-good config from SecureStore.
+
 ## Local Development
 
 Install dependencies only when Node tooling is available:

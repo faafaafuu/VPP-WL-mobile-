@@ -42,6 +42,25 @@ export type MeResponse = {
   subscription: SubscriptionSummary | null;
 };
 
+export type ExportedSubscription = SubscriptionSummary & {
+  original_transaction_id: string;
+};
+
+export type UserDataExportResponse = {
+  data: {
+    user: {
+      id: string;
+      device_id: string;
+      created_at: string;
+    };
+    subscription: ExportedSubscription | null;
+  };
+};
+
+export type DeleteMeResponse = {
+  deleted: boolean;
+};
+
 export type VersionResponse = {
   api_version: string;
   config_format: "sing-box";
@@ -118,6 +137,35 @@ export class BackendApiClient {
     }
 
     return (await response.json()) as MeResponse;
+  }
+
+  async exportMe(accessToken: string): Promise<UserDataExportResponse> {
+    const response = await fetch(`${this.baseUrl}/api/me/export`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new BackendApiError(response.status, await safeErrorMessage(response));
+    }
+
+    return (await response.json()) as UserDataExportResponse;
+  }
+
+  async deleteMe(accessToken: string): Promise<DeleteMeResponse> {
+    const response = await fetch(`${this.baseUrl}/api/me`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new BackendApiError(response.status, await safeErrorMessage(response));
+    }
+
+    return (await response.json()) as DeleteMeResponse;
   }
 
   async fetchNodes(accessToken: string): Promise<PublicNode[]> {

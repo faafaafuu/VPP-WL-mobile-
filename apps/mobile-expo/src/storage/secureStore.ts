@@ -27,4 +27,8 @@ export class SecureTokenStore {
       keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY
     });
   }
+
+  async clearLastKnownGoodConfig(): Promise<void> {
+    await SecureStore.deleteItemAsync(LAST_KNOWN_GOOD_CONFIG_KEY);
+  }
 }

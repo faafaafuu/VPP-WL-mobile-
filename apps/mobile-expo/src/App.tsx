@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Linking,
   Pressable,
   SafeAreaView,
@@ -90,6 +91,30 @@ export default function App() {
   async function checkSubscription() {
     setAuthState({ kind: "checking" });
     setAuthState(await authRepository.loadCurrentSubscription());
+  }
+
+  async function exportAccountData() {
+    setAuthState({ kind: "exporting" });
+    setAuthState(await authRepository.exportAccountData());
+  }
+
+  function confirmDeleteAccount() {
+    Alert.alert("Удалить аккаунт", "Токен и последний рабочий конфиг будут очищены на устройстве.", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Удалить",
+        style: "destructive",
+        onPress: async () => {
+          setAuthState({ kind: "deleting" });
+          const result = await authRepository.deleteAccount();
+          setAuthState(result);
+          if (result.kind === "deleted") {
+            setConfigState({ kind: "idle" });
+            setStatus("disconnected");
+          }
+        }
+      }
+    ]);
   }
 
   async function refreshNodes() {
@@ -183,6 +208,35 @@ export default function App() {
         </View>
 
         <View style={styles.subscriptionPanel}>
+          <Text style={styles.panelTitle}>Аккаунт</Text>
+          <View style={styles.linkRow}>
+            <Pressable
+              disabled={authState.kind === "exporting"}
+              onPress={exportAccountData}
+              style={[styles.outlineButton, styles.rowButton, authState.kind === "exporting" ? styles.disabledButton : null]}
+            >
+              <Text style={styles.outlineButtonText}>
+                {authState.kind === "exporting" ? "Экспорт..." : "Экспорт данных"}
+              </Text>
+            </Pressable>
+            <Pressable
+              disabled={authState.kind === "deleting"}
+              onPress={confirmDeleteAccount}
+              style={[styles.dangerButton, styles.rowButton, authState.kind === "deleting" ? styles.disabledButton : null]}
+            >
+              <Text style={styles.dangerButtonText}>
+                {authState.kind === "deleting" ? "Удаление..." : "Удалить"}
+              </Text>
+            </Pressable>
+          </View>
+          {authState.kind === "exported" ? (
+            <Text style={styles.exportText} selectable>
+              {authState.exportedJson}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={styles.subscriptionPanel}>
           <Text style={styles.panelTitle}>Узлы</Text>
           <Pressable
             disabled={nodesState.kind === "loading"}
@@ -240,6 +294,14 @@ function describeAuthState(state: AuthState): string {
       return `Пользователь создан: ${state.userId}.`;
     case "activating":
       return "Проверяем receipt через backend.";
+    case "exporting":
+      return "Готовим экспорт аккаунта.";
+    case "exported":
+      return "Данные аккаунта экспортированы.";
+    case "deleting":
+      return "Удаляем аккаунт.";
+    case "deleted":
+      return "Аккаунт удалён, локальные токены очищены.";
     case "initializing":
       return "Создаём или ищем пользователя по Device ID.";
     case "checking":
@@ -390,6 +452,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700"
   },
+  rowButton: {
+    flex: 1
+  },
   primaryButton: {
     alignItems: "center",
     backgroundColor: "#1b6f5f",
@@ -430,6 +495,29 @@ const styles = StyleSheet.create({
     color: "#202124",
     fontSize: 15,
     fontWeight: "700"
+  },
+  dangerButton: {
+    alignItems: "center",
+    backgroundColor: "#b3261e",
+    borderRadius: 8,
+    minHeight: 46,
+    justifyContent: "center"
+  },
+  dangerButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  exportText: {
+    backgroundColor: "#f2f4f3",
+    borderColor: "#d6d9d7",
+    borderRadius: 8,
+    borderWidth: 1,
+    color: "#202124",
+    fontFamily: "monospace",
+    fontSize: 12,
+    lineHeight: 18,
+    padding: 12
   },
   nodeList: {
     gap: 10

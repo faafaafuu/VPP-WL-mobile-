@@ -7,6 +7,10 @@ export type AuthState =
   | { kind: "initializing" }
   | { kind: "initialized"; userId: string }
   | { kind: "activating" }
+  | { kind: "exporting" }
+  | { kind: "exported"; exportedJson: string }
+  | { kind: "deleting" }
+  | { kind: "deleted" }
   | { kind: "active"; expiresAt: string }
   | { kind: "auth-required" }
   | { kind: "subscription-required" }
@@ -81,6 +85,54 @@ export class AuthRepository {
         return { kind: "error", message: error.message };
       }
       return { kind: "error", message: "Unable to load subscription" };
+    }
+  }
+
+  async exportAccountData(): Promise<AuthState> {
+    const token = await this.tokenStore.readAccessToken();
+    if (!token) {
+      return { kind: "auth-required" };
+    }
+
+    try {
+      const response = await this.apiClient.exportMe(token);
+      return { kind: "exported", exportedJson: JSON.stringify(response.data, null, 2) };
+    } catch (error) {
+      if (error instanceof BackendApiError && error.statusCode === 401) {
+        await this.tokenStore.clearAccessToken();
+        return { kind: "auth-required" };
+      }
+      if (error instanceof BackendApiError) {
+        return { kind: "error", message: error.message };
+      }
+      return { kind: "error", message: "Unable to export account data" };
+    }
+  }
+
+  async deleteAccount(): Promise<AuthState> {
+    const token = await this.tokenStore.readAccessToken();
+    if (!token) {
+      return { kind: "auth-required" };
+    }
+
+    try {
+      const response = await this.apiClient.deleteMe(token);
+      if (!response.deleted) {
+        return { kind: "error", message: "Account deletion was not confirmed by backend" };
+      }
+      await this.tokenStore.clearAccessToken();
+      await this.tokenStore.clearLastKnownGoodConfig();
+      return { kind: "deleted" };
+    } catch (error) {
+      if (error instanceof BackendApiError && error.statusCode === 401) {
+        await this.tokenStore.clearAccessToken();
+        await this.tokenStore.clearLastKnownGoodConfig();
+        return { kind: "auth-required" };
+      }
+      if (error instanceof BackendApiError) {
+        return { kind: "error", message: error.message };
+      }
+      return { kind: "error", message: "Unable to delete account" };
     }
   }
 }
