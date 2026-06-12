@@ -6,6 +6,12 @@ rule_files:
   - /etc/prometheus/rules/vpn-router-alerts.yml
 
 scrape_configs:
+  - job_name: vpn-router-api-metrics
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - api.example.com
+
   - job_name: vpn-router-api
     metrics_path: /probe
     params:

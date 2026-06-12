@@ -51,6 +51,9 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path == "/api/version":
             self._send_service_response(lambda: API_SERVICE.version())
             return
+        if path == "/metrics":
+            self._send_text(HTTPStatus.OK, API_SERVICE.prometheus_metrics(), "text/plain; version=0.0.4")
+            return
         if path == "/api/nodes":
             user_id = self._require_user_id()
             if user_id is None:
@@ -186,6 +189,17 @@ class ApiHandler(BaseHTTPRequestHandler):
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.send_response(status.value)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self._send_cors_headers()
+        self._send_security_headers()
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_text(self, status: HTTPStatus, payload: str, content_type: str) -> None:
+        body = payload.encode("utf-8")
+        self.send_response(status.value)
+        self.send_header("Content-Type", f"{content_type}; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self._send_cors_headers()

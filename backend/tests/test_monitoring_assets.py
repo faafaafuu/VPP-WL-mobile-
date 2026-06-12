@@ -13,7 +13,9 @@ class MonitoringAssetsTest(unittest.TestCase):
         config = (MONITORING_ROOT / "prometheus.yml").read_text(encoding="utf-8")
 
         self.assertIn("vpn-router-api", config)
+        self.assertIn("vpn-router-api-metrics", config)
         self.assertIn("vpn-router-nodes", config)
+        self.assertIn("/metrics", config)
         self.assertIn("blackbox-exporter:9115", config)
         self.assertIn("vpn-router-alerts.yml", config)
 
@@ -32,6 +34,7 @@ class MonitoringAssetsTest(unittest.TestCase):
         self.assertEqual(dashboard["title"], "VPN Router Operations")
         self.assertIn("panels", dashboard)
         serialized = json.dumps(dashboard)
+        self.assertIn("vpn_router_usable_nodes", serialized)
         self.assertIn("probe_success", serialized)
         self.assertIn("probe_duration_seconds", serialized)
 

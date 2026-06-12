@@ -29,6 +29,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VersionResponse"
+  /metrics:
+    get:
+      security: []
+      summary: Return Prometheus metrics without user traffic data
+      responses:
+        "200":
+          description: Prometheus text exposition
+          content:
+            text/plain:
+              schema:
+                type: string
   /api/auth/init:
     post:
       security: []

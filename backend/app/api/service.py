@@ -63,6 +63,35 @@ class ApiService:
             ],
         }
 
+    def prometheus_metrics(self) -> str:
+        nodes = self.repository.list_nodes()
+        usable_nodes = [node for node in nodes if node.is_usable()]
+        lines = [
+            "# HELP vpn_router_info Static VPN Router backend info.",
+            "# TYPE vpn_router_info gauge",
+            'vpn_router_info{version="0.1.0",config_format="sing-box"} 1',
+            "# HELP vpn_router_nodes_total VPN nodes grouped by non-sensitive routing metadata.",
+            "# TYPE vpn_router_nodes_total gauge",
+        ]
+        node_groups: dict[tuple[str, str, str, str], int] = {}
+        for node in nodes:
+            key = (node.region, node.protocol.value, node.status.value, node.health.value)
+            node_groups[key] = node_groups.get(key, 0) + 1
+        for region, protocol, status, health in sorted(node_groups):
+            lines.append(
+                "vpn_router_nodes_total"
+                f'{{region="{_metric_escape(region)}",protocol="{protocol}",status="{status}",health="{health}"}} '
+                f"{node_groups[(region, protocol, status, health)]}"
+            )
+        lines.extend(
+            [
+                "# HELP vpn_router_usable_nodes Currently usable VPN nodes.",
+                "# TYPE vpn_router_usable_nodes gauge",
+                f"vpn_router_usable_nodes {len(usable_nodes)}",
+            ]
+        )
+        return "\n".join(lines) + "\n"
+
     def auth_receipt(self, payload: dict[str, Any]) -> dict[str, Any]:
         claim = self._receipt_claim_from_payload(payload)
         try:
@@ -309,3 +338,7 @@ def _admin_health_update_details(
     if health is not None:
         details["health"] = health.value
     return details
+
+
+def _metric_escape(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")

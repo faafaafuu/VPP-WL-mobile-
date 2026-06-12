@@ -49,6 +49,16 @@ class ApiServerTest(unittest.TestCase):
         self.assertIn("account-deletion", version["features"])
         self.assertIn("admin-audit", version["features"])
 
+    def test_prometheus_metrics_expose_non_sensitive_node_aggregates(self) -> None:
+        metrics = self.service.prometheus_metrics()
+
+        self.assertIn("vpn_router_info", metrics)
+        self.assertIn("vpn_router_nodes_total", metrics)
+        self.assertIn("vpn_router_usable_nodes", metrics)
+        self.assertIn('protocol="vless"', metrics)
+        self.assertNotIn("eu1.vpn.example.com", metrics)
+        self.assertNotIn("00000000-0000-4000", metrics)
+
     def test_user_can_export_and_delete_account_data(self) -> None:
         receipt_response = self.service.auth_receipt(
             {"platform": "sandbox", "receipt": "demo", "device_id": "device-1"},

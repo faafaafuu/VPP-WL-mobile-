@@ -22,6 +22,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Docker image and Docker Compose config exist.
 - systemd timer/service snippets exist for health checks.
 - Prometheus alert rules and a Grafana dashboard template exist under `deploy/monitoring/`.
+- `/metrics` exposes aggregate backend/node metrics without user traffic data or node secrets.
 - OpenAPI sketch exists in `docs/openapi.yaml`.
 - Mobile API contract exists in `docs/mobile-api-contract.md`.
 - CI runs unit tests, compileall, compose config validation, and graphify JSON sanity.

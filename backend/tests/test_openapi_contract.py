@@ -16,6 +16,7 @@ class OpenApiContractTest(unittest.TestCase):
             "/api/me/export",
             "/api/nodes",
             "/api/version",
+            "/metrics",
             "/api/admin/nodes",
             "/api/admin/audit",
             "/api/admin/nodes/{node_id}/health",
