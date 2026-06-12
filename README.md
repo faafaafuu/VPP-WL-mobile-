@@ -26,6 +26,8 @@ backend/
 docs/
   mvp-review.md      narrowed MVP, risks, and next decisions
   backend-readiness.md  checklist before mobile development
+  privacy-policy-draft.md  privacy policy draft for legal review
+  terms-draft.md  terms draft for legal review
 ```
 
 ## Run Locally
