@@ -52,3 +52,16 @@ CREATE TABLE IF NOT EXISTS node_health_events (
 
 CREATE INDEX IF NOT EXISTS idx_node_health_events_node_checked
 ON node_health_events(node_id, checked_at DESC);
+
+CREATE TABLE IF NOT EXISTS admin_audit_events (
+    id TEXT PRIMARY KEY,
+    occurred_at TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target_type TEXT NOT NULL,
+    target_id TEXT NOT NULL,
+    result TEXT NOT NULL,
+    details_json TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_audit_events_occurred
+ON admin_audit_events(occurred_at DESC);

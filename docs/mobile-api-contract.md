@@ -18,6 +18,7 @@ Current feature flags:
 - `expo-native-vpn-boundary`
 - `account-data-export`
 - `account-deletion`
+- `admin-audit`
 
 ## Base Requirements
 

@@ -47,6 +47,7 @@ class ApiServerTest(unittest.TestCase):
         self.assertIn("smart-routing", version["features"])
         self.assertIn("account-data-export", version["features"])
         self.assertIn("account-deletion", version["features"])
+        self.assertIn("admin-audit", version["features"])
 
     def test_user_can_export_and_delete_account_data(self) -> None:
         receipt_response = self.service.auth_receipt(
@@ -142,6 +143,24 @@ class ApiServerTest(unittest.TestCase):
         self.assertEqual(update["node"]["health"], "degraded")
         self.assertFalse(update["node"]["usable"])
         self.assertNotIn("vless-eu-1", outbound_tags)
+
+    def test_admin_health_update_writes_audit_event_without_tokens(self) -> None:
+        self.service.admin_update_node_health(
+            "test-admin",
+            "node_eu_1",
+            {"health_score": 80, "latency_ms": 230, "success_rate": 0.91, "health": "degraded"},
+        )
+
+        audit = self.service.admin_audit_events("test-admin")
+
+        self.assertEqual(len(audit["events"]), 1)
+        event = audit["events"][0]
+        self.assertEqual(event["action"], "node.health.update")
+        self.assertEqual(event["target_type"], "node")
+        self.assertEqual(event["target_id"], "node_eu_1")
+        self.assertEqual(event["result"], "success")
+        self.assertEqual(event["details"]["health_score"], 80)
+        self.assertNotIn("test-admin", json.dumps(event))
 
     def test_admin_token_is_required(self) -> None:
         with self.assertRaises(ApiError) as context:

@@ -5,7 +5,7 @@ from typing import Protocol as TypingProtocol
 
 from datetime import datetime
 
-from app.domain.models import NodeHealth, NodeHealthEvent, NodeStatus, ReceiptClaim, Subscription, User, VpnNode
+from app.domain.models import AdminAuditEvent, NodeHealth, NodeHealthEvent, NodeStatus, ReceiptClaim, Subscription, User, VpnNode
 from app.repositories.memory import InMemoryRepository
 from app.repositories.sqlite import SqliteRepository
 
@@ -57,6 +57,12 @@ class Repository(TypingProtocol):
         ...
 
     def prune_node_health_events(self, cutoff: datetime) -> int:
+        ...
+
+    def add_admin_audit_event(self, event: AdminAuditEvent) -> None:
+        ...
+
+    def list_admin_audit_events(self, limit: int = 50) -> list[AdminAuditEvent]:
         ...
 
 

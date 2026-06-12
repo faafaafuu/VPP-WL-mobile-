@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from app.domain.models import (
+    AdminAuditEvent,
     NodeHealth,
     NodeHealthEvent,
     NodeStatus,
@@ -160,6 +161,24 @@ class SqliteRepositoryTest(unittest.TestCase):
         events = self.repo.list_node_health_events("node_eu_1", limit=10)
         self.assertEqual(deleted, 1)
         self.assertEqual([event.id for event in events], [new_event.id])
+
+    def test_persists_admin_audit_events(self) -> None:
+        event = AdminAuditEvent(
+            id=new_id("aae"),
+            occurred_at=datetime.now(timezone.utc),
+            action="node.health.update",
+            target_type="node",
+            target_id="node_eu_1",
+            result="success",
+            details={"health_score": 90},
+        )
+
+        self.repo.add_admin_audit_event(event)
+        events = self.repo.list_admin_audit_events()
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0].id, event.id)
+        self.assertEqual(events[0].details, {"health_score": 90})
 
 
 if __name__ == "__main__":

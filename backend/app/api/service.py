@@ -8,7 +8,7 @@ from typing import Any
 
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
-from app.domain.models import NodeHealth, NodeStatus, Platform, ReceiptClaim
+from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, ReceiptClaim, new_id
 from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
 from app.repositories.factory import Repository
@@ -59,6 +59,7 @@ class ApiService:
                 "expo-native-vpn-boundary",
                 "account-data-export",
                 "account-deletion",
+                "admin-audit",
             ],
         }
 
@@ -103,6 +104,10 @@ class ApiService:
         self._require_admin(admin_token)
         return {"nodes": [_admin_node(node) for node in self.repository.list_nodes()]}
 
+    def admin_audit_events(self, admin_token: str) -> dict[str, Any]:
+        self._require_admin(admin_token)
+        return {"events": [_admin_audit_event(event) for event in self.repository.list_admin_audit_events()]}
+
     def admin_update_node_health(self, admin_token: str, node_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         self._require_admin(admin_token)
         health_score = self._health_score_from_payload(payload)
@@ -121,6 +126,23 @@ class ApiService:
         )
         if node is None:
             raise ApiError(HTTPStatus.NOT_FOUND, {"error": "node not found"})
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="node.health.update",
+                target_type="node",
+                target_id=node_id,
+                result="success",
+                details=_admin_health_update_details(
+                    health_score=health_score,
+                    status=status,
+                    latency_ms=latency_ms,
+                    success_rate=success_rate,
+                    health=health,
+                ),
+            )
+        )
         return {"node": _admin_node(node)}
 
     def config(self, user_id: str) -> dict[str, Any]:
@@ -256,3 +278,34 @@ def _admin_node(node: Any) -> dict[str, Any]:
         "last_check_at": node.last_check_at.isoformat() if node.last_check_at else None,
         "usable": node.is_usable(),
     }
+
+
+def _admin_audit_event(event: AdminAuditEvent) -> dict[str, Any]:
+    return {
+        "id": event.id,
+        "occurred_at": event.occurred_at.isoformat(),
+        "action": event.action,
+        "target_type": event.target_type,
+        "target_id": event.target_id,
+        "result": event.result,
+        "details": event.details,
+    }
+
+
+def _admin_health_update_details(
+    health_score: int,
+    status: NodeStatus | None,
+    latency_ms: int | None,
+    success_rate: float | None,
+    health: NodeHealth | None,
+) -> dict[str, Any]:
+    details: dict[str, Any] = {"health_score": health_score}
+    if status is not None:
+        details["status"] = status.value
+    if latency_ms is not None:
+        details["latency_ms"] = latency_ms
+    if success_rate is not None:
+        details["success_rate"] = success_rate
+    if health is not None:
+        details["health"] = health.value
+    return details

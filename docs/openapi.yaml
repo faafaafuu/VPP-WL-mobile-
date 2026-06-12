@@ -151,6 +151,26 @@ paths:
           description: Admin node list
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /api/admin/audit:
+    get:
+      security:
+        - adminToken: []
+      summary: Return recent admin audit events
+      responses:
+        "200":
+          description: Admin audit event list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [events]
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AdminAuditEvent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/admin/nodes/{node_id}/health:
     patch:
       security:
@@ -400,6 +420,26 @@ components:
           type: number
           minimum: 0
           maximum: 1
+    AdminAuditEvent:
+      type: object
+      required: [id, occurred_at, action, target_type, target_id, result, details]
+      properties:
+        id:
+          type: string
+        occurred_at:
+          type: string
+          format: date-time
+        action:
+          type: string
+        target_type:
+          type: string
+        target_id:
+          type: string
+        result:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
     ErrorResponse:
       type: object
       required: [error]

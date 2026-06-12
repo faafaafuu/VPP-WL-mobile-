@@ -13,6 +13,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Node model supports provider, protocol, latency, success rate, last check time, health state, and score.
 - Config includes only usable nodes sorted by score.
 - Admin health update endpoint is protected by env-provided admin token.
+- Admin health updates write basic audit events without storing admin tokens.
 - Automated health-check worker updates node metrics.
 - Health-check events are audited without user traffic logs.
 - Health-check audit events have env-controlled retention cleanup.
@@ -30,7 +31,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 
 - Replace sandbox receipt validation with real Apple/Google validation.
 - Move from SQLite to PostgreSQL with managed backups and migration tooling.
-- Replace shared admin token with operator auth, scoped service tokens, and admin audit logs.
+- Replace shared admin token with operator auth and scoped service tokens.
 - Replace rule-set placeholder host/checksums with signed real artifacts.
 - Run sing-box binary validation against the pinned sing-box version.
 - Add TLS/HTTPS deployment in front of API.

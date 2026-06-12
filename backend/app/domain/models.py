@@ -136,5 +136,16 @@ class NodeHealthEvent:
     error: str | None = None
 
 
+@dataclass(frozen=True)
+class AdminAuditEvent:
+    id: str
+    occurred_at: datetime
+    action: str
+    target_type: str
+    target_id: str
+    result: str
+    details: dict[str, Any] = field(default_factory=dict)
+
+
 def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid4().hex}"

@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from app.domain.models import (
+    AdminAuditEvent,
     NodeHealth,
     NodeHealthEvent,
     NodeStatus,
@@ -26,6 +27,7 @@ class InMemoryRepository:
         self.subscriptions_by_user_id: dict[str, Subscription] = {}
         self.nodes_by_id: dict[str, VpnNode] = {}
         self.health_events_by_node_id: dict[str, list[NodeHealthEvent]] = {}
+        self.admin_audit_events: list[AdminAuditEvent] = []
         self._seed_nodes()
 
     def get_or_create_user(self, device_id: str) -> User:
@@ -134,6 +136,12 @@ class InMemoryRepository:
             else:
                 self.health_events_by_node_id.pop(node_id, None)
         return deleted
+
+    def add_admin_audit_event(self, event: AdminAuditEvent) -> None:
+        self.admin_audit_events.insert(0, event)
+
+    def list_admin_audit_events(self, limit: int = 50) -> list[AdminAuditEvent]:
+        return self.admin_audit_events[:limit]
 
     def _seed_nodes(self) -> None:
         nodes = [

@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from app.domain.models import NodeHealth, NodeHealthEvent, NodeStatus, Platform, ReceiptClaim, new_id
+from app.domain.models import AdminAuditEvent
 from app.repositories.memory import InMemoryRepository
 
 
@@ -109,6 +110,22 @@ class InMemoryRepositoryTest(unittest.TestCase):
         events = repo.list_node_health_events("node_eu_1", limit=10)
         self.assertEqual(deleted, 1)
         self.assertEqual([event.id for event in events], [new_event.id])
+
+    def test_stores_admin_audit_events(self) -> None:
+        repo = InMemoryRepository()
+        event = AdminAuditEvent(
+            id=new_id("aae"),
+            occurred_at=datetime.now(timezone.utc),
+            action="node.health.update",
+            target_type="node",
+            target_id="node_eu_1",
+            result="success",
+            details={"health_score": 90},
+        )
+
+        repo.add_admin_audit_event(event)
+
+        self.assertEqual(repo.list_admin_audit_events(), [event])
 
 
 if __name__ == "__main__":

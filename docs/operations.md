@@ -18,6 +18,10 @@ The worker:
 - prunes old node health audit events using `VPN_ROUTER_AUDIT_RETENTION_DAYS` (default 30, `0` disables cleanup);
 - does not log user identifiers, generated configs, access tokens, admin tokens, or VPN credentials.
 
+## Admin Audit
+
+`PATCH /api/admin/nodes/{node_id}/health` writes an admin audit event without storing the admin token. Recent events are available through `GET /api/admin/audit` with `X-Admin-Token`.
+
 ## Backend Release Gate
 
 Before handing the backend to mobile development, verify:

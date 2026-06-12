@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from app.domain.models import (
+    AdminAuditEvent,
     Hysteria2Options,
     NodeHealth,
     NodeHealthEvent,
@@ -280,6 +281,37 @@ class SqliteRepository:
         )
         self.connection.commit()
 
+    def add_admin_audit_event(self, event: AdminAuditEvent) -> None:
+        self.connection.execute(
+            """
+            INSERT INTO admin_audit_events
+                (id, occurred_at, action, target_type, target_id, result, details_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event.id,
+                _dt_to_text(event.occurred_at),
+                event.action,
+                event.target_type,
+                event.target_id,
+                event.result,
+                json.dumps(event.details, separators=(",", ":"), sort_keys=True),
+            ),
+        )
+        self.connection.commit()
+
+    def list_admin_audit_events(self, limit: int = 50) -> list[AdminAuditEvent]:
+        rows = self.connection.execute(
+            """
+            SELECT id, occurred_at, action, target_type, target_id, result, details_json
+            FROM admin_audit_events
+            ORDER BY occurred_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        return [_admin_audit_event_from_row(row) for row in rows]
+
     def list_node_health_events(self, node_id: str, limit: int = 50) -> list[NodeHealthEvent]:
         rows = self.connection.execute(
             """
@@ -325,6 +357,25 @@ class SqliteRepository:
         for name, definition in columns.items():
             if name not in existing:
                 self.connection.execute(f"ALTER TABLE nodes ADD COLUMN {name} {definition}")
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS admin_audit_events (
+                id TEXT PRIMARY KEY,
+                occurred_at TEXT NOT NULL,
+                action TEXT NOT NULL,
+                target_type TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                result TEXT NOT NULL,
+                details_json TEXT NOT NULL DEFAULT '{}'
+            )
+            """
+        )
+        self.connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_admin_audit_events_occurred
+            ON admin_audit_events(occurred_at DESC)
+            """
+        )
 
 
 def _user_from_row(row: sqlite3.Row) -> User:
@@ -389,6 +440,21 @@ def _health_event_from_row(row: sqlite3.Row) -> NodeHealthEvent:
         new_latency_ms=int(row["new_latency_ms"]) if row["new_latency_ms"] is not None else None,
         health_score=int(row["health_score"]),
         error=row["error"],
+    )
+
+
+def _admin_audit_event_from_row(row: sqlite3.Row) -> AdminAuditEvent:
+    details = json.loads(row["details_json"] or "{}")
+    if not isinstance(details, dict):
+        details = {}
+    return AdminAuditEvent(
+        id=row["id"],
+        occurred_at=_dt_from_text(row["occurred_at"]),
+        action=row["action"],
+        target_type=row["target_type"],
+        target_id=row["target_id"],
+        result=row["result"],
+        details=details,
     )
 
 

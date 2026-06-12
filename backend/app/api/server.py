@@ -79,6 +79,10 @@ class ApiHandler(BaseHTTPRequestHandler):
             admin_token = self.headers.get("X-Admin-Token", "")
             self._send_service_response(lambda: API_SERVICE.admin_nodes(admin_token))
             return
+        if path == "/api/admin/audit":
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(lambda: API_SERVICE.admin_audit_events(admin_token))
+            return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
