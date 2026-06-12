@@ -14,6 +14,7 @@ class OpenApiContractTest(unittest.TestCase):
             "/api/config",
             "/api/me",
             "/api/nodes",
+            "/api/version",
             "/api/admin/nodes",
             "/api/admin/nodes/{node_id}/health",
             "/api/webhook/apple",

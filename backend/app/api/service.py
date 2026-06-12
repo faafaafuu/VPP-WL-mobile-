@@ -46,6 +46,20 @@ class ApiService:
         user = self.repository.get_or_create_user(device_id)
         return {"user_id": user.id}
 
+    def version(self) -> dict[str, Any]:
+        return {
+            "api_version": "0.1.0",
+            "config_format": "sing-box",
+            "config_version": 1,
+            "min_client_version": "0.1.0",
+            "features": [
+                "smart-routing",
+                "node-scoring",
+                "last-known-good-config",
+                "expo-native-vpn-boundary",
+            ],
+        }
+
     def auth_receipt(self, payload: dict[str, Any]) -> dict[str, Any]:
         claim = self._receipt_claim_from_payload(payload)
         try:

@@ -43,6 +43,9 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path == "/health":
             self._send_json(HTTPStatus.OK, {"status": "ok"})
             return
+        if path == "/api/version":
+            self._send_service_response(lambda: API_SERVICE.version())
+            return
         if path == "/api/nodes":
             user_id = self._require_user_id()
             if user_id is None:

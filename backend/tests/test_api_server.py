@@ -38,6 +38,14 @@ class ApiServerTest(unittest.TestCase):
         self.assertTrue(me["subscription"]["active"])
         self.assertEqual(me["subscription"]["product_id"], "vpn.monthly")
 
+    def test_version_endpoint_describes_client_contract(self) -> None:
+        version = self.service.version()
+
+        self.assertEqual(version["api_version"], "0.1.0")
+        self.assertEqual(version["config_format"], "sing-box")
+        self.assertEqual(version["config_version"], 1)
+        self.assertIn("smart-routing", version["features"])
+
     def test_config_requires_token(self) -> None:
         with self.assertRaises(ApiError) as context:
             self.service.user_id_from_authorization("")

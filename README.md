@@ -5,6 +5,7 @@ Mobile VPN/router service with "install and forget" UX. The first backend slice 
 ## MVP Scope
 
 - Issue an API token after a store receipt handoff.
+- Expose API/config compatibility metadata through `GET /api/version`.
 - Keep users, subscriptions, and VPN nodes behind repository interfaces.
 - Return a sing-box client config from `GET /api/config`.
 - Return current user/subscription state from `GET /api/me`.

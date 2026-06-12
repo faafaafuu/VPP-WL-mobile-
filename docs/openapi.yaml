@@ -18,6 +18,17 @@ paths:
       responses:
         "200":
           description: API is alive
+  /api/version:
+    get:
+      security: []
+      summary: Return API and config compatibility metadata
+      responses:
+        "200":
+          description: Version metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionResponse"
   /api/auth/init:
     post:
       security: []
@@ -206,6 +217,23 @@ components:
       properties:
         user_id:
           type: string
+    VersionResponse:
+      type: object
+      required: [api_version, config_format, config_version, min_client_version, features]
+      properties:
+        api_version:
+          type: string
+        config_format:
+          type: string
+          enum: [sing-box]
+        config_version:
+          type: integer
+        min_client_version:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
     ReceiptRequest:
       type: object
       required: [platform, receipt, device_id]

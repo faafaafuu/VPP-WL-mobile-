@@ -4,6 +4,12 @@ This contract is for Android/iOS clients that embed a VPN runtime and request si
 
 The machine-readable API sketch is tracked in `docs/openapi.yaml`.
 
+## Version Flow
+
+`GET /api/version`
+
+Use this endpoint before rollout testing and after app updates to check API/config compatibility. It returns API version, sing-box config version, minimum supported client version, and feature flags.
+
 ## Base Requirements
 
 - All production calls must use HTTPS.
