@@ -38,6 +38,7 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("/api/auth/init", client)
         self.assertIn("/api/me", client)
         self.assertIn("/api/nodes", client)
+        self.assertIn("/api/version", client)
         self.assertIn("/api/auth/receipt", client)
         self.assertIn("Authorization", client)
         self.assertIn("Bearer ${accessToken}", client)
@@ -74,6 +75,16 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("Обновить узлы", app)
         self.assertIn("renderNodes", app)
         self.assertIn("node.score", app)
+
+    def test_expo_version_repository_loads_backend_compatibility(self) -> None:
+        version_repository = (EXPO_ROOT / "src/version/VersionRepository.ts").read_text(encoding="utf-8")
+        app = (EXPO_ROOT / "src/App.tsx").read_text(encoding="utf-8")
+
+        self.assertIn("fetchVersion()", version_repository)
+        self.assertIn("VersionResponse", version_repository)
+        self.assertIn("Проверить версию API", app)
+        self.assertIn("renderVersion", app)
+        self.assertIn("config_format", app)
 
     def test_expo_config_repository_uses_lkg_fallback(self) -> None:
         repository = (EXPO_ROOT / "src/config/configRepository.ts").read_text(encoding="utf-8")

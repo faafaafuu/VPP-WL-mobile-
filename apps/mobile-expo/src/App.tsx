@@ -16,6 +16,7 @@ import { AuthRepository, AuthState } from "./auth/AuthRepository";
 import { ConfigRepository, ConfigState } from "./config/configRepository";
 import { NodeRepository, NodesState } from "./nodes/NodeRepository";
 import { SecureTokenStore } from "./storage/secureStore";
+import { VersionRepository, VersionState } from "./version/VersionRepository";
 import { VpnController } from "./vpn/VpnController";
 import { VpnStatus } from "./vpn/VpnRouterNative";
 
@@ -29,11 +30,13 @@ export default function App() {
   const authRepository = useMemo(() => new AuthRepository(apiClient, tokenStore), [apiClient, tokenStore]);
   const configRepository = useMemo(() => new ConfigRepository(apiClient, tokenStore), [apiClient, tokenStore]);
   const nodeRepository = useMemo(() => new NodeRepository(apiClient, tokenStore), [apiClient, tokenStore]);
+  const versionRepository = useMemo(() => new VersionRepository(apiClient), [apiClient]);
   const controller = useMemo(() => new VpnController(configRepository), [configRepository]);
   const [status, setStatus] = useState<VpnStatus>("disconnected");
   const [configState, setConfigState] = useState<ConfigState>({ kind: "idle" });
   const [authState, setAuthState] = useState<AuthState>({ kind: "idle" });
   const [nodesState, setNodesState] = useState<NodesState>({ kind: "idle" });
+  const [versionState, setVersionState] = useState<VersionState>({ kind: "idle" });
   const [deviceId, setDeviceId] = useState("device-1");
   const [receipt, setReceipt] = useState("demo");
 
@@ -92,6 +95,11 @@ export default function App() {
   async function refreshNodes() {
     setNodesState({ kind: "loading" });
     setNodesState(await nodeRepository.loadNodes());
+  }
+
+  async function refreshVersion() {
+    setVersionState({ kind: "loading" });
+    setVersionState(await versionRepository.loadVersion());
   }
 
   const buttonLabel = status === "connected" || status === "connecting" ? "Отключить" : "Подключить";
@@ -187,6 +195,20 @@ export default function App() {
           </Pressable>
           {renderNodes(nodesState)}
         </View>
+
+        <View style={styles.subscriptionPanel}>
+          <Text style={styles.panelTitle}>Backend</Text>
+          <Pressable
+            disabled={versionState.kind === "loading"}
+            onPress={refreshVersion}
+            style={[styles.outlineButton, versionState.kind === "loading" ? styles.disabledButton : null]}
+          >
+            <Text style={styles.outlineButtonText}>
+              {versionState.kind === "loading" ? "Проверка..." : "Проверить версию API"}
+            </Text>
+          </Pressable>
+          {renderVersion(versionState)}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -263,6 +285,25 @@ function renderNodes(state: NodesState) {
     case "idle":
     default:
       return <Text style={styles.detailText}>Список узлов нужен только для диагностики.</Text>;
+  }
+}
+
+function renderVersion(state: VersionState) {
+  switch (state.kind) {
+    case "ready":
+      return (
+        <Text style={styles.detailText}>
+          API {state.version.api_version} · config {state.version.config_format} v{state.version.config_version} · min app{" "}
+          {state.version.min_client_version}
+        </Text>
+      );
+    case "loading":
+      return <Text style={styles.detailText}>Проверяем совместимость backend.</Text>;
+    case "error":
+      return <Text style={styles.detailText}>{state.message}</Text>;
+    case "idle":
+    default:
+      return <Text style={styles.detailText}>Проверка версии нужна перед rollout и QA.</Text>;
   }
 }
 

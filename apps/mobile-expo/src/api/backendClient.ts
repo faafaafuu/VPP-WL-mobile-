@@ -42,6 +42,14 @@ export type MeResponse = {
   subscription: SubscriptionSummary | null;
 };
 
+export type VersionResponse = {
+  api_version: string;
+  config_format: "sing-box";
+  config_version: number;
+  min_client_version: string;
+  features: string[];
+};
+
 export class BackendApiError extends Error {
   constructor(
     public readonly statusCode: number,
@@ -72,6 +80,16 @@ export class BackendApiClient {
     }
 
     return (await response.json()) as AuthInitResponse;
+  }
+
+  async fetchVersion(): Promise<VersionResponse> {
+    const response = await fetch(`${this.baseUrl}/api/version`);
+
+    if (!response.ok) {
+      throw new BackendApiError(response.status, await safeErrorMessage(response));
+    }
+
+    return (await response.json()) as VersionResponse;
   }
 
   async fetchConfig(accessToken: string): Promise<string> {
