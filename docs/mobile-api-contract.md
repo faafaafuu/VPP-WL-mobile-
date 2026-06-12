@@ -99,7 +99,7 @@ Returns the current user id and active subscription summary. Mobile clients shou
 
 | Status | Meaning | Mobile Client Reaction |
 | --- | --- | --- |
-| 400 | Bad request | Show generic setup error; client bug or invalid receipt payload. |
+| 400 | Bad request | Show generic setup error; client bug, invalid receipt payload, or production store validation not configured. |
 | 401 | Missing/invalid/expired token | Stop VPN if already running, clear token, re-run receipt/auth flow. |
 | 403 | No active subscription | Stop VPN, show subscription screen. |
 | 404 | Missing resource | Treat as non-retryable client/backend version mismatch. |

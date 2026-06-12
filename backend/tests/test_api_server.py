@@ -44,6 +44,19 @@ class ApiServerTest(unittest.TestCase):
 
         self.assertEqual(context.exception.status, HTTPStatus.UNAUTHORIZED)
 
+    def test_production_receipts_fail_closed_until_store_validation_exists(self) -> None:
+        with self.assertRaises(ApiError) as context:
+            self.service.auth_receipt(
+                {
+                    "platform": "apple",
+                    "receipt": "long-production-looking-receipt-value",
+                    "device_id": "device-1",
+                }
+            )
+
+        self.assertEqual(context.exception.status, HTTPStatus.BAD_REQUEST)
+        self.assertIn("not configured", context.exception.payload["error"])
+
     def test_config_rejects_user_without_subscription(self) -> None:
         init_response = self.service.auth_init({"device_id": "device-2"})
         me = self.service.me(init_response["user_id"])

@@ -13,6 +13,7 @@ from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
+from app.services.receipt_verifier import MvpReceiptVerifier, ReceiptVerifier
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,7 @@ class ApiService:
         token_service: TokenService,
         config_builder: ConfigBuilder,
         admin_token: str,
+        receipt_verifier: ReceiptVerifier | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -35,6 +37,7 @@ class ApiService:
         self.token_service = token_service
         self.config_builder = config_builder
         self.admin_token = admin_token
+        self.receipt_verifier = receipt_verifier or MvpReceiptVerifier()
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -46,6 +49,7 @@ class ApiService:
     def auth_receipt(self, payload: dict[str, Any]) -> dict[str, Any]:
         claim = self._receipt_claim_from_payload(payload)
         try:
+            self.receipt_verifier.verify(claim)
             subscription = self.repository.activate_subscription(claim)
         except ValueError as exc:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": str(exc)}) from exc

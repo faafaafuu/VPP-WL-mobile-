@@ -5,6 +5,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 ## Ready
 
 - Subscription-aware auth stub exists.
+- Production Apple/Google receipts fail closed until real store validation is configured.
 - Protected `/api/config` returns validated sing-box JSON.
 - Routing rules engine emits direct/proxy categories.
 - RU direct placeholders and common proxy fallback domains are present.

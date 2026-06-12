@@ -17,7 +17,7 @@ The first releasable technical slice should be small:
 - Storage in this scaffold: SQLite by default, with an in-memory repository available for tests and demos. The repository interface is intentionally narrow so PostgreSQL can replace it without touching API handlers.
 - Auth in this scaffold: signed opaque HMAC token, not a full JWT dependency.
 - sing-box config generation is isolated in `ConfigBuilder`.
-- Store receipt validation is represented as an interface boundary. Real Google Play/App Store calls are not faked as production code.
+- Store receipt validation is represented as an interface boundary. Sandbox receipts are accepted for MVP testing; Apple/Google receipts fail closed until real store validators are implemented.
 - SQL schema lives in `backend/migrations/001_initial.sql`; it is SQLite-compatible for local MVP and should become Alembic/PostgreSQL migrations before production.
 - Admin node health endpoints use `X-Admin-Token`; production should replace this with operator auth, audit logs, and least-privilege service tokens.
 
