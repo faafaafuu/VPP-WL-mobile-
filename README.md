@@ -139,6 +139,15 @@ Run the local CI-equivalent checks:
 make ci
 ```
 
+Optional sing-box binary validation:
+
+```bash
+make sing-box-check
+python3 tools/check_sing_box_config.py --require-binary
+```
+
+The default target validates config shape and skips the binary step when `sing-box` is not installed. Use `--require-binary` in staging/release jobs with a pinned binary.
+
 ## Graphify
 
 ```bash

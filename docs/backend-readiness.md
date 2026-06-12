@@ -27,6 +27,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - OpenAPI sketch exists in `docs/openapi.yaml`.
 - Mobile API contract exists in `docs/mobile-api-contract.md`.
 - CI runs unit tests, compileall, compose config validation, and graphify JSON sanity.
+- Optional sing-box binary validation is available through `make sing-box-check`.
 - OSS licensing decisions are documented.
 - Graphify graph is tracked at `graphify-out/graph.json`.
 
@@ -36,7 +37,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Move from SQLite to PostgreSQL with managed backups and migration tooling.
 - Replace shared admin token with operator auth and scoped service tokens.
 - Replace rule-set placeholder host/checksums with signed real artifacts.
-- Run sing-box binary validation against the pinned sing-box version.
+- Run strict sing-box binary validation against the pinned production sing-box version.
 - Deploy TLS/HTTPS reverse proxy with real certificates and production hostname.
 - Deploy monitoring dashboards and alerts for API, DB, and health-check job failures.
 - Complete privacy policy, terms, and store compliance review.

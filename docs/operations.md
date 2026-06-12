@@ -69,3 +69,7 @@ Before production, replace placeholder targets with real API and node endpoints,
 `deploy/nginx/vpn-router-api.conf` is a production-oriented nginx template for terminating TLS in front of the backend on `127.0.0.1:8080`.
 
 Before production, replace `api.example.com`, install real certificates, enable `VPN_ROUTER_HSTS_ENABLED=true`, and verify that the proxy preserves `X-Forwarded-Proto: https`.
+
+## sing-box Config Validation
+
+`make sing-box-check` validates generated config shape and runs `sing-box check` when a local binary is available. In staging/release jobs, use `python3 tools/check_sing_box_config.py --require-binary` with the pinned production sing-box binary.
