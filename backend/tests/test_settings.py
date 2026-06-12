@@ -16,6 +16,7 @@ class SettingsTest(unittest.TestCase):
                 "VPN_ROUTER_CORS_ORIGINS": "http://localhost:8081, http://127.0.0.1:19006",
                 "VPN_ROUTER_ALLOWED_PRODUCT_IDS": "vpn.monthly,vpn.yearly",
                 "VPN_ROUTER_RATE_LIMIT_PER_MINUTE": "60",
+                "VPN_ROUTER_HSTS_ENABLED": "true",
             }
         )
 
@@ -24,6 +25,7 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(settings.cors_origins, ("http://localhost:8081", "http://127.0.0.1:19006"))
         self.assertEqual(settings.allowed_product_ids, ("vpn.monthly", "vpn.yearly"))
         self.assertEqual(settings.rate_limit_per_minute, 60)
+        self.assertTrue(settings.hsts_enabled)
 
     def test_rejects_missing_secret(self) -> None:
         with self.assertRaises(SettingsError):
@@ -45,6 +47,16 @@ class SettingsTest(unittest.TestCase):
                     "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
                     "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
                     "VPN_ROUTER_PORT": "99999",
+                }
+            )
+
+    def test_rejects_invalid_bool(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                    "VPN_ROUTER_HSTS_ENABLED": "maybe",
                 }
             )
 

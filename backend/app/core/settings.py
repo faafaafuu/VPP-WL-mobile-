@@ -24,6 +24,7 @@ class Settings:
     cors_origins: tuple[str, ...] = ()
     allowed_product_ids: tuple[str, ...] = ("vpn.monthly",)
     rate_limit_per_minute: int = 120
+    hsts_enabled: bool = False
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -40,6 +41,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         source.get("VPN_ROUTER_RATE_LIMIT_PER_MINUTE", "120"),
         "VPN_ROUTER_RATE_LIMIT_PER_MINUTE",
     )
+    hsts_enabled = _bool(source.get("VPN_ROUTER_HSTS_ENABLED", "false"), "VPN_ROUTER_HSTS_ENABLED")
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -48,6 +50,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         cors_origins=cors_origins,
         allowed_product_ids=allowed_product_ids,
         rate_limit_per_minute=rate_limit_per_minute,
+        hsts_enabled=hsts_enabled,
     )
 
 
@@ -84,3 +87,12 @@ def _non_negative_int(raw_value: str, key: str) -> int:
     if value < 0:
         raise SettingsError(f"{key} must be non-negative")
     return value
+
+
+def _bool(raw_value: str, key: str) -> bool:
+    normalized = raw_value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise SettingsError(f"{key} must be true or false")

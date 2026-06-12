@@ -37,6 +37,7 @@ class ApiHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self) -> None:
         self.send_response(HTTPStatus.NO_CONTENT.value)
         self._send_cors_headers()
+        self._send_security_headers()
         self.send_header("Content-Length", "0")
         self.end_headers()
 
@@ -165,6 +166,7 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self._send_cors_headers()
+        self._send_security_headers()
         self.end_headers()
         self.wfile.write(body)
 
@@ -185,6 +187,13 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Authorization,Content-Type,X-Admin-Token")
         self.send_header("Access-Control-Max-Age", "600")
         self.send_header("Vary", "Origin")
+
+    def _send_security_headers(self) -> None:
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("X-Frame-Options", "DENY")
+        if SETTINGS.hsts_enabled:
+            self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
 
 def run(host: str = "127.0.0.1", port: int = 8080) -> None:
