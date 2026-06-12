@@ -73,6 +73,7 @@ iOS still needs EAS or a macOS/Xcode runner for actual builds.
 7. On `403`, stop VPN and show subscription required.
 
 The current UI includes a sandbox auth panel for MVP testing. It can call `/api/auth/init` to create/resume a user by device id, then sends the receipt to `/api/auth/receipt`, stores only the returned access token, and does not persist the receipt.
+Privacy and terms links are shown before activation/purchase and are configured through `EXPO_PUBLIC_PRIVACY_URL` and `EXPO_PUBLIC_TERMS_URL`.
 
 The UI also includes a diagnostics-only node panel backed by `GET /api/nodes`. The VPN runtime should still use `/api/config` for actual routing and failover.
 
@@ -89,6 +90,8 @@ Copy `.env.example` to `.env.local` and set the backend URL:
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:8080
+EXPO_PUBLIC_PRIVACY_URL=https://example.com/privacy
+EXPO_PUBLIC_TERMS_URL=https://example.com/terms
 ```
 
 For native VPN testing, create a development build:

@@ -14,7 +14,9 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://api.example.com"
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.example.com",
+        "EXPO_PUBLIC_PRIVACY_URL": "https://example.com/privacy",
+        "EXPO_PUBLIC_TERMS_URL": "https://example.com/terms"
       }
     },
     "preview": {
@@ -23,13 +25,17 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://api.example.com"
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.example.com",
+        "EXPO_PUBLIC_PRIVACY_URL": "https://example.com/privacy",
+        "EXPO_PUBLIC_TERMS_URL": "https://example.com/terms"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://api.example.com"
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.example.com",
+        "EXPO_PUBLIC_PRIVACY_URL": "https://example.com/privacy",
+        "EXPO_PUBLIC_TERMS_URL": "https://example.com/terms"
       }
     }
   },

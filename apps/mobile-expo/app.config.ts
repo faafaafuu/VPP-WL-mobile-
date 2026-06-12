@@ -20,7 +20,9 @@ const config: ExpoConfig = {
   },
   plugins: ["./plugins/withVpnRouterNative"],
   extra: {
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8080"
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8080",
+    privacyUrl: process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://example.com/privacy",
+    termsUrl: process.env.EXPO_PUBLIC_TERMS_URL ?? "https://example.com/terms"
   }
 };
 

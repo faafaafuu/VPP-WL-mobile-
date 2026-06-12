@@ -1,5 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from "react-native";
 
 import { BackendApiClient } from "./api/backendClient";
 import { AuthRepository, AuthState } from "./auth/AuthRepository";
@@ -10,6 +20,8 @@ import { VpnController } from "./vpn/VpnController";
 import { VpnStatus } from "./vpn/VpnRouterNative";
 
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8080";
+const privacyUrl = process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://example.com/privacy";
+const termsUrl = process.env.EXPO_PUBLIC_TERMS_URL ?? "https://example.com/terms";
 
 export default function App() {
   const apiClient = useMemo(() => new BackendApiClient(apiBaseUrl), []);
@@ -106,6 +118,15 @@ export default function App() {
 
         <View style={styles.subscriptionPanel}>
           <Text style={styles.panelTitle}>Подписка</Text>
+          <Text style={styles.detailText}>Перед оплатой откройте privacy policy и условия подписки.</Text>
+          <View style={styles.linkRow}>
+            <Pressable style={styles.linkButton} onPress={() => Linking.openURL(privacyUrl)}>
+              <Text style={styles.linkButtonText}>Privacy</Text>
+            </Pressable>
+            <Pressable style={styles.linkButton} onPress={() => Linking.openURL(termsUrl)}>
+              <Text style={styles.linkButtonText}>Terms</Text>
+            </Pressable>
+          </View>
           <TextInput
             autoCapitalize="none"
             autoCorrect={false}
@@ -123,35 +144,35 @@ export default function App() {
             style={styles.input}
             value={receipt}
           />
-        <Pressable
-          disabled={authState.kind === "initializing"}
-          onPress={initUser}
-          style={[styles.outlineButton, authState.kind === "initializing" ? styles.disabledButton : null]}
-        >
-          <Text style={styles.outlineButtonText}>
-            {authState.kind === "initializing" ? "Создание..." : "Создать пользователя"}
-          </Text>
-        </Pressable>
-        <Pressable
-          disabled={authState.kind === "activating"}
-          onPress={activateSandboxSubscription}
-          style={[styles.secondaryButton, authState.kind === "activating" ? styles.disabledButton : null]}
-        >
+          <Pressable
+            disabled={authState.kind === "initializing"}
+            onPress={initUser}
+            style={[styles.outlineButton, authState.kind === "initializing" ? styles.disabledButton : null]}
+          >
+            <Text style={styles.outlineButtonText}>
+              {authState.kind === "initializing" ? "Создание..." : "Создать пользователя"}
+            </Text>
+          </Pressable>
+          <Pressable
+            disabled={authState.kind === "activating"}
+            onPress={activateSandboxSubscription}
+            style={[styles.secondaryButton, authState.kind === "activating" ? styles.disabledButton : null]}
+          >
             <Text style={styles.secondaryButtonText}>
               {authState.kind === "activating" ? "Проверка..." : "Активировать sandbox"}
             </Text>
-        </Pressable>
-        <Pressable
-          disabled={authState.kind === "checking"}
-          onPress={checkSubscription}
-          style={[styles.outlineButton, authState.kind === "checking" ? styles.disabledButton : null]}
-        >
-          <Text style={styles.outlineButtonText}>
-            {authState.kind === "checking" ? "Проверка..." : "Проверить подписку"}
-          </Text>
-        </Pressable>
-        <Text style={styles.detailText}>{describeAuthState(authState)}</Text>
-      </View>
+          </Pressable>
+          <Pressable
+            disabled={authState.kind === "checking"}
+            onPress={checkSubscription}
+            style={[styles.outlineButton, authState.kind === "checking" ? styles.disabledButton : null]}
+          >
+            <Text style={styles.outlineButtonText}>
+              {authState.kind === "checking" ? "Проверка..." : "Проверить подписку"}
+            </Text>
+          </Pressable>
+          <Text style={styles.detailText}>{describeAuthState(authState)}</Text>
+        </View>
 
         <View style={styles.subscriptionPanel}>
           <Text style={styles.panelTitle}>Узлы</Text>
@@ -309,6 +330,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 46,
     paddingHorizontal: 12
+  },
+  linkRow: {
+    flexDirection: "row",
+    gap: 10
+  },
+  linkButton: {
+    alignItems: "center",
+    borderColor: "#1b6f5f",
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    minHeight: 42,
+    justifyContent: "center"
+  },
+  linkButtonText: {
+    color: "#1b6f5f",
+    fontSize: 15,
+    fontWeight: "700"
   },
   primaryButton: {
     alignItems: "center",

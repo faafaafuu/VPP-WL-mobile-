@@ -26,6 +26,10 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertTrue(eas["build"]["development"]["developmentClient"])
         self.assertEqual("internal", eas["build"]["development"]["distribution"])
         self.assertIn("EXPO_PUBLIC_API_BASE_URL", env_example)
+        self.assertIn("EXPO_PUBLIC_PRIVACY_URL", env_example)
+        self.assertIn("EXPO_PUBLIC_TERMS_URL", env_example)
+        self.assertIn("privacyUrl", app_config)
+        self.assertIn("termsUrl", app_config)
 
     def test_expo_backend_client_uses_mobile_api_contract(self) -> None:
         client = (EXPO_ROOT / "src/api/backendClient.ts").read_text(encoding="utf-8")
@@ -55,6 +59,9 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("Активировать sandbox", app)
         self.assertIn("Создать пользователя", app)
         self.assertIn("Проверить подписку", app)
+        self.assertIn("Linking.openURL(privacyUrl)", app)
+        self.assertIn("Linking.openURL(termsUrl)", app)
+        self.assertIn("Перед оплатой", app)
         self.assertIn("secureTextEntry", app)
 
     def test_expo_node_repository_loads_public_node_diagnostics(self) -> None:
