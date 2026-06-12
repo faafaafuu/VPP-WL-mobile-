@@ -13,11 +13,13 @@ class SettingsTest(unittest.TestCase):
                 "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
                 "VPN_ROUTER_HOST": "0.0.0.0",
                 "VPN_ROUTER_PORT": "8090",
+                "VPN_ROUTER_CORS_ORIGINS": "http://localhost:8081, http://127.0.0.1:19006",
             }
         )
 
         self.assertEqual(settings.host, "0.0.0.0")
         self.assertEqual(settings.port, 8090)
+        self.assertEqual(settings.cors_origins, ("http://localhost:8081", "http://127.0.0.1:19006"))
 
     def test_rejects_missing_secret(self) -> None:
         with self.assertRaises(SettingsError):
@@ -45,4 +47,3 @@ class SettingsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -30,6 +30,12 @@ API_SERVICE = ApiService(
 class ApiHandler(BaseHTTPRequestHandler):
     server_version = "VpnRouterMVP/0.1"
 
+    def do_OPTIONS(self) -> None:
+        self.send_response(HTTPStatus.NO_CONTENT.value)
+        self._send_cors_headers()
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_GET(self) -> None:
         path = urlparse(self.path).path
         if path == "/health":
@@ -133,8 +139,27 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self._send_cors_headers()
         self.end_headers()
         self.wfile.write(body)
+
+    def _send_cors_headers(self) -> None:
+        origin = self.headers.get("Origin")
+        if not origin or not SETTINGS.cors_origins:
+            return
+
+        if "*" in SETTINGS.cors_origins:
+            allowed_origin = "*"
+        elif origin in SETTINGS.cors_origins:
+            allowed_origin = origin
+        else:
+            return
+
+        self.send_header("Access-Control-Allow-Origin", allowed_origin)
+        self.send_header("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Authorization,Content-Type,X-Admin-Token")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.send_header("Vary", "Origin")
 
 
 def run(host: str = "127.0.0.1", port: int = 8080) -> None:

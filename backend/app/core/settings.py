@@ -21,6 +21,7 @@ class Settings:
     admin_token: str
     host: str = "127.0.0.1"
     port: int = 8080
+    cors_origins: tuple[str, ...] = ()
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -29,7 +30,14 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     admin_token = _required_secret(source, "VPN_ROUTER_ADMIN_TOKEN", min_length=16)
     host = source.get("VPN_ROUTER_HOST", "127.0.0.1")
     port = _port(source.get("VPN_ROUTER_PORT", "8080"))
-    return Settings(token_secret=token_secret, admin_token=admin_token, host=host, port=port)
+    cors_origins = _csv(source.get("VPN_ROUTER_CORS_ORIGINS", ""))
+    return Settings(
+        token_secret=token_secret,
+        admin_token=admin_token,
+        host=host,
+        port=port,
+        cors_origins=cors_origins,
+    )
 
 
 def _required_secret(source: Mapping[str, str], key: str, min_length: int) -> str:
@@ -52,3 +60,6 @@ def _port(raw_value: str) -> int:
         raise SettingsError("VPN_ROUTER_PORT must be between 1 and 65535")
     return port
 
+
+def _csv(raw_value: str) -> tuple[str, ...]:
+    return tuple(item.strip() for item in raw_value.split(",") if item.strip())

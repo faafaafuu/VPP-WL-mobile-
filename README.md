@@ -55,6 +55,7 @@ VPN_ROUTER_REPOSITORY=memory make run
 ```
 
 Use `.env.example` as a checklist; do not commit real `.env` files.
+Set `VPN_ROUTER_CORS_ORIGINS` only for browser-based dev tooling such as Expo Web; native mobile clients do not require CORS.
 
 Example flow:
 
