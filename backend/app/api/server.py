@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import urlparse
 
+from app.api.rate_limit import RateLimiter
 from app.api.service import ApiError, ApiService
 from app.core.settings import load_settings
 from app.domain.config_builder import ConfigBuilder
@@ -17,6 +18,7 @@ from app.services.receipt_verifier import MvpReceiptVerifier
 
 
 SETTINGS = load_settings()
+RATE_LIMITER = RateLimiter(SETTINGS.rate_limit_per_minute)
 REPOSITORY = create_repository()
 TOKEN_SERVICE = TokenService(SETTINGS.token_secret)
 CONFIG_BUILDER = ConfigBuilder()
@@ -39,6 +41,8 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
+        if self._is_rate_limited():
+            return
         path = urlparse(self.path).path
         if path == "/health":
             self._send_json(HTTPStatus.OK, {"status": "ok"})
@@ -72,6 +76,8 @@ class ApiHandler(BaseHTTPRequestHandler):
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
     def do_POST(self) -> None:
+        if self._is_rate_limited():
+            return
         path = urlparse(self.path).path
         if path == "/api/auth/init":
             payload = self._read_json()
@@ -94,6 +100,8 @@ class ApiHandler(BaseHTTPRequestHandler):
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
     def do_PATCH(self) -> None:
+        if self._is_rate_limited():
+            return
         path = urlparse(self.path).path
         prefix = "/api/admin/nodes/"
         suffix = "/health"
@@ -118,6 +126,18 @@ class ApiHandler(BaseHTTPRequestHandler):
         except ApiError as exc:
             self._send_json(exc.status, exc.payload)
             return None
+
+    def _is_rate_limited(self) -> bool:
+        path = urlparse(self.path).path
+        if path == "/health":
+            return False
+
+        client_ip = self.client_address[0] if self.client_address else "unknown"
+        if RATE_LIMITER.allow(client_ip):
+            return False
+
+        self._send_json(HTTPStatus.TOO_MANY_REQUESTS, {"error": "rate limit exceeded"})
+        return True
 
     def _read_json(self) -> dict[str, Any] | None:
         content_length = int(self.headers.get("Content-Length", "0") or "0")

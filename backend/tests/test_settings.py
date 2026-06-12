@@ -15,6 +15,7 @@ class SettingsTest(unittest.TestCase):
                 "VPN_ROUTER_PORT": "8090",
                 "VPN_ROUTER_CORS_ORIGINS": "http://localhost:8081, http://127.0.0.1:19006",
                 "VPN_ROUTER_ALLOWED_PRODUCT_IDS": "vpn.monthly,vpn.yearly",
+                "VPN_ROUTER_RATE_LIMIT_PER_MINUTE": "60",
             }
         )
 
@@ -22,6 +23,7 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(settings.port, 8090)
         self.assertEqual(settings.cors_origins, ("http://localhost:8081", "http://127.0.0.1:19006"))
         self.assertEqual(settings.allowed_product_ids, ("vpn.monthly", "vpn.yearly"))
+        self.assertEqual(settings.rate_limit_per_minute, 60)
 
     def test_rejects_missing_secret(self) -> None:
         with self.assertRaises(SettingsError):

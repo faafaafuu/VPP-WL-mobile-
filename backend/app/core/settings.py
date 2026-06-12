@@ -23,6 +23,7 @@ class Settings:
     port: int = 8080
     cors_origins: tuple[str, ...] = ()
     allowed_product_ids: tuple[str, ...] = ("vpn.monthly",)
+    rate_limit_per_minute: int = 120
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -35,6 +36,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     allowed_product_ids = _csv(source.get("VPN_ROUTER_ALLOWED_PRODUCT_IDS", "vpn.monthly"))
     if not allowed_product_ids:
         raise SettingsError("VPN_ROUTER_ALLOWED_PRODUCT_IDS must not be empty")
+    rate_limit_per_minute = _non_negative_int(
+        source.get("VPN_ROUTER_RATE_LIMIT_PER_MINUTE", "120"),
+        "VPN_ROUTER_RATE_LIMIT_PER_MINUTE",
+    )
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -42,6 +47,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         port=port,
         cors_origins=cors_origins,
         allowed_product_ids=allowed_product_ids,
+        rate_limit_per_minute=rate_limit_per_minute,
     )
 
 
@@ -68,3 +74,13 @@ def _port(raw_value: str) -> int:
 
 def _csv(raw_value: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in raw_value.split(",") if item.strip())
+
+
+def _non_negative_int(raw_value: str, key: str) -> int:
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise SettingsError(f"{key} must be an integer") from exc
+    if value < 0:
+        raise SettingsError(f"{key} must be non-negative")
+    return value
