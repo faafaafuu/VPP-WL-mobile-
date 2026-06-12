@@ -96,6 +96,33 @@ paths:
                 $ref: "#/components/schemas/MeResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete current user account and subscription data
+      responses:
+        "200":
+          description: Deletion status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                properties:
+                  deleted:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/me/export:
+    get:
+      summary: Export current user account and subscription data
+      responses:
+        "200":
+          description: Exported user data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataExportResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/nodes:
     get:
       summary: Return usable node metadata for diagnostics
@@ -284,6 +311,45 @@ components:
         expires_at:
           type: string
           format: date-time
+    UserDataExportResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [user, subscription]
+          properties:
+            user:
+              type: object
+              required: [id, device_id, created_at]
+              properties:
+                id:
+                  type: string
+                device_id:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+            subscription:
+              nullable: true
+              oneOf:
+                - $ref: "#/components/schemas/ExportedSubscription"
+    ExportedSubscription:
+      type: object
+      required: [active, platform, product_id, expires_at, original_transaction_id]
+      properties:
+        active:
+          type: boolean
+        platform:
+          type: string
+          enum: [sandbox, apple, google]
+        product_id:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        original_transaction_id:
+          type: string
     PublicNode:
       type: object
       required: [id, region, provider, country_code, protocol, status, health, health_score, success_rate, priority, score]

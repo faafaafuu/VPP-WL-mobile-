@@ -46,6 +46,21 @@ class ApiServerTest(unittest.TestCase):
         self.assertEqual(version["config_version"], 1)
         self.assertIn("smart-routing", version["features"])
 
+    def test_user_can_export_and_delete_account_data(self) -> None:
+        receipt_response = self.service.auth_receipt(
+            {"platform": "sandbox", "receipt": "demo", "device_id": "device-1"},
+        )
+        user_id = self.service.user_id_from_authorization(f"Bearer {receipt_response['access_token']}")
+
+        exported = self.service.export_me(user_id)
+        deleted = self.service.delete_me(user_id)
+
+        self.assertEqual(exported["data"]["user"]["device_id"], "device-1")
+        self.assertEqual(exported["data"]["subscription"]["product_id"], "vpn.monthly")
+        self.assertTrue(deleted["deleted"])
+        with self.assertRaises(ApiError):
+            self.service.me(user_id)
+
     def test_config_requires_token(self) -> None:
         with self.assertRaises(ApiError) as context:
             self.service.user_id_from_authorization("")

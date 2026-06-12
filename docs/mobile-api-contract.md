@@ -102,6 +102,14 @@ Use this for diagnostics/status UI only. The VPN runtime should use `/api/config
 
 Returns the current user id and active subscription summary. Mobile clients should use this after app start or foreground resume to refresh subscription UI without requesting a VPN config.
 
+`GET /api/me/export`
+
+Returns account and subscription data for privacy export flows. This is not used by the VPN runtime; it is only for account/privacy screens.
+
+`DELETE /api/me`
+
+Deletes the current user account and subscription data. The mobile client must clear the stored access token and last-known-good config after a successful response.
+
 ## Error Handling
 
 | Status | Meaning | Mobile Client Reaction |

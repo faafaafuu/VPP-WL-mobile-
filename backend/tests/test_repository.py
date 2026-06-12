@@ -18,6 +18,21 @@ class InMemoryRepositoryTest(unittest.TestCase):
         self.assertIsNotNone(repo.get_user(subscription.user_id))
         self.assertIsNotNone(repo.get_active_subscription(subscription.user_id))
 
+    def test_exports_and_deletes_user_data(self) -> None:
+        repo = InMemoryRepository()
+        subscription = repo.activate_subscription(
+            ReceiptClaim(platform=Platform.SANDBOX, receipt="demo", device_id="device-1")
+        )
+
+        exported = repo.export_user_data(subscription.user_id)
+        deleted = repo.delete_user(subscription.user_id)
+
+        self.assertEqual(exported["user"]["device_id"], "device-1")
+        self.assertEqual(exported["subscription"]["product_id"], "vpn.monthly")
+        self.assertTrue(deleted)
+        self.assertIsNone(repo.get_user(subscription.user_id))
+        self.assertIsNone(repo.get_active_subscription(subscription.user_id))
+
     def test_short_production_receipt_is_rejected(self) -> None:
         repo = InMemoryRepository()
         with self.assertRaises(ValueError):

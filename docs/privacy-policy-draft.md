@@ -55,6 +55,7 @@ Users should be able to request:
 - export of account/subscription data where required by law.
 
 Production support tooling must include a verified deletion/export workflow before public launch.
+The MVP backend exposes `GET /api/me/export` and `DELETE /api/me` as the first self-service account data export/deletion flow.
 
 ## Third Parties
 

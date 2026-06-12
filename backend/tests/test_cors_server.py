@@ -14,6 +14,7 @@ class CorsServerTest(unittest.TestCase):
         self.assertIn("def do_OPTIONS", server)
         self.assertIn("Access-Control-Allow-Origin", server)
         self.assertIn("Access-Control-Allow-Methods", server)
+        self.assertIn("GET,POST,PATCH,DELETE,OPTIONS", server)
         self.assertIn("Authorization,Content-Type,X-Admin-Token", server)
         self.assertIn("SETTINGS.cors_origins", server)
 

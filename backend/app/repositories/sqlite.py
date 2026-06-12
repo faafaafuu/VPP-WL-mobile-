@@ -67,6 +67,33 @@ class SqliteRepository:
         ).fetchone()
         return _user_from_row(row) if row else None
 
+    def export_user_data(self, user_id: str) -> dict[str, object] | None:
+        user = self.get_user(user_id)
+        if user is None:
+            return None
+        row = self.connection.execute(
+            """
+            SELECT user_id, platform, expires_at, product_id, original_transaction_id
+            FROM subscriptions
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+        subscription = _subscription_from_row(row) if row else None
+        return {
+            "user": {
+                "id": user.id,
+                "device_id": user.device_id,
+                "created_at": _dt_to_text(user.created_at),
+            },
+            "subscription": _subscription_export(subscription) if subscription else None,
+        }
+
+    def delete_user(self, user_id: str) -> bool:
+        cursor = self.connection.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        self.connection.commit()
+        return cursor.rowcount > 0
+
     def activate_subscription(self, claim: ReceiptClaim) -> Subscription:
         user = self.get_or_create_user(claim.device_id)
         if claim.platform != Platform.SANDBOX and len(claim.receipt.strip()) < 24:
@@ -304,6 +331,16 @@ def _subscription_from_row(row: sqlite3.Row) -> Subscription:
         product_id=row["product_id"],
         original_transaction_id=row["original_transaction_id"],
     )
+
+
+def _subscription_export(subscription: Subscription) -> dict[str, object]:
+    return {
+        "platform": subscription.platform.value,
+        "expires_at": _dt_to_text(subscription.expires_at),
+        "product_id": subscription.product_id,
+        "original_transaction_id": subscription.original_transaction_id,
+        "active": subscription.is_active(),
+    }
 
 
 def _node_from_row(row: sqlite3.Row) -> VpnNode:

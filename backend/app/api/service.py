@@ -86,6 +86,17 @@ class ApiService:
             "subscription": _public_subscription(subscription) if subscription else None,
         }
 
+    def export_me(self, user_id: str) -> dict[str, Any]:
+        exported = self.repository.export_user_data(user_id)
+        if exported is None:
+            raise ApiError(HTTPStatus.UNAUTHORIZED, {"error": "unknown user"})
+        return {"data": exported}
+
+    def delete_me(self, user_id: str) -> dict[str, Any]:
+        if not self.repository.delete_user(user_id):
+            raise ApiError(HTTPStatus.UNAUTHORIZED, {"error": "unknown user"})
+        return {"deleted": True}
+
     def admin_nodes(self, admin_token: str) -> dict[str, Any]:
         self._require_admin(admin_token)
         return {"nodes": [_admin_node(node) for node in self.repository.list_nodes()]}

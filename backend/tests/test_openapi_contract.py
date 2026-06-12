@@ -13,6 +13,7 @@ class OpenApiContractTest(unittest.TestCase):
             "/api/auth/receipt",
             "/api/config",
             "/api/me",
+            "/api/me/export",
             "/api/nodes",
             "/api/version",
             "/api/admin/nodes",
@@ -26,6 +27,9 @@ class OpenApiContractTest(unittest.TestCase):
         self.assertIn("adminToken:", contract)
         self.assertIn("X-Admin-Token", contract)
         self.assertIn("ServiceUnavailable", contract)
+        self.assertIn("Delete current user account", contract)
+        self.assertIn("UserDataExportResponse", contract)
+        self.assertIn("ExportedSubscription", contract)
 
 
 if __name__ == "__main__":

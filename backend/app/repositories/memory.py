@@ -41,6 +41,28 @@ class InMemoryRepository:
     def get_user(self, user_id: str) -> User | None:
         return self.users_by_id.get(user_id)
 
+    def export_user_data(self, user_id: str) -> dict[str, object] | None:
+        user = self.get_user(user_id)
+        if user is None:
+            return None
+        subscription = self.subscriptions_by_user_id.get(user_id)
+        return {
+            "user": {
+                "id": user.id,
+                "device_id": user.device_id,
+                "created_at": user.created_at.isoformat(),
+            },
+            "subscription": _subscription_export(subscription) if subscription else None,
+        }
+
+    def delete_user(self, user_id: str) -> bool:
+        user = self.users_by_id.pop(user_id, None)
+        if user is None:
+            return False
+        self.users_by_device_id.pop(user.device_id, None)
+        self.subscriptions_by_user_id.pop(user_id, None)
+        return True
+
     def activate_subscription(self, claim: ReceiptClaim) -> Subscription:
         user = self.get_or_create_user(claim.device_id)
         if claim.platform != Platform.SANDBOX and len(claim.receipt.strip()) < 24:
@@ -184,3 +206,13 @@ class InMemoryRepository:
             ),
         ]
         self.nodes_by_id = {node.id: node for node in nodes}
+
+
+def _subscription_export(subscription: Subscription) -> dict[str, object]:
+    return {
+        "platform": subscription.platform.value,
+        "expires_at": subscription.expires_at.isoformat(),
+        "product_id": subscription.product_id,
+        "original_transaction_id": subscription.original_transaction_id,
+        "active": subscription.is_active(),
+    }

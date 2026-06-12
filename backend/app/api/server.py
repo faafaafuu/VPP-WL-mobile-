@@ -69,6 +69,12 @@ class ApiHandler(BaseHTTPRequestHandler):
                 return
             self._send_service_response(lambda: API_SERVICE.me(user_id))
             return
+        if path == "/api/me/export":
+            user_id = self._require_user_id()
+            if user_id is None:
+                return
+            self._send_service_response(lambda: API_SERVICE.export_me(user_id))
+            return
         if path == "/api/admin/nodes":
             admin_token = self.headers.get("X-Admin-Token", "")
             self._send_service_response(lambda: API_SERVICE.admin_nodes(admin_token))
@@ -96,6 +102,19 @@ class ApiHandler(BaseHTTPRequestHandler):
 
         if path in {"/api/webhook/apple", "/api/webhook/google"}:
             self._send_json(HTTPStatus.ACCEPTED, {"status": "accepted"})
+            return
+
+        self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
+
+    def do_DELETE(self) -> None:
+        if self._is_rate_limited():
+            return
+        path = urlparse(self.path).path
+        if path == "/api/me":
+            user_id = self._require_user_id()
+            if user_id is None:
+                return
+            self._send_service_response(lambda: API_SERVICE.delete_me(user_id))
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
@@ -183,7 +202,7 @@ class ApiHandler(BaseHTTPRequestHandler):
             return
 
         self.send_header("Access-Control-Allow-Origin", allowed_origin)
-        self.send_header("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Authorization,Content-Type,X-Admin-Token")
         self.send_header("Access-Control-Max-Age", "600")
         self.send_header("Vary", "Origin")

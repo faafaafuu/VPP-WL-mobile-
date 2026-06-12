@@ -37,6 +37,20 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertIsNotNone(self.repo.get_active_subscription(subscription.user_id))
         self.assertGreaterEqual(len(self.repo.list_nodes()), 3)
 
+    def test_exports_and_deletes_user_data(self) -> None:
+        subscription = self.repo.activate_subscription(
+            ReceiptClaim(platform=Platform.SANDBOX, receipt="demo", device_id="device-1")
+        )
+
+        exported = self.repo.export_user_data(subscription.user_id)
+        deleted = self.repo.delete_user(subscription.user_id)
+
+        self.assertEqual(exported["user"]["device_id"], "device-1")
+        self.assertEqual(exported["subscription"]["product_id"], "vpn.monthly")
+        self.assertTrue(deleted)
+        self.assertIsNone(self.repo.get_user(subscription.user_id))
+        self.assertIsNone(self.repo.get_active_subscription(subscription.user_id))
+
     def test_upserts_node_options(self) -> None:
         self.repo.upsert_node(
             VpnNode(
