@@ -148,6 +148,13 @@ python3 tools/check_sing_box_config.py --require-binary
 
 The default target validates config shape and skips the binary step when `sing-box` is not installed. Use `--require-binary` in staging/release jobs with a pinned binary.
 
+Validate a deployment env file before starting staging/prod:
+
+```bash
+VPN_ROUTER_ENV_FILE=.env make env-check
+python3 tools/check_env_ready.py --env-file .env --require-hsts
+```
+
 ## Graphify
 
 ```bash

@@ -28,6 +28,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Mobile API contract exists in `docs/mobile-api-contract.md`.
 - CI runs unit tests, compileall, compose config validation, and graphify JSON sanity.
 - Optional sing-box binary validation is available through `make sing-box-check`.
+- Deployment env readiness validation is available through `make env-check`.
 - OSS licensing decisions are documented.
 - Graphify graph is tracked at `graphify-out/graph.json`.
 
@@ -49,4 +50,4 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - iOS team accepts `apps/ios/README.md` architecture and Network Extension scaffold.
 - Product/legal explicitly decides how sing-box/libbox GPL distribution will be handled.
 - A staging API URL is deployed from this backend image.
-- A non-placeholder `.env` exists in staging secret storage.
+- A non-placeholder `.env` exists in staging secret storage and passes `make env-check`.

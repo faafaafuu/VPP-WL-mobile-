@@ -73,3 +73,7 @@ Before production, replace `api.example.com`, install real certificates, enable 
 ## sing-box Config Validation
 
 `make sing-box-check` validates generated config shape and runs `sing-box check` when a local binary is available. In staging/release jobs, use `python3 tools/check_sing_box_config.py --require-binary` with the pinned production sing-box binary.
+
+## Environment Readiness
+
+Run `VPN_ROUTER_ENV_FILE=.env make env-check` before starting a staging or production deployment. For HTTPS environments, run `python3 tools/check_env_ready.py --env-file .env --require-hsts` so placeholder secrets and missing HSTS are caught before rollout.
