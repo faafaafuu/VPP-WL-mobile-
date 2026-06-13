@@ -10,6 +10,7 @@ The mobile UI, backend config contract, and native module boundaries are ready f
 - Expo UI calls `VpnRouterNative.prepare()`, `start(configJson)`, `stop()`, and `status()`.
 - Android native module starts `VpnRouterService`, creates a TUN interface, and passes config JSON plus TUN fd to `SingBoxRunner`.
 - iOS native module creates/loads a `NETunnelProviderManager` profile and passes config JSON to the packet tunnel provider through `providerConfiguration`.
+- `apps/mobile-expo/modules/vpn-router-native/ios/PacketTunnel` contains a minimal `NEPacketTunnelProvider` source template that reads `configJson` and delegates packet handling to a `SingBoxTunnelRunner` boundary. It intentionally keeps `MissingSingBoxTunnelRunner` until the sing-box/libbox distribution decision is explicit.
 - Android and iOS runtime implementations currently fail with explicit missing-runtime errors.
 
 ## Decision Required
@@ -48,8 +49,8 @@ Android:
 
 iOS:
 
-- Add a real Network Extension target to the Expo/EAS native project.
-- Replace `MissingSingBoxRunner` in the packet tunnel provider.
+- Add a real Network Extension target to the Expo/EAS native project and include the `ios/PacketTunnel` source template in that target.
+- Replace `MissingSingBoxTunnelRunner` in the packet tunnel provider.
 - Load config JSON from `providerConfiguration` or shared app group storage.
 - Wire packet flow and stop tunnel error handling.
 - Add device tests for profile install, connect, disconnect, and config refresh.

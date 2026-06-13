@@ -58,6 +58,7 @@ Current iOS skeleton:
 - uses `NETunnelProviderManager` to create or load the VPN profile;
 - stores the backend-provided sing-box config JSON in `providerConfiguration`;
 - reads `VpnRouterTunnelProviderBundleIdentifier` from Info.plist;
+- includes a `ios/PacketTunnel` template for the future `NEPacketTunnelProvider` target;
 - requires a real Network Extension target and entitlements before device testing.
 
 iOS still needs EAS or a macOS/Xcode runner for actual builds.
@@ -116,5 +117,5 @@ Windows developers can run Metro and Android builds locally. iOS builds require 
 
 - Native Android implementation of `VpnRouterNative`.
 - Native iOS Expo module that controls the app-side `NETunnelProviderManager`.
-- iOS Network Extension target generated/maintained through config plugin or dedicated native project.
+- iOS Network Extension target generated/maintained through config plugin or dedicated native project, using `modules/vpn-router-native/ios/PacketTunnel` as its starting source template.
 - Store purchase UI and receipt flow.

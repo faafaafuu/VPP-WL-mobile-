@@ -197,6 +197,25 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("providerConfiguration", controller)
         self.assertIn("VpnRouterTunnelProviderBundleIdentifier", controller)
 
+    def test_expo_ios_packet_tunnel_template_reads_config_and_keeps_runtime_boundary(self) -> None:
+        packet_tunnel_root = EXPO_ROOT / "modules/vpn-router-native/ios/PacketTunnel"
+        provider = (packet_tunnel_root / "VpnRouterPacketTunnelProvider.swift").read_text(encoding="utf-8")
+        runner = (packet_tunnel_root / "SingBoxTunnelRunner.swift").read_text(encoding="utf-8")
+        missing_runner = (packet_tunnel_root / "MissingSingBoxTunnelRunner.swift").read_text(encoding="utf-8")
+        errors = (packet_tunnel_root / "VpnRouterPacketTunnelError.swift").read_text(encoding="utf-8")
+        readme = (EXPO_ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("NEPacketTunnelProvider", provider)
+        self.assertIn("providerConfiguration", provider)
+        self.assertIn("\"configJson\"", provider)
+        self.assertIn("packetFlow", provider)
+        self.assertIn("startTunnel", provider)
+        self.assertIn("stopTunnel", provider)
+        self.assertIn("protocol SingBoxTunnelRunner", runner)
+        self.assertIn("MissingSingBoxTunnelRunner", missing_runner)
+        self.assertIn("runtimeMissing", errors)
+        self.assertIn("ios/PacketTunnel", readme)
+
 
 if __name__ == "__main__":
     unittest.main()
