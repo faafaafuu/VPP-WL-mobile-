@@ -15,6 +15,7 @@ class HealthCheckSummary:
     skipped: int
     failures: int
     pruned_events: int
+    pruned_admin_events: int
     updates: list[HealthUpdate]
 
 
@@ -37,6 +38,7 @@ class HealthCheckWorker:
         skipped = 0
         failures = 0
         pruned_events = 0
+        pruned_admin_events = 0
         updates: list[HealthUpdate] = []
 
         for node in self.repository.list_nodes():
@@ -82,9 +84,9 @@ class HealthCheckWorker:
         if self.retention_days is not None and self.retention_days > 0:
             newest_check = max((update.last_check_at for update in updates), default=None)
             if newest_check is not None:
-                pruned_events = self.repository.prune_node_health_events(
-                    newest_check - timedelta(days=self.retention_days)
-                )
+                cutoff = newest_check - timedelta(days=self.retention_days)
+                pruned_events = self.repository.prune_node_health_events(cutoff)
+                pruned_admin_events = self.repository.prune_admin_audit_events(cutoff)
 
         return HealthCheckSummary(
             checked=checked,
@@ -92,5 +94,6 @@ class HealthCheckWorker:
             skipped=skipped,
             failures=failures,
             pruned_events=pruned_events,
+            pruned_admin_events=pruned_admin_events,
             updates=updates,
         )

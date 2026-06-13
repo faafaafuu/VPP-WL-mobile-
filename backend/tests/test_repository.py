@@ -142,6 +142,34 @@ class InMemoryRepositoryTest(unittest.TestCase):
 
         self.assertEqual(repo.list_admin_audit_events(), [event])
 
+    def test_prunes_old_admin_audit_events(self) -> None:
+        repo = InMemoryRepository()
+        old_event = AdminAuditEvent(
+            id=new_id("aae"),
+            occurred_at=datetime.now(timezone.utc) - timedelta(days=10),
+            action="node.health.update",
+            target_type="node",
+            target_id="node_eu_1",
+            result="success",
+            details={"health_score": 10},
+        )
+        new_event = AdminAuditEvent(
+            id=new_id("aae"),
+            occurred_at=datetime.now(timezone.utc),
+            action="node.health.update",
+            target_type="node",
+            target_id="node_eu_2",
+            result="success",
+            details={"health_score": 90},
+        )
+
+        repo.add_admin_audit_event(old_event)
+        repo.add_admin_audit_event(new_event)
+        deleted = repo.prune_admin_audit_events(datetime.now(timezone.utc) - timedelta(days=1))
+
+        self.assertEqual(deleted, 1)
+        self.assertEqual(repo.list_admin_audit_events(), [new_event])
+
 
 if __name__ == "__main__":
     unittest.main()

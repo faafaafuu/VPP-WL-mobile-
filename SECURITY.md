@@ -14,7 +14,7 @@
 - Store receipts are not persisted; sandbox transaction ids use deterministic SHA-256 fingerprints.
 - Config delivery must stay over HTTPS in production.
 - Health-check workers must not log VPN credentials, generated configs, or user identifiers.
-- Health-check audit events are retained according to `VPN_ROUTER_AUDIT_RETENTION_DAYS`; use `0` only for local debugging.
+- Node health and admin audit events are retained according to `VPN_ROUTER_AUDIT_RETENTION_DAYS`; use `0` only for local debugging.
 
 ## Privacy By Design
 

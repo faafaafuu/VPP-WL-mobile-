@@ -26,6 +26,7 @@ def main() -> None:
                 "failures": summary.failures,
                 "events_written": summary.updated,
                 "events_pruned": summary.pruned_events,
+                "admin_events_pruned": summary.pruned_admin_events,
                 "updates": [
                     {
                         "node_id": update.node_id,

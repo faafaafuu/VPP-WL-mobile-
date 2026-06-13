@@ -144,6 +144,12 @@ class InMemoryRepository:
     def list_admin_audit_events(self, limit: int = 50) -> list[AdminAuditEvent]:
         return self.admin_audit_events[:limit]
 
+    def prune_admin_audit_events(self, cutoff: datetime) -> int:
+        kept = [event for event in self.admin_audit_events if event.occurred_at >= cutoff]
+        deleted = len(self.admin_audit_events) - len(kept)
+        self.admin_audit_events = kept
+        return deleted
+
     def _seed_nodes(self) -> None:
         nodes = [
             VpnNode(

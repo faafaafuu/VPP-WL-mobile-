@@ -313,6 +313,14 @@ class SqliteRepository:
         ).fetchall()
         return [_admin_audit_event_from_row(row) for row in rows]
 
+    def prune_admin_audit_events(self, cutoff: datetime) -> int:
+        cursor = self.connection.execute(
+            "DELETE FROM admin_audit_events WHERE occurred_at < ?",
+            (_dt_to_text(cutoff),),
+        )
+        self.connection.commit()
+        return cursor.rowcount
+
     def list_node_health_events(self, node_id: str, limit: int = 50) -> list[NodeHealthEvent]:
         rows = self.connection.execute(
             """

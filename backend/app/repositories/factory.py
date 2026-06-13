@@ -65,6 +65,9 @@ class Repository(TypingProtocol):
     def list_admin_audit_events(self, limit: int = 50) -> list[AdminAuditEvent]:
         ...
 
+    def prune_admin_audit_events(self, cutoff: datetime) -> int:
+        ...
+
 
 def create_repository() -> Repository:
     backend = os.getenv("VPN_ROUTER_REPOSITORY", "sqlite").lower()

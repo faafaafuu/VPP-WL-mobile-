@@ -182,6 +182,34 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertEqual(events[0].id, event.id)
         self.assertEqual(events[0].details, {"health_score": 90})
 
+    def test_prunes_old_admin_audit_events(self) -> None:
+        old_event = AdminAuditEvent(
+            id=new_id("aae"),
+            occurred_at=datetime.now(timezone.utc) - timedelta(days=10),
+            action="node.health.update",
+            target_type="node",
+            target_id="node_eu_1",
+            result="success",
+            details={"health_score": 10},
+        )
+        new_event = AdminAuditEvent(
+            id=new_id("aae"),
+            occurred_at=datetime.now(timezone.utc),
+            action="node.health.update",
+            target_type="node",
+            target_id="node_eu_2",
+            result="success",
+            details={"health_score": 90},
+        )
+
+        self.repo.add_admin_audit_event(old_event)
+        self.repo.add_admin_audit_event(new_event)
+        deleted = self.repo.prune_admin_audit_events(datetime.now(timezone.utc) - timedelta(days=1))
+
+        events = self.repo.list_admin_audit_events()
+        self.assertEqual(deleted, 1)
+        self.assertEqual([event.id for event in events], [new_event.id])
+
 
 if __name__ == "__main__":
     unittest.main()

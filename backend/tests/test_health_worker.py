@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from app.domain.health_checker import ProbeResult
-from app.domain.models import NodeHealth, NodeHealthEvent, NodeStatus, new_id
+from app.domain.models import AdminAuditEvent, NodeHealth, NodeHealthEvent, NodeStatus, new_id
 from app.repositories.memory import InMemoryRepository
 from app.services.health_worker import HealthCheckWorker
 
@@ -75,12 +75,25 @@ class HealthCheckWorkerTest(unittest.TestCase):
                 error="old",
             )
         )
+        repo.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc) - timedelta(days=10),
+                action="node.health.update",
+                target_type="node",
+                target_id="node_eu_1",
+                result="success",
+                details={"health_score": 10},
+            )
+        )
 
         summary = HealthCheckWorker(repo, probe=FakeProbe(ok=True, latency_ms=44), retention_days=1).run_once()
         events = repo.list_node_health_events("node_eu_1", limit=10)
 
         self.assertEqual(summary.pruned_events, 1)
+        self.assertEqual(summary.pruned_admin_events, 1)
         self.assertTrue(all(event.error != "old" for event in events))
+        self.assertEqual(repo.list_admin_audit_events(), [])
 
 
 if __name__ == "__main__":
