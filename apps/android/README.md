@@ -49,7 +49,6 @@ The initial scaffold now contains these files, but `SingBoxRunner` is intentiona
 - sing-box AAR/libbox dependency.
 - Production `VpnService` runtime wiring.
 - Subscription UI.
-- Foreground notification/channel.
 
 ## Local Secure Storage
 

@@ -27,6 +27,10 @@ class AndroidScaffoldTest(unittest.TestCase):
         self.assertIn("runner.start(configJson, fd)", service)
         self.assertIn("connectIntent(context", service)
         self.assertNotIn("runner.start(\"{}\"", service)
+        self.assertIn("startForeground(NOTIFICATION_ID, notification())", service)
+        self.assertIn("NotificationChannel", service)
+        self.assertIn("createNotificationChannel", service)
+        self.assertIn("ic_dialog_info", service)
 
     def test_sing_box_runtime_is_not_vendored(self) -> None:
         runner = (ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/vpn/SingBoxRunner.kt").read_text(
