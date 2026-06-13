@@ -18,6 +18,7 @@ from app.domain.models import (
     VpnNode,
     new_id,
 )
+from app.domain.receipt_fingerprint import receipt_transaction_id
 
 
 class InMemoryRepository:
@@ -75,7 +76,7 @@ class InMemoryRepository:
             platform=claim.platform,
             expires_at=datetime.now(timezone.utc) + timedelta(days=30),
             product_id=claim.product_id,
-            original_transaction_id=f"{claim.platform.value}:{hash(claim.receipt)}",
+            original_transaction_id=receipt_transaction_id(claim.platform, claim.receipt),
         )
         self.subscriptions_by_user_id[user.id] = subscription
         return subscription

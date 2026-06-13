@@ -23,6 +23,7 @@ from app.domain.models import (
     WireGuardOptions,
     new_id,
 )
+from app.domain.receipt_fingerprint import receipt_transaction_id
 from app.repositories.memory import InMemoryRepository
 
 
@@ -105,7 +106,7 @@ class SqliteRepository:
             platform=claim.platform,
             expires_at=datetime.now(timezone.utc) + timedelta(days=30),
             product_id=claim.product_id,
-            original_transaction_id=f"{claim.platform.value}:{hash(claim.receipt)}",
+            original_transaction_id=receipt_transaction_id(claim.platform, claim.receipt),
         )
         self.connection.execute(
             """

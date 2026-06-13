@@ -36,6 +36,8 @@ class SqliteRepositoryTest(unittest.TestCase):
 
         self.assertIsNotNone(self.repo.get_user(subscription.user_id))
         self.assertIsNotNone(self.repo.get_active_subscription(subscription.user_id))
+        self.assertTrue(subscription.original_transaction_id.startswith("sandbox:sha256:"))
+        self.assertNotIn("demo", subscription.original_transaction_id)
         self.assertGreaterEqual(len(self.repo.list_nodes()), 3)
 
     def test_exports_and_deletes_user_data(self) -> None:

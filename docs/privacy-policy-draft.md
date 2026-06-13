@@ -30,6 +30,7 @@ No traffic content logs are stored. Operational systems may store minimal connec
 ## Receipts And Tokens
 
 Store receipts are sent to the backend only for validation. Mobile clients must not persist receipts after activation. Access tokens are stored in Android Keystore-backed storage or iOS Keychain-backed storage.
+The backend must not persist raw store receipts; MVP sandbox transaction references are deterministic SHA-256 fingerprints.
 
 ## Configuration And Secrets
 

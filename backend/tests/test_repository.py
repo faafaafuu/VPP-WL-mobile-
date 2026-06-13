@@ -18,6 +18,21 @@ class InMemoryRepositoryTest(unittest.TestCase):
 
         self.assertIsNotNone(repo.get_user(subscription.user_id))
         self.assertIsNotNone(repo.get_active_subscription(subscription.user_id))
+        self.assertTrue(subscription.original_transaction_id.startswith("sandbox:sha256:"))
+        self.assertNotIn("demo", subscription.original_transaction_id)
+
+    def test_sandbox_receipt_fingerprint_is_deterministic(self) -> None:
+        first_repo = InMemoryRepository()
+        second_repo = InMemoryRepository()
+
+        first = first_repo.activate_subscription(
+            ReceiptClaim(platform=Platform.SANDBOX, receipt="demo", device_id="device-1")
+        )
+        second = second_repo.activate_subscription(
+            ReceiptClaim(platform=Platform.SANDBOX, receipt="demo", device_id="device-2")
+        )
+
+        self.assertEqual(first.original_transaction_id, second.original_transaction_id)
 
     def test_exports_and_deletes_user_data(self) -> None:
         repo = InMemoryRepository()
