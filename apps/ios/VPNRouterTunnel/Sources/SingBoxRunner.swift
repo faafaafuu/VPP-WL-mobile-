@@ -1,12 +1,12 @@
 import Foundation
 
 protocol SingBoxRunner {
-    func start(configData: Data) throws
+    func start(configJson: String) throws
     func stop()
 }
 
 final class MissingSingBoxRunner: SingBoxRunner {
-    func start(configData: Data) throws {
+    func start(configJson: String) throws {
         throw MissingSingBoxRuntimeError()
     }
 
@@ -14,4 +14,3 @@ final class MissingSingBoxRunner: SingBoxRunner {
 }
 
 struct MissingSingBoxRuntimeError: Error {}
-

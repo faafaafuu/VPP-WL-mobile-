@@ -30,8 +30,9 @@ VPNRouterTunnel
 2. App requests `/api/config`.
 3. App stores last-known-good config in Keychain-backed storage.
 4. App creates/saves a `NETunnelProviderManager` profile.
-5. Packet tunnel receives config path/provider configuration.
-6. Packet tunnel starts sing-box/libbox after runtime integration is approved.
+5. App stores backend config JSON in `NETunnelProviderProtocol.providerConfiguration["configJson"]`.
+6. Packet tunnel reads `configJson` from provider configuration.
+7. Packet tunnel starts sing-box/libbox after runtime integration is approved.
 
 ## Build Requirements
 
@@ -41,4 +42,3 @@ This environment is Linux and has no Xcode or Swift toolchain. On a macOS develo
 - Add an iOS app target and a Network Extension Packet Tunnel target.
 - Apply `apps/ios/Config/*.entitlements` templates with the correct Team ID/App Group.
 - Enable Network Extensions capability for the Apple developer account.
-
