@@ -12,6 +12,7 @@ class ExpoScaffoldTest(unittest.TestCase):
     def test_expo_scaffold_declares_development_build_boundary(self) -> None:
         readme = (EXPO_ROOT / "README.md").read_text(encoding="utf-8")
         package_json = json.loads((EXPO_ROOT / "package.json").read_text(encoding="utf-8"))
+        tsconfig = json.loads((EXPO_ROOT / "tsconfig.json").read_text(encoding="utf-8"))
         app_config = (EXPO_ROOT / "app.config.ts").read_text(encoding="utf-8")
         eas = json.loads((EXPO_ROOT / "eas.json").read_text(encoding="utf-8"))
         env_example = (EXPO_ROOT / ".env.example").read_text(encoding="utf-8")
@@ -21,6 +22,10 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("react-native", package_json["dependencies"])
         self.assertIn("expo-secure-store", package_json["dependencies"])
         self.assertIn("expo-modules-core", package_json["dependencies"])
+        self.assertEqual("tsc --noEmit", package_json["scripts"]["typecheck"])
+        self.assertEqual("expo/tsconfig.base", tsconfig["extends"])
+        self.assertTrue(tsconfig["compilerOptions"]["strict"])
+        self.assertIn("src/**/*.tsx", tsconfig["include"])
         self.assertEqual("file:./modules/vpn-router-native", package_json["dependencies"]["vpn-router-native"])
         self.assertIn("./plugins/withVpnRouterNative", app_config)
         self.assertTrue(eas["build"]["development"]["developmentClient"])

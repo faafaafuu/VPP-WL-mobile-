@@ -89,6 +89,12 @@ npm install
 npm run start
 ```
 
+Run static TypeScript validation before committing UI changes:
+
+```bash
+npm run typecheck
+```
+
 Copy `.env.example` to `.env.local` and set the backend URL:
 
 ```bash
