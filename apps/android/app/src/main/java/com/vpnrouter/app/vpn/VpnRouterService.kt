@@ -10,7 +10,7 @@ class VpnRouterService : VpnService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_CONNECT -> connect()
+            ACTION_CONNECT -> connect(intent.getStringExtra(EXTRA_CONFIG_JSON))
             ACTION_DISCONNECT -> disconnect()
         }
         return START_STICKY
@@ -21,18 +21,22 @@ class VpnRouterService : VpnService() {
         super.onDestroy()
     }
 
-    private fun connect() {
+    private fun connect(configJson: String?) {
         if (tun != null) return
+        if (configJson.isNullOrBlank()) {
+            stopSelf()
+            return
+        }
+
         tun = Builder()
             .setSession("VPN Router")
             .addAddress("172.19.0.2", 30)
             .addRoute("0.0.0.0", 0)
             .establish()
 
-        // The backend-provided sing-box config and libbox runner will be wired here
-        // after the runtime distribution/license decision is made.
         val fd = tun?.fd ?: return
-        runCatching { runner.start("{}", fd) }
+        runCatching { runner.start(configJson, fd) }
+            .onFailure { disconnect() }
     }
 
     private fun disconnect() {
@@ -45,6 +49,12 @@ class VpnRouterService : VpnService() {
     companion object {
         const val ACTION_CONNECT = "com.vpnrouter.app.CONNECT"
         const val ACTION_DISCONNECT = "com.vpnrouter.app.DISCONNECT"
+        const val EXTRA_CONFIG_JSON = "com.vpnrouter.app.CONFIG_JSON"
+
+        fun connectIntent(context: android.content.Context, configJson: String): Intent {
+            return Intent(context, VpnRouterService::class.java)
+                .setAction(ACTION_CONNECT)
+                .putExtra(EXTRA_CONFIG_JSON, configJson)
+        }
     }
 }
-

@@ -22,6 +22,11 @@ class AndroidScaffoldTest(unittest.TestCase):
         self.assertIn("class VpnRouterService : VpnService()", service)
         self.assertIn("Builder()", service)
         self.assertIn("addRoute(\"0.0.0.0\", 0)", service)
+        self.assertIn("EXTRA_CONFIG_JSON", service)
+        self.assertIn("getStringExtra(EXTRA_CONFIG_JSON)", service)
+        self.assertIn("runner.start(configJson, fd)", service)
+        self.assertIn("connectIntent(context", service)
+        self.assertNotIn("runner.start(\"{}\"", service)
 
     def test_sing_box_runtime_is_not_vendored(self) -> None:
         runner = (ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/vpn/SingBoxRunner.kt").read_text(
