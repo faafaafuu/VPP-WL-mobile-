@@ -57,12 +57,12 @@ For production, prefer a scheduler such as systemd timer, Kubernetes CronJob, No
 
 Prometheus and Grafana starter assets are in `deploy/monitoring/`.
 
-- The backend exposes `/metrics` with aggregate node counts and usable-node count. It does not include traffic contents, access tokens, receipts, VPN keys, node hostnames, or generated client secrets.
+- The backend exposes `/metrics` with aggregate node counts, usable-node count, repository type, and retained audit-event counts. It does not include traffic contents, access tokens, receipts, VPN keys, node hostnames, node IDs, or generated client secrets.
 - `prometheus.yml` defines blackbox probes for the API health endpoint and VPN node TCP ports.
 - `vpn-router-alerts.yml` alerts on API down, node down, and sustained high node probe latency.
 - `grafana-dashboard.json` provides API health and node probe panels.
 
-Before production, replace placeholder targets with real API and node endpoints, add database/job metrics, and wire alert notifications to the on-call channel.
+Before production, replace placeholder targets with real API and node endpoints, add database engine metrics, and wire alert notifications to the on-call channel.
 
 ## HTTPS Reverse Proxy
 

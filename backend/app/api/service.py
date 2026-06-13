@@ -66,10 +66,14 @@ class ApiService:
     def prometheus_metrics(self) -> str:
         nodes = self.repository.list_nodes()
         usable_nodes = [node for node in nodes if node.is_usable()]
+        health_event_counts = self.repository.count_node_health_events_by_result()
         lines = [
             "# HELP vpn_router_info Static VPN Router backend info.",
             "# TYPE vpn_router_info gauge",
             'vpn_router_info{version="0.1.0",config_format="sing-box"} 1',
+            "# HELP vpn_router_repository_info Repository backend type.",
+            "# TYPE vpn_router_repository_info gauge",
+            f'vpn_router_repository_info{{backend="{_metric_escape(_repository_backend_name(self.repository))}"}} 1',
             "# HELP vpn_router_nodes_total VPN nodes grouped by non-sensitive routing metadata.",
             "# TYPE vpn_router_nodes_total gauge",
         ]
@@ -88,6 +92,13 @@ class ApiService:
                 "# HELP vpn_router_usable_nodes Currently usable VPN nodes.",
                 "# TYPE vpn_router_usable_nodes gauge",
                 f"vpn_router_usable_nodes {len(usable_nodes)}",
+                "# HELP vpn_router_node_health_events_retained Retained node health audit events grouped by probe result.",
+                "# TYPE vpn_router_node_health_events_retained gauge",
+                f'vpn_router_node_health_events_retained{{result="success"}} {health_event_counts.get("success", 0)}',
+                f'vpn_router_node_health_events_retained{{result="failure"}} {health_event_counts.get("failure", 0)}',
+                "# HELP vpn_router_admin_audit_events_retained Retained admin audit events.",
+                "# TYPE vpn_router_admin_audit_events_retained gauge",
+                f"vpn_router_admin_audit_events_retained {self.repository.count_admin_audit_events()}",
             ]
         )
         return "\n".join(lines) + "\n"
@@ -342,3 +353,12 @@ def _admin_health_update_details(
 
 def _metric_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
+def _repository_backend_name(repository: Repository) -> str:
+    name = type(repository).__name__.lower()
+    if "sqlite" in name:
+        return "sqlite"
+    if "memory" in name:
+        return "memory"
+    return "custom"

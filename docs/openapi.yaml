@@ -32,7 +32,8 @@ paths:
   /metrics:
     get:
       security: []
-      summary: Return Prometheus metrics without user traffic data
+      summary: Return aggregate Prometheus metrics without user traffic data
+      description: Exposes backend, node, and retained audit-event aggregates. Does not expose user traffic, node IDs, node hostnames, tokens, receipts, or VPN credentials.
       responses:
         "200":
           description: Prometheus text exposition

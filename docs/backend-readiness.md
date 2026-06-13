@@ -22,7 +22,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Docker image and Docker Compose config exist.
 - systemd timer/service snippets exist for health checks.
 - Prometheus alert rules and a Grafana dashboard template exist under `deploy/monitoring/`.
-- `/metrics` exposes aggregate backend/node metrics without user traffic data or node secrets.
+- `/metrics` exposes aggregate backend/node/audit metrics without user traffic data, node IDs, or node secrets.
 - HTTPS reverse proxy template exists under `deploy/nginx/`.
 - OpenAPI sketch exists in `docs/openapi.yaml`.
 - Mobile API contract exists in `docs/mobile-api-contract.md`.
@@ -40,7 +40,7 @@ This checklist defines the backend state needed before starting Android/iOS impl
 - Replace rule-set placeholder host/checksums with signed real artifacts.
 - Run strict sing-box binary validation against the pinned production sing-box version.
 - Deploy TLS/HTTPS reverse proxy with real certificates and production hostname.
-- Deploy monitoring dashboards and alerts for API, DB, and health-check job failures.
+- Deploy monitoring dashboards and alerts for API, DB engine metrics, and on-call notification routing.
 - Complete privacy policy, terms, and store compliance review.
 
 ## Mobile Can Start When

@@ -123,6 +123,7 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertEqual(events[0].id, event.id)
         self.assertEqual(events[0].new_health, NodeHealth.DEGRADED)
         self.assertEqual(events[0].error, "timeout")
+        self.assertEqual(self.repo.count_node_health_events_by_result(), {"success": 0, "failure": 1})
 
     def test_prunes_old_node_health_events(self) -> None:
         old_event = NodeHealthEvent(
@@ -181,6 +182,7 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0].id, event.id)
         self.assertEqual(events[0].details, {"health_score": 90})
+        self.assertEqual(self.repo.count_admin_audit_events(), 1)
 
     def test_prunes_old_admin_audit_events(self) -> None:
         old_event = AdminAuditEvent(

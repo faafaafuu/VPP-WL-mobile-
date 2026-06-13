@@ -35,6 +35,8 @@ class MonitoringAssetsTest(unittest.TestCase):
         self.assertIn("panels", dashboard)
         serialized = json.dumps(dashboard)
         self.assertIn("vpn_router_usable_nodes", serialized)
+        self.assertIn("vpn_router_node_health_events_retained", serialized)
+        self.assertIn("vpn_router_admin_audit_events_retained", serialized)
         self.assertIn("probe_success", serialized)
         self.assertIn("probe_duration_seconds", serialized)
 

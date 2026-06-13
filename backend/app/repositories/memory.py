@@ -138,6 +138,14 @@ class InMemoryRepository:
                 self.health_events_by_node_id.pop(node_id, None)
         return deleted
 
+    def count_node_health_events_by_result(self) -> dict[str, int]:
+        counts = {"success": 0, "failure": 0}
+        for events in self.health_events_by_node_id.values():
+            for event in events:
+                result = "failure" if event.error else "success"
+                counts[result] += 1
+        return counts
+
     def add_admin_audit_event(self, event: AdminAuditEvent) -> None:
         self.admin_audit_events.insert(0, event)
 
@@ -149,6 +157,9 @@ class InMemoryRepository:
         deleted = len(self.admin_audit_events) - len(kept)
         self.admin_audit_events = kept
         return deleted
+
+    def count_admin_audit_events(self) -> int:
+        return len(self.admin_audit_events)
 
     def _seed_nodes(self) -> None:
         nodes = [

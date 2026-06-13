@@ -55,6 +55,28 @@
       ]
     },
     {
+      "type": "stat",
+      "title": "Health Events Retained",
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0},
+      "targets": [
+        {
+          "expr": "vpn_router_node_health_events_retained",
+          "legendFormat": "{{ result }}"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Admin Audit Events Retained",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 14},
+      "targets": [
+        {
+          "expr": "vpn_router_admin_audit_events_retained",
+          "legendFormat": "admin audit"
+        }
+      ]
+    },
+    {
       "type": "timeseries",
       "title": "Node Probe Latency",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},

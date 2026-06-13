@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import unittest
+from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Any
 
 from app.api.service import ApiError, ApiService
 from app.domain.config_builder import ConfigBuilder
+from app.domain.models import AdminAuditEvent, NodeHealth, NodeHealthEvent, NodeStatus, new_id
 from app.repositories.memory import InMemoryRepository
 from app.security.tokens import TokenService
 
@@ -50,14 +52,47 @@ class ApiServerTest(unittest.TestCase):
         self.assertIn("admin-audit", version["features"])
 
     def test_prometheus_metrics_expose_non_sensitive_node_aggregates(self) -> None:
+        self.service.repository.add_node_health_event(
+            NodeHealthEvent(
+                id=new_id("nhe"),
+                node_id="node_eu_1",
+                checked_at=datetime.now(timezone.utc),
+                old_health=NodeHealth.HEALTHY,
+                new_health=NodeHealth.DEGRADED,
+                old_status=NodeStatus.ACTIVE,
+                new_status=NodeStatus.ACTIVE,
+                old_success_rate=0.99,
+                new_success_rate=0.5,
+                old_latency_ms=50,
+                new_latency_ms=500,
+                health_score=30,
+                error="timeout",
+            )
+        )
+        self.service.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="node.health.update",
+                target_type="node",
+                target_id="node_eu_1",
+                result="success",
+                details={"health_score": 80},
+            )
+        )
+
         metrics = self.service.prometheus_metrics()
 
         self.assertIn("vpn_router_info", metrics)
+        self.assertIn('vpn_router_repository_info{backend="memory"} 1', metrics)
         self.assertIn("vpn_router_nodes_total", metrics)
         self.assertIn("vpn_router_usable_nodes", metrics)
+        self.assertIn('vpn_router_node_health_events_retained{result="failure"} 1', metrics)
+        self.assertIn("vpn_router_admin_audit_events_retained 1", metrics)
         self.assertIn('protocol="vless"', metrics)
         self.assertNotIn("eu1.vpn.example.com", metrics)
         self.assertNotIn("00000000-0000-4000", metrics)
+        self.assertNotIn("node_eu_1", metrics)
 
     def test_user_can_export_and_delete_account_data(self) -> None:
         receipt_response = self.service.auth_receipt(

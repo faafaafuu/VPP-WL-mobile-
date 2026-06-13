@@ -344,6 +344,25 @@ class SqliteRepository:
         self.connection.commit()
         return cursor.rowcount
 
+    def count_node_health_events_by_result(self) -> dict[str, int]:
+        rows = self.connection.execute(
+            """
+            SELECT
+                CASE WHEN error IS NULL THEN 'success' ELSE 'failure' END AS result,
+                COUNT(*) AS count
+            FROM node_health_events
+            GROUP BY result
+            """
+        ).fetchall()
+        counts = {"success": 0, "failure": 0}
+        for row in rows:
+            counts[str(row["result"])] = int(row["count"])
+        return counts
+
+    def count_admin_audit_events(self) -> int:
+        row = self.connection.execute("SELECT COUNT(*) AS count FROM admin_audit_events").fetchone()
+        return int(row["count"])
+
     def seed_nodes_if_empty(self) -> None:
         count = self.connection.execute("SELECT COUNT(*) AS count FROM nodes").fetchone()["count"]
         if count:

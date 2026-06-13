@@ -84,6 +84,7 @@ class InMemoryRepositoryTest(unittest.TestCase):
         repo.add_node_health_event(event)
 
         self.assertEqual(repo.list_node_health_events("node_eu_1"), [event])
+        self.assertEqual(repo.count_node_health_events_by_result(), {"success": 0, "failure": 1})
 
     def test_prunes_old_node_health_events(self) -> None:
         repo = InMemoryRepository()
@@ -141,6 +142,7 @@ class InMemoryRepositoryTest(unittest.TestCase):
         repo.add_admin_audit_event(event)
 
         self.assertEqual(repo.list_admin_audit_events(), [event])
+        self.assertEqual(repo.count_admin_audit_events(), 1)
 
     def test_prunes_old_admin_audit_events(self) -> None:
         repo = InMemoryRepository()

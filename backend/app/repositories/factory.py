@@ -59,6 +59,9 @@ class Repository(TypingProtocol):
     def prune_node_health_events(self, cutoff: datetime) -> int:
         ...
 
+    def count_node_health_events_by_result(self) -> dict[str, int]:
+        ...
+
     def add_admin_audit_event(self, event: AdminAuditEvent) -> None:
         ...
 
@@ -66,6 +69,9 @@ class Repository(TypingProtocol):
         ...
 
     def prune_admin_audit_events(self, cutoff: datetime) -> int:
+        ...
+
+    def count_admin_audit_events(self) -> int:
         ...
 
 
