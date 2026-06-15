@@ -32,6 +32,21 @@ class AndroidScaffoldTest(unittest.TestCase):
         self.assertIn("createNotificationChannel", service)
         self.assertIn("ic_dialog_info", service)
 
+    def test_main_activity_loads_backend_config_before_starting_vpn_service(self) -> None:
+        activity = (ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/MainActivity.kt").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("ConfigRepository", activity)
+        self.assertIn("BackendApiClient", activity)
+        self.assertIn("EncryptedTokenStore", activity)
+        self.assertIn("EncryptedConfigStore", activity)
+        self.assertIn("configRepository.loadConfig()", activity)
+        self.assertIn("VpnRouterService.connectIntent(this, configJson)", activity)
+        self.assertIn("ConfigLoadResult.Cached", activity)
+        self.assertIn("Subscription activation required", activity)
+        self.assertIn("10.0.2.2:8080", activity)
+
     def test_sing_box_runtime_is_not_vendored(self) -> None:
         runner = (ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/vpn/SingBoxRunner.kt").read_text(
             encoding="utf-8"

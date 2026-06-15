@@ -40,7 +40,7 @@ The initial scaffold now contains these files, but `SingBoxRunner` is intentiona
 4. `ConfigRepository` calls backend `GET /api/config`.
 5. Fresh configs are stored through `EncryptedConfigStore`.
 6. On network/5xx/503 errors, `ConfigRepository` can return the encrypted last-known-good config.
-7. UI starts `VpnRouterService` with `EXTRA_CONFIG_JSON`; the service fails closed if config JSON is missing.
+7. `MainActivity` starts `VpnRouterService.connectIntent(context, configJson)` with fresh or cached config.
 8. `VpnRouterService` starts sing-box/libbox with the config after runtime integration is approved.
 9. Client health checks trigger config refresh or reconnect when repeated failures happen.
 
