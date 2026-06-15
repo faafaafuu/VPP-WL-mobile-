@@ -4,11 +4,10 @@ const VPN_SERVICE_CLASS = "com.vpnrouter.nativevpn.VpnRouterService";
 
 const withVpnRouterNative: ConfigPlugin = (config) => {
   config = withAndroidManifest(config, (mod) => {
-    const manifest = mod.modResults.manifest;
-    AndroidConfig.Permissions.addPermission(manifest, "android.permission.INTERNET");
-    AndroidConfig.Permissions.addPermission(manifest, "android.permission.FOREGROUND_SERVICE");
+    AndroidConfig.Permissions.addPermission(mod.modResults, "android.permission.INTERNET");
+    AndroidConfig.Permissions.addPermission(mod.modResults, "android.permission.FOREGROUND_SERVICE");
 
-    const application = AndroidConfig.Manifest.getMainApplicationOrThrow(manifest);
+    const application = AndroidConfig.Manifest.getMainApplicationOrThrow(mod.modResults);
     application.service = application.service ?? [];
 
     const hasVpnService = application.service.some((service) => service.$["android:name"] === VPN_SERVICE_CLASS);

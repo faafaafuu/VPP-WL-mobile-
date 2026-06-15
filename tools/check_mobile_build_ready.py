@@ -23,6 +23,18 @@ ANDROID_COMPILE_SDK = "35"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ANDROID_PROJECT_ROOT = REPO_ROOT / "apps" / "android"
 
+
+def find_tool(command: str) -> str | None:
+    path = shutil.which(command)
+    if path:
+        return path
+    if command == "eas":
+        npm_global_eas = Path.home() / ".npm-global" / "bin" / "eas"
+        if npm_global_eas.exists():
+            return str(npm_global_eas)
+    return None
+
+
 EXPO_TOOLS = (
     ToolCheck("Node.js", "node", "Expo UI development"),
     ToolCheck("npm", "npm", "Expo dependency install and scripts"),
@@ -38,13 +50,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Check mobile build toolchain readiness.")
     parser.add_argument("--android", action="store_true", help="Require Android build tools.")
     parser.add_argument("--expo", action="store_true", help="Require Expo/Node tools.")
-    parser.add_argument("--ios", action="store_true", help="Require local iOS build tools.")
+    parser.add_argument("--ios", action="store_true", help="Require local iOS build tools on macOS.")
+    parser.add_argument("--eas-ios", action="store_true", help="Require Expo/EAS tools for cloud iOS builds.")
     args = parser.parse_args()
 
     selected = []
     if args.android:
         selected.extend(ANDROID_TOOLS)
-    if args.expo:
+    if args.expo or args.eas_ios:
         selected.extend(EXPO_TOOLS)
     if args.ios:
         selected.extend(IOS_TOOLS)
@@ -53,14 +66,14 @@ def main() -> int:
 
     missing: list[ToolCheck] = []
     for check in selected:
-        path = shutil.which(check.command)
+        path = find_tool(check.command)
         if path:
             print(f"ok: {check.name} ({check.command}) -> {path}")
         else:
             print(f"missing: {check.name} ({check.command}) required for {check.required_for}")
             missing.append(check)
 
-    if args.android or not any((args.android, args.expo, args.ios)):
+    if args.android or not any((args.android, args.expo, args.ios, args.eas_ios)):
         gradlew = ANDROID_PROJECT_ROOT / "gradlew"
         if gradlew.exists():
             print(f"ok: Gradle Wrapper -> {gradlew}")

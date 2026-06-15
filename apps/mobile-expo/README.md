@@ -95,6 +95,12 @@ Run static TypeScript validation before committing UI changes:
 npm run typecheck
 ```
 
+From the repository root the same check is available as:
+
+```bash
+make expo-typecheck
+```
+
 Copy `.env.example` to `.env.local` and set the backend URL:
 
 ```bash
@@ -112,6 +118,14 @@ npx eas build --profile development --platform ios
 ```
 
 Windows developers can run Metro and Android builds locally. iOS builds require EAS or macOS/Xcode.
+For EAS iOS builds in CI/non-interactive environments, install EAS CLI and set `EXPO_TOKEN`; local Xcode is not required:
+
+```bash
+python3 tools/check_mobile_build_ready.py --eas-ios
+EXPO_TOKEN=... eas build --profile development --platform ios --non-interactive
+```
+
+Without an Expo account token, EAS exits before build scheduling with "An Expo user account is required to proceed."
 
 `eas.json` contains three profiles:
 

@@ -32,6 +32,17 @@ class MobileBuildReadinessToolTest(unittest.TestCase):
         self.assertIn("Node.js", result.stdout)
         self.assertIn("EAS CLI", result.stdout)
 
+    def test_eas_ios_check_does_not_require_local_xcode(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(TOOL), "--eas-ios"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertIn("EAS CLI", result.stdout)
+        self.assertNotIn("Xcode build tools", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
