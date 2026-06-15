@@ -1,7 +1,7 @@
 PY ?= python3
 GRAPHIFY ?= graphify
 
-.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check run docker-build docker-up docker-down docker-health-check ci
+.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness run docker-build docker-up docker-down docker-health-check ci
 
 test:
 	cd backend && $(PY) -m unittest discover -s tests
@@ -38,6 +38,9 @@ sing-box-check:
 
 env-check:
 	$(PY) tools/check_env_ready.py --env-file $${VPN_ROUTER_ENV_FILE:-.env}
+
+mobile-readiness:
+	$(PY) tools/check_mobile_build_ready.py
 
 ci: test compile compose-config check-tracked-artifacts sing-box-check
 	$(PY) -c "import json; json.load(open('graphify-out/graph.json')); print('graphify graph json ok')"

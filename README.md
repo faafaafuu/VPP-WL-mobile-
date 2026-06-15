@@ -155,6 +155,15 @@ VPN_ROUTER_ENV_FILE=.env make env-check
 python3 tools/check_env_ready.py --env-file .env --require-hsts
 ```
 
+Check local mobile build prerequisites before attempting Android/EAS/iOS builds:
+
+```bash
+make mobile-readiness
+python3 tools/check_mobile_build_ready.py --android --expo
+```
+
+This is intentionally not part of `make ci`, because Linux CI may not have Android SDK, EAS credentials, or Xcode installed.
+
 ## Graphify
 
 ```bash
