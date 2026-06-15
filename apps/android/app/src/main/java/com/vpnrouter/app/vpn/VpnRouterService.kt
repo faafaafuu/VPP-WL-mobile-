@@ -7,12 +7,11 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.VpnService
-import android.os.ParcelFileDescriptor
 import com.vpnrouter.app.MainActivity
 
 class VpnRouterService : VpnService() {
-    private var tun: ParcelFileDescriptor? = null
-    private val runner: SingBoxRunner = MissingSingBoxRunner()
+    private var connected = false
+    private val runner: SingBoxRunner by lazy { SingBoxRunner.create(this) }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -28,28 +27,24 @@ class VpnRouterService : VpnService() {
     }
 
     private fun connect(configJson: String?) {
-        if (tun != null) return
+        if (connected) return
         if (configJson.isNullOrBlank()) {
             stopSelf()
             return
         }
 
         startForeground(NOTIFICATION_ID, notification())
-        tun = Builder()
-            .setSession("VPN Router")
-            .addAddress("172.19.0.2", 30)
-            .addRoute("0.0.0.0", 0)
-            .establish()
-
-        val fd = tun?.fd ?: return
-        runCatching { runner.start(configJson, fd) }
-            .onFailure { disconnect() }
+        runCatching {
+            runner.start(configJson)
+            connected = true
+        }.onFailure {
+            disconnect()
+        }
     }
 
     private fun disconnect() {
         runner.stop()
-        tun?.close()
-        tun = null
+        connected = false
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }

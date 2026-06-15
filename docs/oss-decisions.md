@@ -7,6 +7,8 @@ This file records upstream projects checked before larger implementation work. D
 | Project | Upstream | License Observed | Use Decision | Reason |
 | --- | --- | --- | --- | --- |
 | sing-box / libbox | https://github.com/SagerNet/sing-box | GPL-3.0-or-later text in README/LICENSE | Use directly in the mobile app under a GPL-compatible distribution model. | Best protocol coverage for VLESS, Shadowsocks, WireGuard, Hysteria2 and sing-box config format. Product decision on 2026-06-15 accepted GPL runtime integration. |
+| sing-box for Android | https://github.com/SagerNet/sing-box-for-android | GPL-3.0-or-later text in README/LICENSE | Reference only; do not copy client code. | Upstream confirms Android libbox integration uses `CommandServer` and `PlatformInterface`. Our adapter uses independently written reflection/proxy code. |
+| sing-box for Apple | https://github.com/SagerNet/sing-box-for-apple | GPL-3.0-or-later text in README/LICENSE | Reference only; do not copy client code. | Upstream confirms Apple app wraps packet tunnel implementation through app/library targets. Our iOS template remains independently written until framework artifacts are added. |
 | Xray-core | https://github.com/XTLS/Xray-core | MPL-2.0 | Reference or separate component fallback; no current integration. | Useful protocol reference, but MVP config target remains sing-box. MPL is file-level copyleft; still avoid copying source. |
 | v2rayNG | https://github.com/2dust/v2rayNG | GPL-3.0 | Reference only. | Android VPN and core integration patterns are useful, but GPL code must not be copied into closed app. |
 | ClashMetaForAndroid | https://github.com/MetaCubeX/ClashMetaForAndroid | GPL-3.0 | Reference only. | Useful Android rule-based tunnel reference; GPL code must not be copied. |
@@ -27,3 +29,4 @@ This file records upstream projects checked before larger implementation work. D
 - Product decision on 2026-06-15: mobile app distribution must be GPL-compatible if sing-box/libbox is linked or bundled.
 - GPL/AGPL projects other than the approved sing-box/libbox runtime remain documentation/reference sources only in this repository.
 - Runtime integration decision details are tracked in `docs/runtime-integration-plan.md`.
+- Android runtime adapter is independently implemented in `apps/android/app/src/main/java/com/vpnrouter/app/vpn/ReflectionLibboxRunner.kt` and does not vendor upstream GPL source.

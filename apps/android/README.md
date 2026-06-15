@@ -30,7 +30,12 @@ apps/android/
     src/main/java/.../vpn/SingBoxRunner.kt
 ```
 
-The initial scaffold now contains these files, but `SingBoxRunner` is intentionally an interface with a missing-runtime implementation. No sing-box/libbox source or binary is vendored into this repository.
+The initial scaffold now contains these files. `SingBoxRunner` is an interface with two implementations:
+
+- `ReflectionLibboxRunner`: activates when `io.nekohasekai.libbox` is present in the APK and starts libbox `CommandServer` with the backend config JSON.
+- `MissingSingBoxRunner`: explicit fallback when libbox is not bundled.
+
+No sing-box/libbox source or binary is vendored into this repository.
 
 ## VPN Flow
 
@@ -41,13 +46,14 @@ The initial scaffold now contains these files, but `SingBoxRunner` is intentiona
 5. Fresh configs are stored through `EncryptedConfigStore`.
 6. On network/5xx/503 errors, `ConfigRepository` can return the encrypted last-known-good config.
 7. `MainActivity` starts `VpnRouterService.connectIntent(context, configJson)` with fresh or cached config.
-8. `VpnRouterService` starts sing-box/libbox with the config after runtime integration is approved.
-9. Client health checks trigger config refresh or reconnect when repeated failures happen.
+8. `VpnRouterService` starts sing-box/libbox with the config when a libbox AAR is on the runtime classpath.
+9. libbox calls Android `OpenTun`; `ReflectionLibboxRunner` creates the TUN with `VpnService.Builder`.
+10. Client health checks trigger config refresh or reconnect when repeated failures happen.
 
 ## Not Implemented Yet
 
-- sing-box AAR/libbox dependency.
-- Production `VpnService` runtime wiring.
+- Pinned sing-box AAR/libbox dependency.
+- Device-verified production `VpnService` runtime wiring.
 - Subscription UI.
 
 ## Local Secure Storage

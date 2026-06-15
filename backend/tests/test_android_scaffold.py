@@ -18,19 +18,25 @@ class AndroidScaffoldTest(unittest.TestCase):
         service = (
             ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/vpn/VpnRouterService.kt"
         ).read_text(encoding="utf-8")
+        runner = (
+            ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/vpn/ReflectionLibboxRunner.kt"
+        ).read_text(encoding="utf-8")
 
         self.assertIn("class VpnRouterService : VpnService()", service)
-        self.assertIn("Builder()", service)
-        self.assertIn("addRoute(\"0.0.0.0\", 0)", service)
         self.assertIn("EXTRA_CONFIG_JSON", service)
         self.assertIn("getStringExtra(EXTRA_CONFIG_JSON)", service)
-        self.assertIn("runner.start(configJson, fd)", service)
+        self.assertIn("runner.start(configJson)", service)
         self.assertIn("connectIntent(context", service)
         self.assertNotIn("runner.start(\"{}\"", service)
         self.assertIn("startForeground(NOTIFICATION_ID, notification())", service)
         self.assertIn("NotificationChannel", service)
         self.assertIn("createNotificationChannel", service)
         self.assertIn("ic_dialog_info", service)
+        self.assertIn("service.Builder().setSession", runner)
+        self.assertIn("openTun", runner)
+        self.assertIn("addRoute(\"0.0.0.0\", 0)", runner)
+        self.assertIn("CommandServer", runner)
+        self.assertIn("PlatformInterface", runner)
 
     def test_main_activity_loads_backend_config_before_starting_vpn_service(self) -> None:
         activity = (ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/MainActivity.kt").read_text(
@@ -51,9 +57,13 @@ class AndroidScaffoldTest(unittest.TestCase):
         runner = (ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/vpn/SingBoxRunner.kt").read_text(
             encoding="utf-8"
         )
+        reflection_runner = (
+            ANDROID_ROOT / "app/src/main/java/com/vpnrouter/app/vpn/ReflectionLibboxRunner.kt"
+        ).read_text(encoding="utf-8")
 
         self.assertIn("interface SingBoxRunner", runner)
         self.assertIn("not bundled yet", runner)
+        self.assertIn("Class.forName(\"io.nekohasekai.libbox.PlatformInterface\")", reflection_runner)
         self.assertFalse(any(path.name.lower().startswith("sing-box") for path in ANDROID_ROOT.rglob("*")))
 
     def test_backend_client_uses_bearer_config_contract(self) -> None:
