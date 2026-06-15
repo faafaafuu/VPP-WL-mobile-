@@ -58,17 +58,20 @@ The initial scaffold now contains these files, but `SingBoxRunner` is intentiona
 
 ## Build Requirements
 
-This environment did not have Java, Gradle, or Android SDK installed when the scaffold was created. On a development machine, install:
+On a development machine, install:
 
-- JDK 17
-- Android Studio or Android SDK command line tools
-- Gradle wrapper or system Gradle
+- JDK 17 or newer.
+- Android SDK command line tools.
+- Android SDK Platform 35.
+- Android SDK Build Tools 34.0.0 or newer.
 
 Then run:
 
 ```bash
-cd apps/android
-gradle :app:assembleDebug
+python3 tools/check_mobile_build_ready.py --android
+make android-debug
 ```
+
+The project uses the checked-in Gradle Wrapper, not the system Gradle package. If `ANDROID_HOME` is not set, `make android-debug` defaults to `/usr/lib/android-sdk`.
 
 Before wiring the actual VPN runtime, decide whether the app is GPL-compatible or whether sing-box/libbox is distributed as a separate component.

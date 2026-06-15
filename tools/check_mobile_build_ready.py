@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+from pathlib import Path
 import shutil
 from dataclasses import dataclass
 
@@ -14,9 +16,12 @@ class ToolCheck:
 
 ANDROID_TOOLS = (
     ToolCheck("Java JDK", "java", "Android Gradle builds"),
-    ToolCheck("Gradle", "gradle", "Android debug/release builds"),
     ToolCheck("Android Debug Bridge", "adb", "Android device QA"),
 )
+
+ANDROID_COMPILE_SDK = "35"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+ANDROID_PROJECT_ROOT = REPO_ROOT / "apps" / "android"
 
 EXPO_TOOLS = (
     ToolCheck("Node.js", "node", "Expo UI development"),
@@ -54,6 +59,49 @@ def main() -> int:
         else:
             print(f"missing: {check.name} ({check.command}) required for {check.required_for}")
             missing.append(check)
+
+    if args.android or not any((args.android, args.expo, args.ios)):
+        gradlew = ANDROID_PROJECT_ROOT / "gradlew"
+        if gradlew.exists():
+            print(f"ok: Gradle Wrapper -> {gradlew}")
+        else:
+            print(f"missing: Gradle Wrapper ({gradlew}) required for reproducible Android builds")
+            missing.append(ToolCheck("Gradle Wrapper", str(gradlew), "Android debug/release builds"))
+
+        android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
+        if android_home:
+            sdk_root = Path(android_home)
+            if sdk_root.exists():
+                print(f"ok: Android SDK root -> {sdk_root}")
+            else:
+                print(f"missing: Android SDK root path does not exist: {sdk_root}")
+                missing.append(ToolCheck("Android SDK root", "ANDROID_HOME", "Android Gradle builds"))
+        else:
+            default_sdk_root = Path("/usr/lib/android-sdk")
+            if default_sdk_root.exists():
+                print(f"warning: ANDROID_HOME is not set; detected {default_sdk_root}")
+                sdk_root = default_sdk_root
+            else:
+                print("missing: ANDROID_HOME or ANDROID_SDK_ROOT required for Android Gradle builds")
+                missing.append(ToolCheck("Android SDK root", "ANDROID_HOME", "Android Gradle builds"))
+                sdk_root = None
+
+        if sdk_root:
+            platform_dir = sdk_root / "platforms" / f"android-{ANDROID_COMPILE_SDK}"
+            if platform_dir.exists():
+                print(f"ok: Android SDK Platform {ANDROID_COMPILE_SDK} -> {platform_dir}")
+            else:
+                print(
+                    "missing: Android SDK Platform "
+                    f"{ANDROID_COMPILE_SDK} ({platform_dir}) required for compileSdk={ANDROID_COMPILE_SDK}"
+                )
+                missing.append(
+                    ToolCheck(
+                        f"Android SDK Platform {ANDROID_COMPILE_SDK}",
+                        f"platforms;android-{ANDROID_COMPILE_SDK}",
+                        "Android Gradle builds",
+                    )
+                )
 
     if missing:
         print(f"mobile build readiness failed: {len(missing)} missing tool(s)")

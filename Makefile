@@ -1,7 +1,7 @@
 PY ?= python3
 GRAPHIFY ?= graphify
 
-.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness run docker-build docker-up docker-down docker-health-check ci
+.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness android-debug run docker-build docker-up docker-down docker-health-check ci
 
 test:
 	cd backend && $(PY) -m unittest discover -s tests
@@ -41,6 +41,9 @@ env-check:
 
 mobile-readiness:
 	$(PY) tools/check_mobile_build_ready.py
+
+android-debug:
+	cd apps/android && ANDROID_HOME=$${ANDROID_HOME:-/usr/lib/android-sdk} ./gradlew --no-daemon :app:assembleDebug
 
 ci: test compile compose-config check-tracked-artifacts sing-box-check
 	$(PY) -c "import json; json.load(open('graphify-out/graph.json')); print('graphify graph json ok')"
