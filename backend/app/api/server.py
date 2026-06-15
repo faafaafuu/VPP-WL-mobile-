@@ -15,6 +15,7 @@ from app.domain.config_builder import ConfigBuilder
 from app.repositories.factory import create_repository
 from app.security.tokens import TokenService
 from app.services.receipt_verifier import MvpReceiptVerifier
+from app.services.yookassa import DisabledYooKassaProvider, HttpYooKassaProvider, YooKassaConfig
 
 
 SETTINGS = load_settings()
@@ -22,12 +23,25 @@ RATE_LIMITER = RateLimiter(SETTINGS.rate_limit_per_minute)
 REPOSITORY = create_repository()
 TOKEN_SERVICE = TokenService(SETTINGS.token_secret)
 CONFIG_BUILDER = ConfigBuilder()
+YOOKASSA_PROVIDER = (
+    HttpYooKassaProvider(
+        YooKassaConfig(
+            shop_id=SETTINGS.yookassa_shop_id or "",
+            secret_key=SETTINGS.yookassa_secret_key or "",
+            return_url=SETTINGS.yookassa_return_url or "",
+            product_prices_rub=SETTINGS.product_prices_rub,
+        )
+    )
+    if SETTINGS.yookassa_shop_id and SETTINGS.yookassa_secret_key and SETTINGS.yookassa_return_url
+    else DisabledYooKassaProvider()
+)
 API_SERVICE = ApiService(
     REPOSITORY,
     TOKEN_SERVICE,
     CONFIG_BUILDER,
     admin_token=SETTINGS.admin_token,
     receipt_verifier=MvpReceiptVerifier(SETTINGS.allowed_product_ids),
+    yookassa_provider=YOOKASSA_PROVIDER,
 )
 
 
@@ -105,6 +119,20 @@ class ApiHandler(BaseHTTPRequestHandler):
             if payload is None:
                 return
             self._send_service_response(lambda: API_SERVICE.auth_receipt(payload))
+            return
+
+        if path == "/api/payments/yookassa":
+            payload = self._read_json()
+            if payload is None:
+                return
+            self._send_service_response(lambda: API_SERVICE.create_yookassa_payment(payload))
+            return
+
+        if path == "/api/webhook/yookassa":
+            payload = self._read_json()
+            if payload is None:
+                return
+            self._send_service_response(lambda: API_SERVICE.yookassa_webhook(payload))
             return
 
         if path in {"/api/webhook/apple", "/api/webhook/google"}:

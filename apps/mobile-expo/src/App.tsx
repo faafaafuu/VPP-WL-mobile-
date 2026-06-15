@@ -83,6 +83,25 @@ export default function App() {
     }
   }
 
+  async function createYooKassaPayment() {
+    setAuthState({ kind: "activating" });
+    const result = await authRepository.createYooKassaPayment(deviceId);
+    setAuthState(result);
+    if (result.kind === "payment-created") {
+      setReceipt(result.paymentId);
+      Linking.openURL(result.confirmationUrl).catch(() => undefined);
+    }
+  }
+
+  async function activateYooKassaPayment() {
+    setAuthState({ kind: "activating" });
+    const result = await authRepository.activateYooKassaPayment(deviceId, receipt);
+    setAuthState(result);
+    if (result.kind === "active") {
+      setConfigState({ kind: "idle" });
+    }
+  }
+
   async function initUser() {
     setAuthState({ kind: "initializing" });
     setAuthState(await authRepository.initDevice(deviceId));
@@ -196,6 +215,24 @@ export default function App() {
             </Text>
           </Pressable>
           <Pressable
+            disabled={authState.kind === "activating"}
+            onPress={createYooKassaPayment}
+            style={[styles.secondaryButton, authState.kind === "activating" ? styles.disabledButton : null]}
+          >
+            <Text style={styles.secondaryButtonText}>
+              {authState.kind === "activating" ? "Создание..." : "Оплатить ЮKassa"}
+            </Text>
+          </Pressable>
+          <Pressable
+            disabled={authState.kind === "activating"}
+            onPress={activateYooKassaPayment}
+            style={[styles.outlineButton, authState.kind === "activating" ? styles.disabledButton : null]}
+          >
+            <Text style={styles.outlineButtonText}>
+              {authState.kind === "activating" ? "Проверка..." : "Подтвердить ЮKassa"}
+            </Text>
+          </Pressable>
+          <Pressable
             disabled={authState.kind === "checking"}
             onPress={checkSubscription}
             style={[styles.outlineButton, authState.kind === "checking" ? styles.disabledButton : null]}
@@ -294,6 +331,8 @@ function describeAuthState(state: AuthState): string {
       return `Пользователь создан: ${state.userId}.`;
     case "activating":
       return "Проверяем receipt через backend.";
+    case "payment-created":
+      return `Платёж ЮKassa создан: ${state.paymentId}. После оплаты подтвердите платёж.`;
     case "exporting":
       return "Готовим экспорт аккаунта.";
     case "exported":

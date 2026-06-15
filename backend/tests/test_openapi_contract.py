@@ -11,6 +11,7 @@ class OpenApiContractTest(unittest.TestCase):
         for path in [
             "/api/auth/init",
             "/api/auth/receipt",
+            "/api/payments/yookassa",
             "/api/config",
             "/api/me",
             "/api/me/export",
@@ -22,6 +23,7 @@ class OpenApiContractTest(unittest.TestCase):
             "/api/admin/nodes/{node_id}/health",
             "/api/webhook/apple",
             "/api/webhook/google",
+            "/api/webhook/yookassa",
         ]:
             self.assertIn(path, contract)
 

@@ -40,6 +40,14 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertNotIn("demo", subscription.original_transaction_id)
         self.assertGreaterEqual(len(self.repo.list_nodes()), 3)
 
+    def test_persists_yookassa_subscription(self) -> None:
+        subscription = self.repo.activate_subscription(
+            ReceiptClaim(platform=Platform.YOOKASSA, receipt="yk-payment-1", device_id="device-1")
+        )
+
+        self.assertIsNotNone(self.repo.get_active_subscription(subscription.user_id))
+        self.assertTrue(subscription.original_transaction_id.startswith("yookassa:sha256:"))
+
     def test_exports_and_deletes_user_data(self) -> None:
         subscription = self.repo.activate_subscription(
             ReceiptClaim(platform=Platform.SANDBOX, receipt="demo", device_id="device-1")

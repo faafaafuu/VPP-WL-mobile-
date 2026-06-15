@@ -1,6 +1,6 @@
 # Runtime Integration Plan
 
-Status: blocked on product/legal decision.
+Status: GPL-compatible sing-box/libbox integration approved on 2026-06-15; implementation blocked on runtime artifacts, Android SDK/device testing, and iOS EAS/Xcode build environment.
 
 The mobile UI, backend config contract, and native module boundaries are ready for a VPN runtime, but the actual packet proxy engine is intentionally not bundled yet.
 
@@ -10,34 +10,19 @@ The mobile UI, backend config contract, and native module boundaries are ready f
 - Expo UI calls `VpnRouterNative.prepare()`, `start(configJson)`, `stop()`, and `status()`.
 - Android native module starts `VpnRouterService`, creates a TUN interface, and passes config JSON plus TUN fd to `SingBoxRunner`.
 - iOS native module creates/loads a `NETunnelProviderManager` profile and passes config JSON to the packet tunnel provider through `providerConfiguration`.
-- `apps/mobile-expo/modules/vpn-router-native/ios/PacketTunnel` contains a minimal `NEPacketTunnelProvider` source template that reads `configJson` and delegates packet handling to a `SingBoxTunnelRunner` boundary. It intentionally keeps `MissingSingBoxTunnelRunner` until the sing-box/libbox distribution decision is explicit.
+- `apps/mobile-expo/modules/vpn-router-native/ios/PacketTunnel` contains a minimal `NEPacketTunnelProvider` source template that reads `configJson` and delegates packet handling to a `SingBoxTunnelRunner` boundary. It intentionally keeps `MissingSingBoxTunnelRunner` until libbox artifacts are added.
 - Android and iOS runtime implementations currently fail with explicit missing-runtime errors.
 
-## Decision Required
+## Approved Runtime Decision
 
-`sing-box/libbox` is GPL-3.0-or-later. Before bundling it in a distributed mobile app, choose one of these paths:
+`sing-box/libbox` is GPL-3.0-or-later. Product decision on 2026-06-15 selected the GPL-compatible app distribution path:
 
-1. GPL-compatible app distribution.
-   - Use sing-box/libbox directly.
-   - Publish app source and satisfy GPL obligations.
-   - Simplest engineering path, strongest licensing implications.
+- Use sing-box/libbox directly in mobile runtime modules.
+- Publish app source and satisfy GPL obligations for distributed mobile builds.
+- Keep backend proprietary/GPL boundary under legal review if distribution model changes later.
+- Do not copy unrelated GPL/AGPL client source from v2rayNG, ClashMetaForAndroid, Marzban, or 3X-UI.
 
-2. Separate runtime component.
-   - Keep closed UI/backend separate from a GPL runtime component.
-   - Requires careful legal review and packaging architecture.
-   - May be difficult on mobile app stores.
-
-3. Replace primary runtime.
-   - Use a permissively licensed engine for the closed app.
-   - Likely reduces protocol coverage, especially VLESS/Reality/Hysteria2.
-   - Requires backend config format changes or adapters.
-
-4. WireGuard-only first release.
-   - Use permissive WireGuard implementations for an initial limited MVP.
-   - Does not satisfy the full original sing-box protocol requirement.
-   - Easier licensing but weaker anti-blocking behavior.
-
-## Engineering Steps After Decision
+## Engineering Steps
 
 Android:
 
@@ -66,5 +51,5 @@ Backend:
 - Android development build starts a real tunnel with backend config.
 - iOS development build starts a real Packet Tunnel with backend config.
 - `GET /api/config` output passes pinned sing-box validation.
-- No GPL/AGPL source is copied into closed code without an explicit approved decision.
-- `docs/oss-decisions.md` records the chosen distribution model before runtime code lands.
+- No unrelated GPL/AGPL source is copied into the app/backend.
+- `docs/oss-decisions.md` records GPL-compatible sing-box/libbox distribution.

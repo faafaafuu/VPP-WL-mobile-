@@ -21,6 +21,15 @@ class InMemoryRepositoryTest(unittest.TestCase):
         self.assertTrue(subscription.original_transaction_id.startswith("sandbox:sha256:"))
         self.assertNotIn("demo", subscription.original_transaction_id)
 
+    def test_yookassa_payment_id_activates_subscription_after_verification(self) -> None:
+        repo = InMemoryRepository()
+        subscription = repo.activate_subscription(
+            ReceiptClaim(platform=Platform.YOOKASSA, receipt="yk-payment-1", device_id="device-1")
+        )
+
+        self.assertIsNotNone(repo.get_active_subscription(subscription.user_id))
+        self.assertTrue(subscription.original_transaction_id.startswith("yookassa:sha256:"))
+
     def test_sandbox_receipt_fingerprint_is_deterministic(self) -> None:
         first_repo = InMemoryRepository()
         second_repo = InMemoryRepository()

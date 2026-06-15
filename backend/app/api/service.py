@@ -14,6 +14,7 @@ from app.domain.node_selection import choose_preferred_nodes
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
 from app.services.receipt_verifier import MvpReceiptVerifier, ReceiptVerifier
+from app.services.yookassa import DisabledYooKassaProvider, YooKassaError, YooKassaProvider
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,7 @@ class ApiService:
         config_builder: ConfigBuilder,
         admin_token: str,
         receipt_verifier: ReceiptVerifier | None = None,
+        yookassa_provider: YooKassaProvider | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -38,6 +40,7 @@ class ApiService:
         self.config_builder = config_builder
         self.admin_token = admin_token
         self.receipt_verifier = receipt_verifier or MvpReceiptVerifier()
+        self.yookassa_provider = yookassa_provider or DisabledYooKassaProvider()
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -60,6 +63,7 @@ class ApiService:
                 "account-data-export",
                 "account-deletion",
                 "admin-audit",
+                "yookassa-payments",
             ],
         }
 
@@ -106,7 +110,10 @@ class ApiService:
     def auth_receipt(self, payload: dict[str, Any]) -> dict[str, Any]:
         claim = self._receipt_claim_from_payload(payload)
         try:
-            self.receipt_verifier.verify(claim)
+            if claim.platform == Platform.YOOKASSA:
+                self._verify_yookassa_claim(claim)
+            else:
+                self.receipt_verifier.verify(claim)
             subscription = self.repository.activate_subscription(claim)
         except ValueError as exc:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": str(exc)}) from exc
@@ -114,6 +121,56 @@ class ApiService:
         return {
             "access_token": token,
             "token_type": "Bearer",
+            "expires_at": subscription.expires_at.isoformat(),
+        }
+
+    def create_yookassa_payment(self, payload: dict[str, Any]) -> dict[str, Any]:
+        device_id = str(payload.get("device_id", "")).strip()
+        product_id = str(payload.get("product_id", "vpn.monthly")).strip() or "vpn.monthly"
+        if not device_id:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "device_id is required"})
+        try:
+            payment = self.yookassa_provider.create_payment(device_id=device_id, product_id=product_id)
+        except YooKassaError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+        return {
+            "provider": "yookassa",
+            "payment_id": payment.id,
+            "status": payment.status,
+            "paid": payment.paid,
+            "confirmation_url": payment.confirmation_url,
+        }
+
+    def yookassa_webhook(self, payload: dict[str, Any]) -> dict[str, Any]:
+        event = str(payload.get("event", ""))
+        raw_object = payload.get("object")
+        payment_object = raw_object if isinstance(raw_object, dict) else {}
+        payment_id = str(payment_object.get("id", "")).strip()
+        if event != "payment.succeeded" or not payment_id:
+            return {"status": "ignored"}
+        try:
+            current_payment = self.yookassa_provider.fetch_payment(payment_id)
+        except YooKassaError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+        if str(current_payment.get("status", "")) != "succeeded" or not bool(current_payment.get("paid", False)):
+            return {"status": "ignored"}
+        metadata = current_payment.get("metadata")
+        metadata = metadata if isinstance(metadata, dict) else {}
+        device_id = str(metadata.get("device_id", "")).strip()
+        product_id = str(metadata.get("product_id", "vpn.monthly")).strip() or "vpn.monthly"
+        if not device_id:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "payment metadata.device_id is required"})
+        subscription = self.repository.activate_subscription(
+            ReceiptClaim(
+                platform=Platform.YOOKASSA,
+                receipt=payment_id,
+                device_id=device_id,
+                product_id=product_id,
+            )
+        )
+        return {
+            "status": "activated",
+            "user_id": subscription.user_id,
             "expires_at": subscription.expires_at.isoformat(),
         }
 
@@ -266,7 +323,7 @@ class ApiService:
         try:
             platform = Platform(str(payload.get("platform", "")).lower())
         except ValueError as exc:
-            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "platform must be apple, google, or sandbox"}) from exc
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "platform must be apple, google, yookassa, or sandbox"}) from exc
 
         receipt = str(payload.get("receipt", "")).strip()
         device_id = str(payload.get("device_id", "")).strip()
@@ -280,6 +337,20 @@ class ApiService:
     def _require_known_user(self, user_id: str) -> None:
         if self.repository.get_user(user_id) is None:
             raise ApiError(HTTPStatus.UNAUTHORIZED, {"error": "unknown user"})
+
+    def _verify_yookassa_claim(self, claim: ReceiptClaim) -> None:
+        try:
+            payment = self.yookassa_provider.fetch_payment(claim.receipt)
+        except YooKassaError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+        if str(payment.get("status", "")) != "succeeded" or not bool(payment.get("paid", False)):
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "yookassa payment is not paid"})
+        metadata = payment.get("metadata")
+        metadata = metadata if isinstance(metadata, dict) else {}
+        if str(metadata.get("device_id", "")).strip() != claim.device_id:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "yookassa payment device mismatch"})
+        if str(metadata.get("product_id", "")).strip() != claim.product_id:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "yookassa payment product mismatch"})
 
 
 def _public_node(node: Any) -> dict[str, Any]:

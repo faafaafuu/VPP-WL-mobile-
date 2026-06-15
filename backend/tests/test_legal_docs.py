@@ -38,12 +38,12 @@ class LegalDocsTest(unittest.TestCase):
         self.assertIn("Google Play Billing", checklist)
         self.assertIn("Apple IAP", checklist)
         self.assertIn("Data Safety", checklist)
-        self.assertIn("sing-box/libbox distribution and license decision", checklist)
+        self.assertIn("sing-box/libbox GPL-compatible distribution obligations", checklist)
 
     def test_runtime_integration_plan_records_gpl_blocker(self) -> None:
         plan = (DOCS_ROOT / "runtime-integration-plan.md").read_text(encoding="utf-8")
 
-        self.assertIn("blocked on product/legal decision", plan)
+        self.assertIn("GPL-compatible sing-box/libbox integration approved", plan)
         self.assertIn("GPL-3.0-or-later", plan)
         self.assertIn("MissingSingBoxRunner", plan)
         self.assertIn("Android development build starts a real tunnel", plan)

@@ -62,7 +62,7 @@ The MVP backend exposes `GET /api/me/export` and `DELETE /api/me` as the first s
 
 The service may use:
 
-- Apple App Store and Google Play for subscription payments;
+- Apple App Store, Google Play, and YooKassa for subscription payments;
 - infrastructure providers for API, database, monitoring, and VPN nodes;
 - crash/error diagnostics providers if enabled.
 

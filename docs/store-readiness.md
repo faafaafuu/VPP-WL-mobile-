@@ -45,6 +45,13 @@ Do not expose real user IPs, access tokens, receipts, node credentials, or inter
 - Declare VPN functionality and `BIND_VPN_SERVICE` usage.
 - Provide privacy policy URL in Play Console and app UI.
 - Use Google Play Billing for digital subscriptions distributed through Play.
+
+## RU Payment Notes
+
+- YooKassa redirect payments are the first non-store RU payment provider in the backend contract.
+- The app must not collect or store card details; mobile opens the provider confirmation URL.
+- Backend verifies YooKassa payment status before issuing an access token.
+- App Store / Google Play distribution may still require store billing for digital services in those stores; RU payments should be reviewed per distribution channel before release.
 - Complete Data Safety form consistently with `docs/privacy-policy-draft.md`.
 - Do not use misleading claims about traffic logging, unblock guarantees, or government/bank access.
 
@@ -70,4 +77,4 @@ Final answers must match the production analytics, logging, support, and payment
 - Store product IDs match backend expected product IDs.
 - Device QA passes Android development build.
 - Device QA passes iOS build with Network Extension entitlement.
-- sing-box/libbox distribution and license decision is approved and documented in `docs/oss-decisions.md`.
+- sing-box/libbox GPL-compatible distribution obligations are satisfied and documented in `docs/oss-decisions.md`.

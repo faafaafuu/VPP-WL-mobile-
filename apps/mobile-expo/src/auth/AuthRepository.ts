@@ -7,6 +7,7 @@ export type AuthState =
   | { kind: "initializing" }
   | { kind: "initialized"; userId: string }
   | { kind: "activating" }
+  | { kind: "payment-created"; paymentId: string; confirmationUrl: string }
   | { kind: "exporting" }
   | { kind: "exported"; exportedJson: string }
   | { kind: "deleting" }
@@ -61,6 +62,54 @@ export class AuthRepository {
         return { kind: "error", message: error.message };
       }
       return { kind: "error", message: "Unable to activate subscription" };
+    }
+  }
+
+  async createYooKassaPayment(deviceId: string): Promise<AuthState> {
+    const normalizedDeviceId = deviceId.trim();
+    if (!normalizedDeviceId) {
+      return { kind: "error", message: "Device ID is required" };
+    }
+
+    try {
+      const response = await this.apiClient.createYooKassaPayment(normalizedDeviceId, "vpn.monthly");
+      if (!response.confirmation_url) {
+        return { kind: "error", message: "YooKassa did not return a confirmation URL" };
+      }
+      return {
+        kind: "payment-created",
+        paymentId: response.payment_id,
+        confirmationUrl: response.confirmation_url
+      };
+    } catch (error) {
+      if (error instanceof BackendApiError) {
+        return { kind: "error", message: error.message };
+      }
+      return { kind: "error", message: "Unable to create YooKassa payment" };
+    }
+  }
+
+  async activateYooKassaPayment(deviceId: string, paymentId: string): Promise<AuthState> {
+    const normalizedDeviceId = deviceId.trim();
+    const normalizedPaymentId = paymentId.trim();
+    if (!normalizedDeviceId || !normalizedPaymentId) {
+      return { kind: "error", message: "Device ID and YooKassa payment ID are required" };
+    }
+
+    try {
+      const response = await this.apiClient.submitReceipt({
+        platform: "yookassa",
+        receipt: normalizedPaymentId,
+        device_id: normalizedDeviceId,
+        product_id: "vpn.monthly"
+      });
+      await this.tokenStore.saveAccessToken(response.access_token);
+      return { kind: "active", expiresAt: response.expires_at };
+    } catch (error) {
+      if (error instanceof BackendApiError) {
+        return { kind: "error", message: error.message };
+      }
+      return { kind: "error", message: "Unable to activate YooKassa payment" };
     }
   }
 

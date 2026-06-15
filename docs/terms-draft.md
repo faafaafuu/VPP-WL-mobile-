@@ -20,7 +20,7 @@ The service may suspend accounts or block access to protect the platform, users,
 
 ## Subscriptions
 
-Subscriptions are purchased through Apple App Store or Google Play unless another approved channel is explicitly offered. Store subscriptions renew automatically unless cancelled through the relevant store account settings.
+Subscriptions are purchased through Apple App Store, Google Play, YooKassa, or another approved channel explicitly offered in the app. Store subscriptions renew automatically unless cancelled through the relevant store account settings.
 
 Prices, trial periods, renewal dates, refunds, and cancellation handling follow the rules of the store where the subscription was purchased.
 

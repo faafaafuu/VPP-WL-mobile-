@@ -1,5 +1,5 @@
 export type ReceiptRequest = {
-  platform: "sandbox" | "apple" | "google";
+  platform: "sandbox" | "apple" | "google" | "yookassa";
   receipt: string;
   device_id: string;
   product_id: string;
@@ -13,6 +13,14 @@ export type ReceiptResponse = {
   access_token: string;
   token_type: "Bearer";
   expires_at: string;
+};
+
+export type YooKassaPaymentResponse = {
+  provider: "yookassa";
+  payment_id: string;
+  status: string;
+  paid: boolean;
+  confirmation_url: string | null;
 };
 
 export type PublicNode = {
@@ -32,7 +40,7 @@ export type PublicNode = {
 
 export type SubscriptionSummary = {
   active: boolean;
-  platform: "sandbox" | "apple" | "google";
+  platform: "sandbox" | "apple" | "google" | "yookassa";
   product_id: string;
   expires_at: string;
 };
@@ -197,6 +205,22 @@ export class BackendApiClient {
     }
 
     return (await response.json()) as ReceiptResponse;
+  }
+
+  async createYooKassaPayment(deviceId: string, productId: string): Promise<YooKassaPaymentResponse> {
+    const response = await fetch(`${this.baseUrl}/api/payments/yookassa`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ device_id: deviceId, product_id: productId })
+    });
+
+    if (!response.ok) {
+      throw new BackendApiError(response.status, await safeErrorMessage(response));
+    }
+
+    return (await response.json()) as YooKassaPaymentResponse;
   }
 }
 

@@ -98,7 +98,7 @@ class SqliteRepository:
 
     def activate_subscription(self, claim: ReceiptClaim) -> Subscription:
         user = self.get_or_create_user(claim.device_id)
-        if claim.platform != Platform.SANDBOX and len(claim.receipt.strip()) < 24:
+        if claim.platform in {Platform.APPLE, Platform.GOOGLE} and len(claim.receipt.strip()) < 24:
             raise ValueError("receipt is too short for non-sandbox validation")
 
         subscription = Subscription(

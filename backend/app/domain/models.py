@@ -10,6 +10,7 @@ from uuid import uuid4
 class Platform(str, Enum):
     APPLE = "apple"
     GOOGLE = "google"
+    YOOKASSA = "yookassa"
     SANDBOX = "sandbox"
 
 

@@ -18,6 +18,10 @@ class SettingsTest(unittest.TestCase):
                 "VPN_ROUTER_RATE_LIMIT_PER_MINUTE": "60",
                 "VPN_ROUTER_AUDIT_RETENTION_DAYS": "14",
                 "VPN_ROUTER_HSTS_ENABLED": "true",
+                "VPN_ROUTER_YOOKASSA_SHOP_ID": "123456",
+                "VPN_ROUTER_YOOKASSA_SECRET_KEY": "yookassa-secret-with-length",
+                "VPN_ROUTER_YOOKASSA_RETURN_URL": "https://vpn.example/payments/return",
+                "VPN_ROUTER_PRODUCT_PRICES_RUB": "vpn.monthly:399.00,vpn.yearly:2599.00",
             }
         )
 
@@ -28,6 +32,10 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(settings.rate_limit_per_minute, 60)
         self.assertEqual(settings.audit_retention_days, 14)
         self.assertTrue(settings.hsts_enabled)
+        self.assertEqual(settings.yookassa_shop_id, "123456")
+        self.assertEqual(settings.yookassa_secret_key, "yookassa-secret-with-length")
+        self.assertEqual(settings.yookassa_return_url, "https://vpn.example/payments/return")
+        self.assertEqual(settings.product_prices_rub["vpn.yearly"], "2599.00")
 
     def test_rejects_missing_secret(self) -> None:
         with self.assertRaises(SettingsError):
@@ -59,6 +67,37 @@ class SettingsTest(unittest.TestCase):
                     "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
                     "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
                     "VPN_ROUTER_HSTS_ENABLED": "maybe",
+                }
+            )
+
+    def test_rejects_partial_yookassa_credentials(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                    "VPN_ROUTER_YOOKASSA_SHOP_ID": "123456",
+                }
+            )
+
+    def test_rejects_yookassa_credentials_without_return_url(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                    "VPN_ROUTER_YOOKASSA_SHOP_ID": "123456",
+                    "VPN_ROUTER_YOOKASSA_SECRET_KEY": "yookassa-secret-with-length",
+                }
+            )
+
+    def test_rejects_invalid_product_price(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                    "VPN_ROUTER_PRODUCT_PRICES_RUB": "vpn.monthly:not-a-price",
                 }
             )
 

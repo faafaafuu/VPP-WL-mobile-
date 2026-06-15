@@ -19,6 +19,7 @@ Current feature flags:
 - `account-data-export`
 - `account-deletion`
 - `admin-audit`
+- `yookassa-payments`
 
 ## Base Requirements
 
@@ -71,7 +72,32 @@ Response:
 ```
 
 Production platforms will be `apple` and `google` after store validation is implemented.
+For RU payments, the production platform is `yookassa`; the `receipt` value is the YooKassa payment id and the backend re-checks current payment status before issuing an access token.
 `product_id` must be one of the backend allowlisted products, configured through `VPN_ROUTER_ALLOWED_PRODUCT_IDS`.
+
+### RU Payment Flow
+
+`POST /api/payments/yookassa`
+
+Request:
+
+```json
+{"device_id":"stable-installation-id","product_id":"vpn.monthly"}
+```
+
+Response:
+
+```json
+{
+  "provider": "yookassa",
+  "payment_id": "payment-id",
+  "status": "pending",
+  "paid": false,
+  "confirmation_url": "https://..."
+}
+```
+
+Mobile opens `confirmation_url`. After the user returns, the app calls `POST /api/auth/receipt` with `platform=yookassa`, `receipt=<payment_id>`, the same `device_id`, and the product id. Webhooks may activate the subscription server-side, but they never return mobile access tokens.
 
 ## Config Flow
 

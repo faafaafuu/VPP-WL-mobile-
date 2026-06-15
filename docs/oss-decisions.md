@@ -6,7 +6,7 @@ This file records upstream projects checked before larger implementation work. D
 
 | Project | Upstream | License Observed | Use Decision | Reason |
 | --- | --- | --- | --- | --- |
-| sing-box / libbox | https://github.com/SagerNet/sing-box | GPL-3.0-or-later text in README/LICENSE | Use as separate core/runtime component only; do not copy source into closed app/backend. | Best protocol coverage for VLESS, Shadowsocks, WireGuard, Hysteria2 and sing-box config format. GPL requires product-level license decision if linked/distributed as part of closed app. |
+| sing-box / libbox | https://github.com/SagerNet/sing-box | GPL-3.0-or-later text in README/LICENSE | Use directly in the mobile app under a GPL-compatible distribution model. | Best protocol coverage for VLESS, Shadowsocks, WireGuard, Hysteria2 and sing-box config format. Product decision on 2026-06-15 accepted GPL runtime integration. |
 | Xray-core | https://github.com/XTLS/Xray-core | MPL-2.0 | Reference or separate component fallback; no current integration. | Useful protocol reference, but MVP config target remains sing-box. MPL is file-level copyleft; still avoid copying source. |
 | v2rayNG | https://github.com/2dust/v2rayNG | GPL-3.0 | Reference only. | Android VPN and core integration patterns are useful, but GPL code must not be copied into closed app. |
 | ClashMetaForAndroid | https://github.com/MetaCubeX/ClashMetaForAndroid | GPL-3.0 | Reference only. | Useful Android rule-based tunnel reference; GPL code must not be copied. |
@@ -24,6 +24,6 @@ This file records upstream projects checked before larger implementation work. D
 - Mobile plan targets a React Native + Expo UI shell with native Android/iOS VPN modules underneath.
 - Android native module targets `VpnService` plus sing-box/libbox runtime.
 - iOS native module targets `NETunnelProviderManager` plus `NEPacketTunnelProvider`.
-- The distribution/license model must be explicitly approved before bundling GPL sing-box binaries into a closed mobile app.
-- GPL/AGPL projects are documentation/reference sources only in this repository.
+- Product decision on 2026-06-15: mobile app distribution must be GPL-compatible if sing-box/libbox is linked or bundled.
+- GPL/AGPL projects other than the approved sing-box/libbox runtime remain documentation/reference sources only in this repository.
 - Runtime integration decision details are tracked in `docs/runtime-integration-plan.md`.

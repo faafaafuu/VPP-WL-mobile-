@@ -63,7 +63,7 @@ paths:
   /api/auth/receipt:
     post:
       security: []
-      summary: Activate subscription from a store receipt
+      summary: Activate subscription from a store or YooKassa receipt
       requestBody:
         required: true
         content:
@@ -79,6 +79,29 @@ paths:
                 $ref: "#/components/schemas/ReceiptResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/payments/yookassa:
+    post:
+      security: []
+      summary: Create a YooKassa redirect payment for RU users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/YooKassaPaymentRequest"
+      responses:
+        "200":
+          description: YooKassa payment confirmation URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YooKassaPaymentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
   /api/config:
     get:
       summary: Return sing-box config for active subscriber
@@ -223,6 +246,14 @@ paths:
       responses:
         "202":
           description: Accepted
+  /api/webhook/yookassa:
+    post:
+      security: []
+      summary: YooKassa payment notification
+      description: Re-checks current payment status through YooKassa before activating a subscription. Does not return mobile access tokens to the provider.
+      responses:
+        "200":
+          description: Webhook processed or ignored
 components:
   securitySchemes:
     bearerAuth:
@@ -299,14 +330,40 @@ components:
       properties:
         platform:
           type: string
-          enum: [sandbox, apple, google]
+          enum: [sandbox, apple, google, yookassa]
         receipt:
           type: string
+          description: Store receipt, sandbox token, or YooKassa payment id.
         device_id:
           type: string
         product_id:
           type: string
           default: vpn.monthly
+    YooKassaPaymentRequest:
+      type: object
+      required: [device_id]
+      properties:
+        device_id:
+          type: string
+        product_id:
+          type: string
+          default: vpn.monthly
+    YooKassaPaymentResponse:
+      type: object
+      required: [provider, payment_id, status, paid, confirmation_url]
+      properties:
+        provider:
+          type: string
+          enum: [yookassa]
+        payment_id:
+          type: string
+        status:
+          type: string
+        paid:
+          type: boolean
+        confirmation_url:
+          type: string
+          nullable: true
     ReceiptResponse:
       type: object
       required: [access_token, token_type, expires_at]
@@ -337,7 +394,7 @@ components:
           type: boolean
         platform:
           type: string
-          enum: [sandbox, apple, google]
+          enum: [sandbox, apple, google, yookassa]
         product_id:
           type: string
         expires_at:
@@ -374,7 +431,7 @@ components:
           type: boolean
         platform:
           type: string
-          enum: [sandbox, apple, google]
+          enum: [sandbox, apple, google, yookassa]
         product_id:
           type: string
         expires_at:
