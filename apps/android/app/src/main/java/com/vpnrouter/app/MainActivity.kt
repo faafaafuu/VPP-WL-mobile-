@@ -2,6 +2,7 @@ package com.vpnrouter.app
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
 import android.net.VpnService
 import android.os.Bundle
 import android.widget.Button
@@ -26,9 +27,15 @@ class MainActivity : Activity() {
             configStore = EncryptedConfigStore(applicationContext),
         )
 
+        val title = TextView(this).apply {
+            text = "VPN Router"
+            textSize = 28f
+            setTextColor(Color.rgb(17, 24, 39))
+        }
         status = TextView(this).apply {
             text = "Ready"
             textSize = 18f
+            setTextColor(Color.rgb(75, 85, 99))
         }
         val connect = Button(this).apply {
             text = "Connect"
@@ -45,7 +52,13 @@ class MainActivity : Activity() {
         setContentView(
             LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(32, 32, 32, 32)
+                setBackgroundColor(Color.WHITE)
+                setPadding(dp(24), dp(32), dp(24), dp(24))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                )
+                addView(title)
                 addView(status)
                 addView(connect)
             }
@@ -85,6 +98,10 @@ class MainActivity : Activity() {
         runOnUiThread {
             status.text = message
         }
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
     }
 
     private companion object {
