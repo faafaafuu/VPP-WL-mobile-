@@ -22,5 +22,9 @@ kotlin {
 
 dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-}
 
+    val libboxAar = file("libs/libbox.aar")
+    if (libboxAar.exists()) {
+        implementation(files(libboxAar))
+    }
+}

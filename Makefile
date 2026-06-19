@@ -1,7 +1,7 @@
 PY ?= python3
 GRAPHIFY ?= graphify
 
-.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness android-debug expo-typecheck run docker-build docker-up docker-down docker-health-check ci
+.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness libbox-android-check android-debug expo-typecheck run docker-build docker-up docker-down docker-health-check ci
 
 test:
 	cd backend && $(PY) -m unittest discover -s tests
@@ -41,6 +41,9 @@ env-check:
 
 mobile-readiness:
 	$(PY) tools/check_mobile_build_ready.py
+
+libbox-android-check:
+	$(PY) tools/check_libbox_artifacts.py --android
 
 android-debug:
 	cd apps/android && ANDROID_HOME=$${ANDROID_HOME:-/usr/lib/android-sdk} ./gradlew --no-daemon :app:assembleDebug

@@ -5,6 +5,7 @@ __pycache__/
 .env
 apps/android/.gradle/
 apps/android/**/build/
+apps/android/app/libs/*.aar
 apps/android/local.properties
 apps/mobile-expo/node_modules/
 backend/data/*.db

@@ -8,6 +8,8 @@ FORBIDDEN_PARTS = (
     "__pycache__/",
     ".pyc",
     "backend/data/",
+    "apps/android/app/libs/libbox.aar",
+    "apps/android/app/libs/libbox-legacy.aar",
 )
 FORBIDDEN_EXACT = {
     ".env",
