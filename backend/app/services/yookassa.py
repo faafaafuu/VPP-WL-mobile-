@@ -33,7 +33,7 @@ class YooKassaPayment:
 
 
 class YooKassaProvider(Protocol):
-    def create_payment(self, device_id: str, product_id: str) -> YooKassaPayment:
+    def create_payment(self, device_id: str, product_id: str, return_url: str | None = None) -> YooKassaPayment:
         ...
 
     def fetch_payment(self, payment_id: str) -> dict[str, Any]:
@@ -41,7 +41,7 @@ class YooKassaProvider(Protocol):
 
 
 class DisabledYooKassaProvider:
-    def create_payment(self, device_id: str, product_id: str) -> YooKassaPayment:
+    def create_payment(self, device_id: str, product_id: str, return_url: str | None = None) -> YooKassaPayment:
         raise YooKassaError("yookassa is not configured")
 
     def fetch_payment(self, payment_id: str) -> dict[str, Any]:
@@ -54,14 +54,14 @@ class HttpYooKassaProvider:
     def __init__(self, config: YooKassaConfig) -> None:
         self.config = config
 
-    def create_payment(self, device_id: str, product_id: str) -> YooKassaPayment:
+    def create_payment(self, device_id: str, product_id: str, return_url: str | None = None) -> YooKassaPayment:
         amount = self.config.product_prices_rub.get(product_id)
         if amount is None:
             raise YooKassaError("unknown product_id")
         payload = {
             "amount": {"value": amount, "currency": "RUB"},
             "capture": True,
-            "confirmation": {"type": "redirect", "return_url": self.config.return_url},
+            "confirmation": {"type": "redirect", "return_url": return_url or self.config.return_url},
             "description": f"VPN Router subscription {product_id}",
             "metadata": {"device_id": device_id, "product_id": product_id},
         }

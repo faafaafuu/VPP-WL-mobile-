@@ -6,11 +6,15 @@ from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Any
 
+from app.api.pages import connect_page, landing_page
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
-from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, ReceiptClaim, new_id
+from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, ReceiptClaim, new_id, new_subscription_token
 from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
+from app.domain.qr_svg import qr_svg
+from app.domain.tariffs import Tariff, parse_tariffs, tariffs_by_id
+from app.domain.v2ray_subscription import encoded_subscription, raw_subscription
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
 from app.services.receipt_verifier import MvpReceiptVerifier, ReceiptVerifier
@@ -32,6 +36,9 @@ class ApiService:
         admin_token: str,
         receipt_verifier: ReceiptVerifier | None = None,
         yookassa_provider: YooKassaProvider | None = None,
+        public_base_url: str = "http://127.0.0.1:8080",
+        checkout_mode: str = "mock",
+        tariffs: tuple[Tariff, ...] | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -41,6 +48,10 @@ class ApiService:
         self.admin_token = admin_token
         self.receipt_verifier = receipt_verifier or MvpReceiptVerifier()
         self.yookassa_provider = yookassa_provider or DisabledYooKassaProvider()
+        self.public_base_url = public_base_url.rstrip("/")
+        self.checkout_mode = checkout_mode
+        self.tariffs = tariffs or parse_tariffs(None)
+        self.tariffs_by_id = tariffs_by_id(self.tariffs)
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -64,7 +75,98 @@ class ApiService:
                 "account-deletion",
                 "admin-audit",
                 "yookassa-payments",
+                "v2ray-subscription-link-mvp",
             ],
+        }
+
+    def landing_html(self) -> str:
+        return landing_page(self.tariffs)
+
+    def checkout(self, payload: dict[str, Any]) -> dict[str, Any]:
+        tariff = self._tariff_from_payload(payload)
+        token = new_subscription_token()
+        self.repository.create_commercial_subscription(token, tariff.id)
+        connect_url = f"/connect/{token}"
+
+        if self.checkout_mode == "mock":
+            subscription = self.repository.activate_commercial_subscription(token, tariff.duration_days)
+            if subscription is None:
+                raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "subscription create failed"})
+            return {"redirect_url": connect_url, "token": token, "mode": "mock"}
+
+        try:
+            payment = self.yookassa_provider.create_payment(
+                device_id=token,
+                product_id=tariff.id,
+                return_url=f"{self.public_base_url}{connect_url}",
+            )
+        except YooKassaError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+        return {
+            "redirect_url": payment.confirmation_url or connect_url,
+            "token": token,
+            "mode": "yookassa",
+            "payment_id": payment.id,
+        }
+
+    def connect_html(self, token: str) -> str:
+        subscription = self._commercial_subscription(token)
+        return connect_page(subscription, self.subscription_url(token), self.tariffs)
+
+    def subscription_url(self, token: str) -> str:
+        return f"{self.public_base_url}/sub/{token}"
+
+    def v2ray_subscription(self, token: str) -> str:
+        self._require_active_commercial_subscription(token)
+        try:
+            return encoded_subscription(self.repository.list_nodes())
+        except ValueError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+
+    def raw_v2ray_subscription(self, token: str) -> str:
+        self._require_active_commercial_subscription(token)
+        try:
+            return raw_subscription(self.repository.list_nodes())
+        except ValueError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+
+    def subscription_qr_svg(self, token: str) -> str:
+        self._require_active_commercial_subscription(token)
+        try:
+            return qr_svg(self.subscription_url(token))
+        except ValueError as exc:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": str(exc)}) from exc
+
+    def admin_activate_commercial_subscription(
+        self,
+        admin_token: str,
+        token: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        self._require_admin(admin_token)
+        try:
+            duration_days = int(payload.get("duration_days", 30))
+        except (TypeError, ValueError) as exc:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "duration_days must be an integer"}) from exc
+        if duration_days <= 0:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "duration_days must be positive"})
+        subscription = self.repository.activate_commercial_subscription(token, duration_days)
+        if subscription is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="commercial_subscription.activate",
+                target_type="commercial_subscription",
+                target_id=_mask_token(token),
+                result="success",
+                details={"duration_days": duration_days},
+            )
+        )
+        return {
+            "status": "activated",
+            "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
         }
 
     def prometheus_metrics(self) -> str:
@@ -160,6 +262,19 @@ class ApiService:
         product_id = str(metadata.get("product_id", "vpn.monthly")).strip() or "vpn.monthly"
         if not device_id:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "payment metadata.device_id is required"})
+        commercial_subscription = self.repository.get_commercial_subscription(device_id)
+        if commercial_subscription is not None:
+            tariff = self.tariffs_by_id.get(product_id) or self.tariffs_by_id.get(commercial_subscription.tariff_id)
+            if tariff is None:
+                raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "unknown tariff_id"})
+            activated = self.repository.activate_commercial_subscription(device_id, tariff.duration_days, payment_id)
+            if activated is None:
+                raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+            return {
+                "status": "activated",
+                "connect_url": f"{self.public_base_url}/connect/{device_id}",
+                "expires_at": activated.expires_at.isoformat() if activated.expires_at else None,
+            }
         subscription = self.repository.activate_subscription(
             ReceiptClaim(
                 platform=Platform.YOOKASSA,
@@ -263,6 +378,24 @@ class ApiService:
             raise ApiError(HTTPStatus.UNAUTHORIZED, {"error": str(exc)}) from exc
         self._require_known_user(claims.subject)
         return claims.subject
+
+    def _commercial_subscription(self, token: str) -> Any:
+        subscription = self.repository.get_commercial_subscription(token)
+        if subscription is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+        return subscription
+
+    def _require_active_commercial_subscription(self, token: str) -> None:
+        subscription = self._commercial_subscription(token)
+        if not subscription.is_active():
+            raise ApiError(HTTPStatus.FORBIDDEN, {"error": "subscription expired"})
+
+    def _tariff_from_payload(self, payload: dict[str, Any]) -> Tariff:
+        tariff_id = str(payload.get("tariff_id", "")).strip()
+        tariff = self.tariffs_by_id.get(tariff_id)
+        if tariff is None:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "unknown tariff_id"})
+        return tariff
 
     def _require_admin(self, admin_token: str) -> None:
         if not self.admin_token or not hmac.compare_digest(admin_token, self.admin_token):
@@ -433,3 +566,9 @@ def _repository_backend_name(repository: Repository) -> str:
     if "memory" in name:
         return "memory"
     return "custom"
+
+
+def _mask_token(token: str) -> str:
+    if len(token) <= 8:
+        return "***"
+    return f"{token[:4]}...{token[-4:]}"

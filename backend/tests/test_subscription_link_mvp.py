@@ -1,0 +1,121 @@
+from __future__ import annotations
+
+import base64
+import unittest
+from dataclasses import replace
+from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
+
+from app.api.service import ApiError, ApiService
+from app.domain.config_builder import ConfigBuilder
+from app.repositories.memory import InMemoryRepository
+from app.security.tokens import TokenService
+
+
+class SubscriptionLinkMvpTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.repository = InMemoryRepository()
+        self.service = ApiService(
+            self.repository,
+            TokenService("test-secret-with-length"),
+            ConfigBuilder(),
+            admin_token="test-admin",
+            public_base_url="http://203.0.113.10:8080",
+            checkout_mode="mock",
+        )
+
+    def test_mock_checkout_activates_subscription_and_connect_page(self) -> None:
+        checkout = self.service.checkout({"tariff_id": "vpn.1m"})
+        token = checkout["token"]
+
+        html = self.service.connect_html(token)
+
+        self.assertEqual(checkout["redirect_url"], f"/connect/{token}")
+        self.assertIn("Ваш VPN активен", html)
+        self.assertIn(f"http://203.0.113.10:8080/sub/{token}", html)
+        self.assertIn("Скопировать ссылку", html)
+        self.assertIn("Показать QR", html)
+
+    def test_expired_subscription_connect_page_shows_renewal(self) -> None:
+        checkout = self.service.checkout({"tariff_id": "vpn.1m"})
+        token = checkout["token"]
+        subscription = self.repository.commercial_subscriptions_by_token[token]
+        self.repository.commercial_subscriptions_by_token[token] = replace(
+            subscription,
+            expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+
+        html = self.service.connect_html(token)
+
+        self.assertIn("Подписка закончилась", html)
+        self.assertIn("Продлить", html)
+
+    def test_active_subscription_gets_base64_v2ray_subscription(self) -> None:
+        token = self.service.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        encoded = self.service.v2ray_subscription(token)
+        decoded = base64.b64decode(encoded).decode("utf-8")
+
+        self.assertIn("vless://00000000-0000-4000-8000-000000000001@eu1.vpn.example.com:443", decoded)
+        self.assertIn("security=reality", decoded)
+        self.assertIn("pbk=mvpRealityPublicKey111111111111111111111111111", decoded)
+        self.assertIn("#VPN%20Router%201", decoded)
+        self.assertNotIn("vless-disabled", decoded)
+        self.assertNotIn("ss-eu-2", decoded)
+
+    def test_raw_subscription_returns_plain_vless_lines_sorted_by_priority(self) -> None:
+        token = self.service.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        raw = self.service.raw_v2ray_subscription(token)
+
+        self.assertTrue(raw.startswith("vless://00000000-0000-4000-8000-000000000001@"))
+        self.assertIn("\nvless://00000000-0000-4000-8000-000000000003@", raw)
+
+    def test_expired_subscription_is_forbidden_on_subscription_endpoint(self) -> None:
+        token = self.service.checkout({"tariff_id": "vpn.1m"})["token"]
+        subscription = self.repository.commercial_subscriptions_by_token[token]
+        self.repository.commercial_subscriptions_by_token[token] = replace(
+            subscription,
+            expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+
+        with self.assertRaises(ApiError) as context:
+            self.service.v2ray_subscription(token)
+
+        self.assertEqual(context.exception.status, HTTPStatus.FORBIDDEN)
+        self.assertEqual(context.exception.payload["error"], "subscription expired")
+
+    def test_unknown_subscription_token_returns_404(self) -> None:
+        with self.assertRaises(ApiError) as context:
+            self.service.raw_v2ray_subscription("missing-token")
+
+        self.assertEqual(context.exception.status, HTTPStatus.NOT_FOUND)
+
+    def test_qr_endpoint_returns_svg_for_subscription_url(self) -> None:
+        token = self.service.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        svg = self.service.subscription_qr_svg(token)
+
+        self.assertTrue(svg.startswith("<svg"))
+        self.assertIn('role="img"', svg)
+
+    def test_admin_activation_requires_admin_token_and_extends_subscription(self) -> None:
+        token = "test-token"
+        self.repository.create_commercial_subscription(token, "vpn.1m")
+
+        with self.assertRaises(ApiError) as context:
+            self.service.admin_activate_commercial_subscription("wrong", token, {"duration_days": 30})
+        activated = self.service.admin_activate_commercial_subscription("test-admin", token, {"duration_days": 30})
+
+        self.assertEqual(context.exception.status, HTTPStatus.UNAUTHORIZED)
+        self.assertEqual(activated["status"], "activated")
+        self.assertTrue(self.repository.get_commercial_subscription(token).is_active())
+
+    def test_public_base_url_is_used_in_subscription_url(self) -> None:
+        token = "token-1"
+
+        self.assertEqual(self.service.subscription_url(token), "http://203.0.113.10:8080/sub/token-1")
+
+
+if __name__ == "__main__":
+    unittest.main()

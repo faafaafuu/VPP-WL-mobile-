@@ -32,6 +32,23 @@ API service
 
 Admin health updates and the health-check worker feed node metrics used by node scoring before configs are emitted.
 
+## Subscription Link MVP Chain
+
+The web sales graph should expose this path:
+
+```text
+Landing page
+  -> checkout
+  -> payment/mock activation
+  -> commercial subscription token
+  -> connect page
+  -> V2Ray subscription endpoint
+  -> active VLESS nodes
+  -> v2rayN / v2rayNG / Hiddify / Streisand / Shadowrocket
+```
+
+The V2Ray subscription endpoint only emits active usable VLESS nodes, sorted by priority. The connect page shows the subscription URL and QR but does not expose node UUIDs or Reality keys directly.
+
 ## Mobile UI Chain
 
 The mobile graph should expose this path:

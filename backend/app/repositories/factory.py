@@ -5,7 +5,17 @@ from typing import Protocol as TypingProtocol
 
 from datetime import datetime
 
-from app.domain.models import AdminAuditEvent, NodeHealth, NodeHealthEvent, NodeStatus, ReceiptClaim, Subscription, User, VpnNode
+from app.domain.models import (
+    AdminAuditEvent,
+    CommercialSubscription,
+    NodeHealth,
+    NodeHealthEvent,
+    NodeStatus,
+    ReceiptClaim,
+    Subscription,
+    User,
+    VpnNode,
+)
 from app.repositories.memory import InMemoryRepository
 from app.repositories.sqlite import SqliteRepository
 
@@ -27,6 +37,25 @@ class Repository(TypingProtocol):
         ...
 
     def get_active_subscription(self, user_id: str) -> Subscription | None:
+        ...
+
+    def create_commercial_subscription(
+        self,
+        token: str,
+        tariff_id: str,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription:
+        ...
+
+    def get_commercial_subscription(self, token: str) -> CommercialSubscription | None:
+        ...
+
+    def activate_commercial_subscription(
+        self,
+        token: str,
+        duration_days: int,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription | None:
         ...
 
     def list_nodes(self) -> list[VpnNode]:

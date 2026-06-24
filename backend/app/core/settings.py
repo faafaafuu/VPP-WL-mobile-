@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import Mapping
 
+from app.domain.tariffs import Tariff, parse_tariffs
+
 
 PLACEHOLDER_VALUES = {
     "replace-with-random-32-byte-secret",
@@ -33,6 +35,9 @@ class Settings:
     yookassa_secret_key: str | None = None
     yookassa_return_url: str | None = None
     product_prices_rub: dict[str, str] = field(default_factory=lambda: {"vpn.monthly": "399.00"})
+    public_base_url: str = "http://127.0.0.1:8080"
+    checkout_mode: str = "mock"
+    tariffs: tuple[Tariff, ...] = field(default_factory=parse_tariffs)
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -61,7 +66,17 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         raise SettingsError("VPN_ROUTER_YOOKASSA_SHOP_ID and VPN_ROUTER_YOOKASSA_SECRET_KEY must be set together")
     if yookassa_shop_id and not yookassa_return_url:
         raise SettingsError("VPN_ROUTER_YOOKASSA_RETURN_URL is required when YooKassa credentials are set")
-    product_prices_rub = _product_prices(source.get("VPN_ROUTER_PRODUCT_PRICES_RUB", "vpn.monthly:399.00"))
+    product_prices_rub = _product_prices(
+        source.get("VPN_ROUTER_PRODUCT_PRICES_RUB", "vpn.monthly:399.00,vpn.1m:399.00,vpn.3m:999.00,vpn.6m:1799.00")
+    )
+    public_base_url = _required_url(source.get("PUBLIC_BASE_URL", f"http://127.0.0.1:{port}"), "PUBLIC_BASE_URL")
+    checkout_mode = source.get("CHECKOUT_MODE", "mock").strip().lower()
+    if checkout_mode not in {"mock", "yookassa"}:
+        raise SettingsError("CHECKOUT_MODE must be mock or yookassa")
+    try:
+        tariffs = parse_tariffs(source.get("VPN_ROUTER_TARIFFS", ""), product_prices_rub)
+    except ValueError as exc:
+        raise SettingsError(f"VPN_ROUTER_TARIFFS invalid: {exc}") from exc
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -76,6 +91,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         yookassa_secret_key=yookassa_secret_key,
         yookassa_return_url=yookassa_return_url,
         product_prices_rub=product_prices_rub,
+        public_base_url=public_base_url,
+        checkout_mode=checkout_mode,
+        tariffs=tariffs,
     )
 
 
@@ -123,6 +141,15 @@ def _optional_url(raw_value: str) -> str | None:
         raise SettingsError("VPN_ROUTER_YOOKASSA_RETURN_URL must not use placeholder value")
     if not value.startswith(("https://", "http://")):
         raise SettingsError("VPN_ROUTER_YOOKASSA_RETURN_URL must be an absolute URL")
+    return value
+
+
+def _required_url(raw_value: str, key: str) -> str:
+    value = raw_value.strip().rstrip("/")
+    if not value:
+        raise SettingsError(f"{key} is required")
+    if not value.startswith(("https://", "http://")):
+        raise SettingsError(f"{key} must be an absolute URL")
     return value
 
 

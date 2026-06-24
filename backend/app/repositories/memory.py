@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.domain.models import (
     AdminAuditEvent,
+    CommercialSubscription,
     NodeHealth,
     NodeHealthEvent,
     NodeStatus,
@@ -26,6 +27,7 @@ class InMemoryRepository:
         self.users_by_id: dict[str, User] = {}
         self.users_by_device_id: dict[str, str] = {}
         self.subscriptions_by_user_id: dict[str, Subscription] = {}
+        self.commercial_subscriptions_by_token: dict[str, CommercialSubscription] = {}
         self.nodes_by_id: dict[str, VpnNode] = {}
         self.health_events_by_node_id: dict[str, list[NodeHealthEvent]] = {}
         self.admin_audit_events: list[AdminAuditEvent] = []
@@ -86,6 +88,48 @@ class InMemoryRepository:
         if subscription and subscription.is_active():
             return subscription
         return None
+
+    def create_commercial_subscription(
+        self,
+        token: str,
+        tariff_id: str,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription:
+        now = datetime.now(timezone.utc)
+        subscription = CommercialSubscription(
+            token=token,
+            tariff_id=tariff_id,
+            payment_id=payment_id,
+            status="pending",
+            created_at=now,
+            updated_at=now,
+        )
+        self.commercial_subscriptions_by_token[token] = subscription
+        return subscription
+
+    def get_commercial_subscription(self, token: str) -> CommercialSubscription | None:
+        return self.commercial_subscriptions_by_token.get(token)
+
+    def activate_commercial_subscription(
+        self,
+        token: str,
+        duration_days: int,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription | None:
+        subscription = self.commercial_subscriptions_by_token.get(token)
+        if subscription is None:
+            return None
+        now = datetime.now(timezone.utc)
+        base = subscription.expires_at if subscription.expires_at and subscription.expires_at > now else now
+        updated = replace(
+            subscription,
+            status="active",
+            expires_at=base + timedelta(days=duration_days),
+            payment_id=payment_id or subscription.payment_id,
+            updated_at=now,
+        )
+        self.commercial_subscriptions_by_token[token] = updated
+        return updated
 
     def list_nodes(self) -> list[VpnNode]:
         return list(self.nodes_by_id.values())
@@ -180,7 +224,9 @@ class InMemoryRepository:
                 options=VlessOptions(
                     uuid="00000000-0000-4000-8000-000000000001",
                     server_name="cdn.example.com",
-                    transport={"type": "ws", "path": "/api/cdn"},
+                    public_key="mvpRealityPublicKey111111111111111111111111111",
+                    short_id="a1b2c3d4",
+                    label="VPN Router 1",
                 ),
             ),
             VpnNode(
@@ -219,6 +265,9 @@ class InMemoryRepository:
                 options=VlessOptions(
                     uuid="00000000-0000-4000-8000-000000000003",
                     server_name="assets.example.com",
+                    public_key="mvpRealityPublicKey222222222222222222222222222",
+                    short_id="b2c3d4e5",
+                    label="VPN Router 2",
                 ),
             ),
             VpnNode(
@@ -239,6 +288,9 @@ class InMemoryRepository:
                 options=VlessOptions(
                     uuid="00000000-0000-4000-8000-000000000004",
                     server_name="assets.example.com",
+                    public_key="mvpRealityPublicKey333333333333333333333333333",
+                    short_id="c3d4e5f6",
+                    label="VPN Router disabled",
                 ),
             ),
         ]

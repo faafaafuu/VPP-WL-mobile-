@@ -8,6 +8,7 @@ from typing import Any
 
 from app.domain.models import (
     AdminAuditEvent,
+    CommercialSubscription,
     Hysteria2Options,
     NodeHealth,
     NodeHealthEvent,
@@ -31,7 +32,7 @@ class SqliteRepository:
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
-        self.connection = sqlite3.connect(self.database_path)
+        self.connection = sqlite3.connect(self.database_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
         self.connection.execute("PRAGMA foreign_keys = ON")
         self.migrate()
@@ -143,6 +144,79 @@ class SqliteRepository:
             return None
         subscription = _subscription_from_row(row)
         return subscription if subscription.is_active() else None
+
+    def create_commercial_subscription(
+        self,
+        token: str,
+        tariff_id: str,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription:
+        now = datetime.now(timezone.utc)
+        subscription = CommercialSubscription(
+            token=token,
+            tariff_id=tariff_id,
+            status="pending",
+            created_at=now,
+            updated_at=now,
+            payment_id=payment_id,
+        )
+        self.connection.execute(
+            """
+            INSERT INTO commercial_subscriptions
+                (token, tariff_id, status, created_at, updated_at, expires_at, payment_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                subscription.token,
+                subscription.tariff_id,
+                subscription.status,
+                _dt_to_text(subscription.created_at),
+                _dt_to_text(subscription.updated_at),
+                None,
+                subscription.payment_id,
+            ),
+        )
+        self.connection.commit()
+        return subscription
+
+    def get_commercial_subscription(self, token: str) -> CommercialSubscription | None:
+        row = self.connection.execute(
+            """
+            SELECT token, tariff_id, status, created_at, updated_at, expires_at, payment_id
+            FROM commercial_subscriptions
+            WHERE token = ?
+            """,
+            (token,),
+        ).fetchone()
+        return _commercial_subscription_from_row(row) if row else None
+
+    def activate_commercial_subscription(
+        self,
+        token: str,
+        duration_days: int,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription | None:
+        subscription = self.get_commercial_subscription(token)
+        if subscription is None:
+            return None
+        now = datetime.now(timezone.utc)
+        base = subscription.expires_at if subscription.expires_at and subscription.expires_at > now else now
+        expires_at = base + timedelta(days=duration_days)
+        self.connection.execute(
+            """
+            UPDATE commercial_subscriptions
+            SET status = 'active', expires_at = ?, payment_id = ?, updated_at = ?
+            WHERE token = ?
+            """,
+            (
+                _dt_to_text(expires_at),
+                payment_id or subscription.payment_id,
+                _dt_to_text(now),
+                token,
+            ),
+        )
+        self.connection.commit()
+        return self.get_commercial_subscription(token)
 
     def list_nodes(self) -> list[VpnNode]:
         rows = self.connection.execute(
@@ -404,6 +478,25 @@ class SqliteRepository:
             ON admin_audit_events(occurred_at DESC)
             """
         )
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS commercial_subscriptions (
+                token TEXT PRIMARY KEY,
+                tariff_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                expires_at TEXT,
+                payment_id TEXT
+            )
+            """
+        )
+        self.connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_commercial_subscriptions_status_expires
+            ON commercial_subscriptions(status, expires_at)
+            """
+        )
 
 
 def _user_from_row(row: sqlite3.Row) -> User:
@@ -417,6 +510,18 @@ def _subscription_from_row(row: sqlite3.Row) -> Subscription:
         expires_at=_dt_from_text(row["expires_at"]),
         product_id=row["product_id"],
         original_transaction_id=row["original_transaction_id"],
+    )
+
+
+def _commercial_subscription_from_row(row: sqlite3.Row) -> CommercialSubscription:
+    return CommercialSubscription(
+        token=row["token"],
+        tariff_id=row["tariff_id"],
+        status=row["status"],
+        created_at=_dt_from_text(row["created_at"]),
+        updated_at=_dt_from_text(row["updated_at"]),
+        expires_at=_dt_from_text(row["expires_at"]) if row["expires_at"] else None,
+        payment_id=row["payment_id"],
     )
 
 
@@ -497,6 +602,11 @@ def _options_to_json(node: VpnNode) -> str | None:
             "flow": node.options.flow,
             "transport": node.options.transport,
             "reality": node.options.reality,
+            "security": node.options.security,
+            "public_key": node.options.public_key,
+            "short_id": node.options.short_id,
+            "fingerprint": node.options.fingerprint,
+            "label": node.options.label,
         }
     elif isinstance(node.options, ShadowsocksOptions):
         payload = {
@@ -532,6 +642,11 @@ def _options_from_json(protocol: Protocol, raw: str | None) -> Any:
             flow=payload.get("flow"),
             transport=payload.get("transport"),
             reality=payload.get("reality"),
+            security=payload.get("security", "reality"),
+            public_key=payload.get("public_key"),
+            short_id=payload.get("short_id"),
+            fingerprint=payload.get("fingerprint", "chrome"),
+            label=payload.get("label"),
         )
     if protocol == Protocol.SHADOWSOCKS:
         return ShadowsocksOptions(method=payload["method"], password=payload["password"])
