@@ -114,11 +114,17 @@ _free_port() {
         fi
     done
 
-    # Check if it's a Docker container
-    local docker_info
-    docker_info=$(docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep ":${port}->" || true)
-    if [[ -n "$docker_info" ]]; then
-        die "Port ${port} is used by a Docker container:\n  ${docker_info}\nStop it first: docker stop <name>"
+    # Check if it's a Docker container — stop it automatically
+    local container
+    container=$(docker ps --format "{{.Names}}" 2>/dev/null | while read -r name; do
+        docker port "$name" 2>/dev/null | grep -q ":${port}$" && echo "$name"
+    done | head -1 || true)
+    if [[ -n "$container" ]]; then
+        warn "Port ${port} is used by container '${container}' — stopping it"
+        docker stop "$container" && docker rm "$container" \
+            && ok "Removed container ${container}" \
+            || die "Could not remove container ${container}. Try: docker rm -f ${container}"
+        return 0
     fi
 
     die "Port ${port} is in use by an unknown process. Free it and re-run setup.sh."
