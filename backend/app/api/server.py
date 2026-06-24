@@ -155,7 +155,7 @@ class ApiHandler(BaseHTTPRequestHandler):
                 return
             self._send_service_response(lambda: API_SERVICE.export_me(user_id))
             return
-        if path == "/api/admin/nodes":
+        if path in {"/api/admin/nodes", "/admin/nodes"}:
             admin_token = self.headers.get("X-Admin-Token", "")
             self._send_service_response(lambda: API_SERVICE.admin_nodes(admin_token))
             return
@@ -228,7 +228,15 @@ class ApiHandler(BaseHTTPRequestHandler):
             self._send_service_response(lambda: API_SERVICE.yookassa_webhook(payload))
             return
 
-        if path == "/api/admin/nodes":
+        if path in {"/api/admin/nodes/import-vless", "/admin/nodes/import-vless"}:
+            payload = self._read_json()
+            if payload is None:
+                return
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(lambda: API_SERVICE.admin_import_vless(admin_token, payload))
+            return
+
+        if path in {"/api/admin/nodes", "/admin/nodes"}:
             payload = self._read_json()
             if payload is None:
                 return
@@ -269,6 +277,18 @@ class ApiHandler(BaseHTTPRequestHandler):
             admin_token = self.headers.get("X-Admin-Token", "")
             self._send_service_response(lambda: API_SERVICE.admin_update_node_health(admin_token, node_id, payload))
             return
+
+        # PATCH /admin/nodes/{id} or /api/admin/nodes/{id} — toggle enabled / label / priority
+        for node_prefix in ("/api/admin/nodes/", "/admin/nodes/"):
+            if path.startswith(node_prefix) and not path.endswith("/health"):
+                node_id = path[len(node_prefix):].strip("/")
+                if node_id:
+                    payload = self._read_json()
+                    if payload is None:
+                        return
+                    admin_token = self.headers.get("X-Admin-Token", "")
+                    self._send_service_response(lambda: API_SERVICE.admin_patch_node(admin_token, node_id, payload))
+                    return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 

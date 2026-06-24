@@ -17,6 +17,7 @@ from app.domain.node_selection import choose_preferred_nodes
 from app.domain.qr_svg import qr_svg
 from app.domain.tariffs import Tariff, parse_tariffs, tariffs_by_id
 from app.domain.v2ray_subscription import encoded_subscription, raw_subscription
+from app.domain.vless_parser import VlessParseError, parse_vless_url
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
 from app.services.exchange_rates import ExchangeRateService
@@ -129,7 +130,21 @@ class ApiService:
 
     def connect_html(self, token: str) -> str:
         subscription = self._commercial_subscription(token)
-        return connect_page(subscription, self.subscription_url(token), self.tariffs)
+        configs = self._public_configs() if subscription.is_active() else []
+        return connect_page(subscription, self.subscription_url(token), self.tariffs, configs)
+
+    def _public_configs(self) -> list[dict[str, str]]:
+        """Display-only list of available configs — labels and type, no secrets."""
+        from app.domain.v2ray_subscription import active_vless_nodes
+        configs: list[dict[str, str]] = []
+        for node in active_vless_nodes(self.repository.list_nodes()):
+            opts = node.options
+            label = getattr(opts, "label", None) or node.tag
+            security = (getattr(opts, "security", "") or "").lower()
+            transport = (getattr(opts, "transport", None) or {}).get("type", "tcp")
+            kind = "Reality" if security == "reality" else security.upper() or "TCP"
+            configs.append({"label": label, "kind": kind, "transport": str(transport).upper()})
+        return configs
 
     def invoice_html(self, token: str) -> str:
         subscription = self._commercial_subscription(token)
@@ -445,6 +460,79 @@ class ApiService:
         )
         return {"node": _admin_node(disabled)}
 
+    def admin_import_vless(self, admin_token: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Parse a vless:// URL (e.g. from 3x-ui) and store it as a node."""
+        self._require_admin(admin_token)
+        vless_url = str(payload.get("vless_url", "")).strip()
+        if not vless_url:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "vless_url is required"})
+        try:
+            node = parse_vless_url(
+                vless_url,
+                node_id=_opt_str(payload.get("id")),
+                label=_opt_str(payload.get("label")),
+                priority=int(payload.get("priority", 100)),
+                enabled=bool(payload.get("enabled", True)),
+                country_code=str(payload.get("country_code", "XX") or "XX"),
+                region=str(payload.get("region", "unknown") or "unknown"),
+                source=str(payload.get("source", "3x-ui") or "3x-ui"),
+                source_panel=str(payload.get("source_panel", "local-3x-ui") or "local-3x-ui"),
+            )
+        except (VlessParseError, ValueError) as exc:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": f"invalid vless_url: {exc}"}) from exc
+        self.repository.upsert_node(node)
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="node.import_vless",
+                target_type="node",
+                target_id=node.id,
+                result="success",
+                details={"host": node.host, "port": node.port, "source": "3x-ui"},
+            )
+        )
+        return {"node": _admin_node(node)}
+
+    def admin_patch_node(self, admin_token: str, node_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Toggle enabled / change label / priority online, without a redeploy."""
+        self._require_admin(admin_token)
+        from dataclasses import replace
+        node = self.repository.get_node(node_id)
+        if node is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "node not found"})
+
+        changes: dict[str, Any] = {}
+        if "enabled" in payload:
+            enabled = bool(payload["enabled"])
+            node = replace(
+                node,
+                status=NodeStatus.ACTIVE if enabled else NodeStatus.DISABLED,
+                health=NodeHealth.HEALTHY if enabled else NodeHealth.DISABLED,
+            )
+            changes["enabled"] = enabled
+        if "priority" in payload:
+            node = replace(node, priority=int(payload["priority"]))
+            changes["priority"] = node.priority
+        if "label" in payload and isinstance(node.options, VlessOptions):
+            label = str(payload["label"]).strip()
+            node = replace(node, tag=label, options=replace(node.options, label=label))
+            changes["label"] = label
+
+        self.repository.upsert_node(node)
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="node.patch",
+                target_type="node",
+                target_id=node_id,
+                result="success",
+                details=changes,
+            )
+        )
+        return {"node": _admin_node(node)}
+
     def config(self, user_id: str) -> dict[str, Any]:
         self._require_known_user(user_id)
         if self.repository.get_active_subscription(user_id) is None:
@@ -600,13 +688,28 @@ def _public_subscription(subscription: Any) -> dict[str, Any]:
     }
 
 
+def _opt_str(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 def _admin_node(node: Any) -> dict[str, Any]:
+    options = node.options
+    label = getattr(options, "label", None) if options else None
+    source = getattr(options, "source", None) if options else None
+    source_panel = getattr(options, "source_panel", None) if options else None
     return {
         **_public_node(node),
         "tag": node.tag,
+        "label": label or node.tag,
         "host": node.host,
         "port": node.port,
         "weight": node.weight,
+        "enabled": node.status not in {NodeStatus.DISABLED},
+        "source": source,
+        "source_panel": source_panel,
         "last_check_at": node.last_check_at.isoformat() if node.last_check_at else None,
         "usable": node.is_usable(),
     }

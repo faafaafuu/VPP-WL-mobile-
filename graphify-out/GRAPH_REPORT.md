@@ -2,9 +2,9 @@
 
 Fallback AST graph for the VPN Router MVP backend.
 
-- Files: 68
-- Symbols: 602
-- Edges: 713
+- Files: 71
+- Symbols: 639
+- Edges: 762
 
 ## Key Files
 
@@ -16,6 +16,7 @@ Fallback AST graph for the VPN Router MVP backend.
 - `backend/app/api/service.py`
 - `backend/app/cli/__init__.py`
 - `backend/app/cli/health_check.py`
+- `backend/app/cli/import_vless.py`
 - `backend/app/core/__init__.py`
 - `backend/app/core/settings.py`
 - `backend/app/domain/__init__.py`
@@ -32,6 +33,7 @@ Fallback AST graph for the VPN Router MVP backend.
 - `backend/app/domain/rules_engine.py`
 - `backend/app/domain/tariffs.py`
 - `backend/app/domain/v2ray_subscription.py`
+- `backend/app/domain/vless_parser.py`
 - `backend/app/repositories/__init__.py`
 - `backend/app/repositories/factory.py`
 - `backend/app/repositories/memory.py`
@@ -75,4 +77,5 @@ Fallback AST graph for the VPN Router MVP backend.
 - `backend/tests/test_subscription_link_mvp.py`
 - `backend/tests/test_tls_deploy_assets.py`
 - `backend/tests/test_tokens.py`
+- `backend/tests/test_vless_import.py`
 - `backend/tests/test_yookassa_payments.py`

@@ -40,12 +40,14 @@ def connect_page(
     subscription: CommercialSubscription,
     subscription_url: str,
     tariffs: tuple[Tariff, ...],
+    configs: list[dict[str, str]] | None = None,
 ) -> str:
     tariff_map = {t.id: t for t in tariffs}
     current_tariff = tariff_map.get(subscription.tariff_id)
     max_devices = current_tariff.max_devices if current_tariff else 3
     if subscription.is_active():
         expires = subscription.expires_at.strftime("%d.%m.%Y") if subscription.expires_at else ""
+        configs_block = _configs_block(configs or [])
         status = f"""
           <div class="status-card active">
             <p class="eyebrow">Подписка</p>
@@ -59,6 +61,7 @@ def connect_page(
             <p class="sub-url" id="subUrl">{escape(subscription_url)}</p>
             <p class="hint" id="connectHint" hidden>Если клиент не открылся, скопируйте ссылку или отсканируйте QR.</p>
             <div class="qr-wrap" id="qrWrap" hidden><img src="/sub/{escape(subscription.token)}/qr" alt="QR код подписки"></div>
+            {configs_block}
           </div>
         """
     else:
@@ -215,6 +218,23 @@ def invoice_page(
     )
 
 
+def _configs_block(configs: list[dict[str, str]]) -> str:
+    if not configs:
+        return ""
+    rows = "\n".join(
+        f'<li><span class="cfg-name">{escape(c.get("label", ""))}</span>'
+        f'<span class="cfg-kind">{escape(c.get("kind", ""))}</span></li>'
+        for c in configs
+    )
+    return f"""
+      <div class="configs">
+        <p class="configs-title">Доступные варианты ({len(configs)})</p>
+        <ul class="configs-list">{rows}</ul>
+        <p class="configs-hint">Все варианты добавятся одной ссылкой. Если один не работает — выберите другой в приложении.</p>
+      </div>
+    """
+
+
 def _coin_tab_buttons(coin_options: list[dict[str, str]]) -> str:
     parts = []
     for i, opt in enumerate(coin_options):
@@ -356,6 +376,13 @@ def _page(title: str, body: str) -> str:
     .step-num {{ flex-shrink: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--green)); color: #061018; font-weight: 900; }}
     .notes {{ display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); }}
     .notes span {{ border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; background: rgba(255,255,255,.05); }}
+    .configs {{ margin-top: 22px; border-top: 1px solid var(--line); padding-top: 18px; }}
+    .configs-title {{ margin: 0 0 12px; font-size: .82rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }}
+    .configs-list {{ list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }}
+    .configs-list li {{ display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: rgba(0,0,0,.18); }}
+    .cfg-name {{ font-weight: 700; }}
+    .cfg-kind {{ font-size: .74rem; font-weight: 800; letter-spacing: .04em; color: var(--cyan); background: rgba(54,231,255,.12); border-radius: 999px; padding: 4px 10px; }}
+    .configs-hint {{ margin: 12px 0 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }}
     .instructions-title {{ margin: 0; font-size: .82rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }}
     .tag {{ display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(54,231,255,.16); color: var(--cyan); font-size: .68rem; font-weight: 800; letter-spacing: .04em; vertical-align: middle; }}
     .status-card {{ margin-top: 22px; padding: 24px; overflow: hidden; }}

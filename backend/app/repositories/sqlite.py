@@ -442,7 +442,11 @@ class SqliteRepository:
         count = self.connection.execute("SELECT COUNT(*) AS count FROM nodes").fetchone()["count"]
         if count:
             return
-        seed_source = self._initial_nodes or InMemoryRepository().list_nodes()
+        # Explicit list (even empty) means "use exactly these" — no demo seeds.
+        if self._initial_nodes is not None:
+            seed_source = self._initial_nodes
+        else:
+            seed_source = InMemoryRepository().list_nodes()
         for node in seed_source:
             self.upsert_node(node)
 
@@ -609,6 +613,9 @@ def _options_to_json(node: VpnNode) -> str | None:
             "short_id": node.options.short_id,
             "fingerprint": node.options.fingerprint,
             "label": node.options.label,
+            "raw_url": node.options.raw_url,
+            "source": node.options.source,
+            "source_panel": node.options.source_panel,
         }
     elif isinstance(node.options, ShadowsocksOptions):
         payload = {
@@ -649,6 +656,9 @@ def _options_from_json(protocol: Protocol, raw: str | None) -> Any:
             short_id=payload.get("short_id"),
             fingerprint=payload.get("fingerprint", "chrome"),
             label=payload.get("label"),
+            raw_url=payload.get("raw_url"),
+            source=payload.get("source", "manual"),
+            source_panel=payload.get("source_panel"),
         )
     if protocol == Protocol.SHADOWSOCKS:
         return ShadowsocksOptions(method=payload["method"], password=payload["password"])
