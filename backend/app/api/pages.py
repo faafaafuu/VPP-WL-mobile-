@@ -23,6 +23,7 @@ def landing_page(tariffs: tuple[Tariff, ...]) -> str:
           </section>
           <section class="notes">
             <span>Без сложной настройки</span>
+            <span>До 3 устройств на одну подписку</span>
             <span>Готовые клиенты: v2rayN, v2rayNG, Hiddify, Streisand</span>
             <span>Ссылка подключения сразу после оплаты</span>
           </section>
@@ -36,13 +37,16 @@ def connect_page(
     subscription_url: str,
     tariffs: tuple[Tariff, ...],
 ) -> str:
+    tariff_map = {t.id: t for t in tariffs}
+    current_tariff = tariff_map.get(subscription.tariff_id)
+    max_devices = current_tariff.max_devices if current_tariff else 3
     if subscription.is_active():
         expires = subscription.expires_at.strftime("%d.%m.%Y") if subscription.expires_at else ""
         status = f"""
           <div class="status-card active">
             <p class="eyebrow">Подписка</p>
             <h1>Ваш VPN активен</h1>
-            <p class="lead compact">Действует до {escape(expires)}. Нажмите подключить или импортируйте ссылку в клиент.</p>
+            <p class="lead compact">Действует до {escape(expires)}. До {max_devices} устройств — установите ссылку на каждом.</p>
             <div class="actions">
               <button class="button primary" type="button" onclick="connectClient()">Подключить</button>
               <button class="button" type="button" onclick="copySub()">Скопировать ссылку</button>
@@ -116,41 +120,35 @@ def connect_page(
 def invoice_page(
     subscription: CommercialSubscription,
     tariff: Tariff,
-    usdt_trc20_address: str,
-    amount_usdt: str,
+    coin_options: list[dict[str, str]],
 ) -> str:
     order_ref = subscription.token[:12].upper()
     price_rub = _price(tariff.price_rub)
+    coins_js = _coins_js(coin_options)
+    coin_blocks = "\n".join(_coin_block(i, opt, subscription.token) for i, opt in enumerate(coin_options))
     return _page(
         "Оплата криптовалютой",
         f"""
         <main class="shell connect">
           <div class="status-card active" style="background:linear-gradient(145deg,rgba(103,247,165,.13),rgba(255,255,255,.08))">
-            <p class="eyebrow">Оплата</p>
+            <p class="eyebrow">Оплата криптовалютой</p>
             <h1>{escape(tariff.title)}</h1>
-            <p class="lead compact">Переведите <strong>{escape(amount_usdt)} USDT TRC20</strong> на адрес ниже.<br>
-            Стоимость тарифа: {escape(price_rub)}. Номер заказа: <code>{escape(order_ref)}</code></p>
-            <div class="crypto-card">
-              <p class="crypto-label">USDT TRC20 адрес</p>
-              <p class="crypto-addr" id="walletAddr">{escape(usdt_trc20_address)}</p>
-              <div class="actions">
-                <button class="button primary" type="button" onclick="copyAddr()">Скопировать адрес</button>
-                <button class="button" type="button" onclick="toggleAddrQr()">QR-код адреса</button>
-              </div>
-              <div class="qr-wrap" id="addrQr" hidden>
-                <img src="/invoice/{escape(subscription.token)}/qr" alt="QR адреса кошелька">
-              </div>
-              <p class="hint" id="copyHint" hidden>Адрес скопирован.</p>
+            <p class="lead compact">Стоимость: <strong>{escape(price_rub)}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;Заказ: <code>{escape(order_ref)}</code></p>
+            <p class="lead compact" style="margin-top:6px">Выберите валюту и переведите точную сумму.</p>
+            <div class="coin-tabs" id="coinTabs">
+              {_coin_tab_buttons(coin_options)}
             </div>
+            {coin_blocks}
             <div class="instructions" style="margin-top:18px">
               <details open>
                 <summary>Как оплатить</summary>
                 <ol>
-                  <li>Откройте ваш крипто-кошелёк (Binance, OKX, Trust Wallet, Bybit и др.).</li>
-                  <li>Выберите сеть <strong>TRC20 (Tron)</strong>.</li>
-                  <li>Переведите ровно <strong>{escape(amount_usdt)} USDT</strong>.</li>
+                  <li>Выберите валюту, которая удобна вам.</li>
+                  <li>Откройте ваш кошелёк (Binance, OKX, Bybit, Trust Wallet и др.).</li>
+                  <li>Убедитесь, что выбрали правильную <strong>сеть</strong> (TRC20, BSC, TON и т.д.).</li>
+                  <li>Переведите <strong>точную сумму</strong> — без округления.</li>
                   <li>В комментарии/мемо укажите номер заказа: <strong>{escape(order_ref)}</strong>.</li>
-                  <li>После подтверждения транзакции администратор активирует доступ — обычно в течение 30 минут.</li>
+                  <li>После подтверждения транзакции активируем доступ — обычно в течение 30 минут.</li>
                 </ol>
               </details>
             </div>
@@ -160,25 +158,79 @@ def invoice_page(
           </div>
         </main>
         <script>
-          const walletAddr = {usdt_trc20_address!r};
-          async function copyAddr() {{
-            await navigator.clipboard.writeText(walletAddr);
-            const hint = document.getElementById('copyHint');
-            hint.hidden = false;
+          {coins_js}
+          function selectCoin(idx) {{
+            document.querySelectorAll('.coin-panel').forEach((p, i) => p.hidden = i !== idx);
+            document.querySelectorAll('.coin-tab').forEach((b, i) => b.classList.toggle('active', i === idx));
           }}
-          function toggleAddrQr() {{
-            const qr = document.getElementById('addrQr');
-            qr.hidden = !qr.hidden;
+          async function copyAddr(idx) {{
+            await navigator.clipboard.writeText(COINS[idx].address);
+            const hint = document.getElementById('copyHint' + idx);
+            if (hint) hint.hidden = false;
           }}
+          function toggleQr(idx) {{
+            const qr = document.getElementById('addrQr' + idx);
+            if (qr) qr.hidden = !qr.hidden;
+          }}
+          selectCoin(0);
         </script>
         <style>
-          .crypto-card {{ margin-top: 18px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: rgba(0,0,0,.22); }}
-          .crypto-label {{ margin: 0 0 6px; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; }}
-          .crypto-addr {{ margin: 0 0 14px; font-family: monospace; font-size: .92rem; word-break: break-all; color: var(--cyan); }}
+          .coin-tabs {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }}
+          .coin-tab {{ padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; color: var(--text); }}
+          .coin-tab.active {{ border-color: var(--cyan); color: var(--cyan); background: rgba(54,231,255,.10); }}
+          .coin-panel {{ margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: rgba(0,0,0,.22); }}
+          .crypto-meta {{ display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }}
+          .crypto-dot {{ width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }}
+          .crypto-net {{ color: var(--muted); font-size: .8rem; }}
+          .crypto-amount {{ font-size: 1.9rem; font-weight: 900; margin: 0 0 12px; }}
+          .crypto-label {{ margin: 0 0 4px; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; }}
+          .crypto-addr {{ margin: 0 0 12px; font-family: monospace; font-size: .88rem; word-break: break-all; color: var(--cyan); }}
+          .hint {{ color: var(--green); margin-top: 8px; }}
           code {{ font-family: monospace; color: var(--cyan); }}
         </style>
         """,
     )
+
+
+def _coin_tab_buttons(coin_options: list[dict[str, str]]) -> str:
+    parts = []
+    for i, opt in enumerate(coin_options):
+        dot = f'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{escape(opt["color"])};margin-right:5px"></span>'
+        parts.append(
+            f'<button class="coin-tab" type="button" onclick="selectCoin({i})">'
+            f'{dot}{escape(opt["label"])} <span style="opacity:.6;font-weight:400">{escape(opt["network_label"])}</span>'
+            f'</button>'
+        )
+    return "\n".join(parts)
+
+
+def _coin_block(idx: int, opt: dict[str, str], token: str) -> str:
+    return f"""
+      <div class="coin-panel" id="coinPanel{idx}" hidden>
+        <div class="crypto-meta">
+          <span class="crypto-dot" style="background:{escape(opt['color'])}"></span>
+          <span style="font-weight:700">{escape(opt['label'])}</span>
+          <span class="crypto-net">{escape(opt['network_label'])}</span>
+        </div>
+        <p class="crypto-amount">{escape(opt['amount'])} {escape(opt['label'])}</p>
+        <p class="crypto-label">Адрес кошелька</p>
+        <p class="crypto-addr">{escape(opt['address'])}</p>
+        <div class="actions">
+          <button class="button primary" type="button" onclick="copyAddr({idx})">Скопировать адрес</button>
+          <button class="button" type="button" onclick="toggleQr({idx})">QR-код</button>
+        </div>
+        <div class="qr-wrap" id="addrQr{idx}" hidden>
+          <img src="/invoice/{escape(token)}/qr/{escape(opt['id'])}" alt="QR {escape(opt['label'])} {escape(opt['network_label'])}">
+        </div>
+        <p class="hint" id="copyHint{idx}" hidden>Адрес скопирован.</p>
+      </div>
+    """
+
+
+def _coins_js(coin_options: list[dict[str, str]]) -> str:
+    import json as _json
+    items = [{"address": opt["address"]} for opt in coin_options]
+    return f"const COINS = {_json.dumps(items)};"
 
 
 def not_found_page() -> str:
@@ -206,7 +258,7 @@ def _tariff_card(tariff: Tariff, compact: bool = False) -> str:
         <input type="hidden" name="tariff_id" value="{escape(tariff.id)}">
         <h2>{escape(tariff.title)}</h2>
         <p class="price">{escape(_price(tariff.price_rub))}</p>
-        <p>Выберите тариф и получите ссылку подключения.</p>
+        <p>До {tariff.max_devices} устройств. Ссылка сразу после оплаты.</p>
         <button class="button primary" type="submit">Оплатить</button>
       </form>
     """

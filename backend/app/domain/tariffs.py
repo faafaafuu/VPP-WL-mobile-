@@ -12,12 +12,13 @@ class Tariff:
     duration_days: int
     price_rub: str
     badge: str | None = None
+    max_devices: int = 3
 
 
 DEFAULT_TARIFFS: tuple[Tariff, ...] = (
-    Tariff(id="vpn.1m", title="1 месяц", duration_days=30, price_rub="399.00"),
-    Tariff(id="vpn.3m", title="3 месяца", duration_days=90, price_rub="999.00", badge="выгоднее"),
-    Tariff(id="vpn.6m", title="6 месяцев", duration_days=180, price_rub="1799.00", badge="лучший выбор"),
+    Tariff(id="vpn.1m", title="1 месяц",    duration_days=30,  price_rub="200.00", max_devices=3),
+    Tariff(id="vpn.3m", title="3 месяца",   duration_days=90,  price_rub="500.00", badge="выгоднее",    max_devices=3),
+    Tariff(id="vpn.6m", title="6 месяцев",  duration_days=180, price_rub="900.00", badge="лучший выбор", max_devices=3),
 )
 
 
@@ -33,10 +34,18 @@ def parse_tariffs(raw_value: str | None = None, product_prices: Mapping[str, str
     parsed: list[Tariff] = []
     for item in _csv(raw_value):
         parts = [part.strip() for part in item.split(":")]
-        if len(parts) not in {4, 5}:
-            raise ValueError("tariff items must use id:title:duration_days:price_rub[:badge]")
+        if len(parts) not in {4, 5, 6}:
+            raise ValueError("tariff items must use id:title:duration_days:price_rub[:badge[:max_devices]]")
         tariff_id, title, raw_duration, raw_price = parts[:4]
-        badge = parts[4] if len(parts) == 5 and parts[4] else None
+        badge = parts[4] if len(parts) >= 5 and parts[4] else None
+        max_devices = 3
+        if len(parts) == 6 and parts[5]:
+            try:
+                max_devices = int(parts[5])
+            except ValueError as exc:
+                raise ValueError("tariff max_devices must be an integer") from exc
+            if max_devices < 1:
+                raise ValueError("tariff max_devices must be at least 1")
         if not tariff_id or not title:
             raise ValueError("tariff id and title must not be empty")
         try:
@@ -45,7 +54,7 @@ def parse_tariffs(raw_value: str | None = None, product_prices: Mapping[str, str
             raise ValueError("tariff duration_days must be an integer") from exc
         if duration_days <= 0:
             raise ValueError("tariff duration_days must be positive")
-        parsed.append(Tariff(tariff_id, title, duration_days, _decimal_price(raw_price), badge))
+        parsed.append(Tariff(tariff_id, title, duration_days, _decimal_price(raw_price), badge, max_devices))
     if not parsed:
         raise ValueError("at least one tariff is required")
     return tuple(parsed)
@@ -60,6 +69,7 @@ def _with_configured_price(tariff: Tariff, prices: Mapping[str, str]) -> Tariff:
         duration_days=tariff.duration_days,
         price_rub=_decimal_price(prices[tariff.id]),
         badge=tariff.badge,
+        max_devices=tariff.max_devices,
     )
 
 

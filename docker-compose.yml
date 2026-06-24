@@ -10,9 +10,7 @@ services:
       VPN_ROUTER_REPOSITORY: sqlite
       VPN_ROUTER_SQLITE_PATH: data/vpn-router.db
       VPN_ROUTER_HOST: 0.0.0.0
-      VPN_ROUTER_PORT: 8080
-    ports:
-      - "8080:8080"
+      VPN_ROUTER_PORT: "8080"
     volumes:
       - backend-data:/app/backend/data
     healthcheck:
@@ -21,6 +19,34 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:v2.11.0
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+        while :; do
+          certbot renew --quiet --webroot --webroot-path /var/www/certbot 2>/dev/null || true;
+          sleep 12h & wait $${!};
+        done"
+    restart: unless-stopped
 
   health-check:
     image: vpn-router-backend:latest
@@ -37,3 +63,5 @@ services:
 
 volumes:
   backend-data:
+  certbot-conf:
+  certbot-www:

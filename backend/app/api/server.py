@@ -15,6 +15,7 @@ from app.core.settings import load_settings
 from app.domain.config_builder import ConfigBuilder
 from app.repositories.factory import create_repository
 from app.security.tokens import TokenService
+from app.services.exchange_rates import get_exchange_rate_service
 from app.services.receipt_verifier import MvpReceiptVerifier
 from app.services.yookassa import DisabledYooKassaProvider, HttpYooKassaProvider, YooKassaConfig
 
@@ -36,6 +37,7 @@ YOOKASSA_PROVIDER = (
     if SETTINGS.yookassa_shop_id and SETTINGS.yookassa_secret_key and SETTINGS.yookassa_return_url
     else DisabledYooKassaProvider()
 )
+EXCHANGE_RATE_SERVICE = get_exchange_rate_service(SETTINGS.crypto_rate_provider)
 API_SERVICE = ApiService(
     REPOSITORY,
     TOKEN_SERVICE,
@@ -48,6 +50,8 @@ API_SERVICE = ApiService(
     tariffs=SETTINGS.tariffs,
     crypto_usdt_trc20_address=SETTINGS.crypto_usdt_trc20_address,
     crypto_usdt_rate_rub=SETTINGS.crypto_usdt_rate_rub,
+    crypto_wallets=SETTINGS.crypto_wallets,
+    exchange_rate_service=EXCHANGE_RATE_SERVICE,
 )
 
 
@@ -93,10 +97,21 @@ class ApiHandler(BaseHTTPRequestHandler):
             token = path.removeprefix("/sub/").strip("/")
             self._send_text_response(lambda: API_SERVICE.v2ray_subscription(token), "text/plain")
             return
+        if path.startswith("/invoice/") and "/qr/" in path:
+            # /invoice/{token}/qr/{coin_id}
+            rest = path.removeprefix("/invoice/")
+            parts = rest.split("/qr/", 1)
+            token = parts[0].strip("/")
+            coin_id = parts[1].strip("/") if len(parts) > 1 else None
+            try:
+                self._send_text(HTTPStatus.OK, API_SERVICE.invoice_wallet_qr_svg(token, coin_id), "image/svg+xml")
+            except ApiError as exc:
+                self._send_json(exc.status, exc.payload)
+            return
         if path.startswith("/invoice/") and path.endswith("/qr"):
             token = path.removeprefix("/invoice/")[: -len("/qr")].strip("/")
             try:
-                self._send_text(HTTPStatus.OK, API_SERVICE.invoice_wallet_qr_svg(token), "image/svg+xml")
+                self._send_text(HTTPStatus.OK, API_SERVICE.invoice_wallet_qr_svg(token, None), "image/svg+xml")
             except ApiError as exc:
                 self._send_json(exc.status, exc.payload)
             return
@@ -151,6 +166,25 @@ class ApiHandler(BaseHTTPRequestHandler):
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
+    def do_DELETE(self) -> None:
+        if self._is_rate_limited():
+            return
+        path = urlparse(self.path).path
+        if path == "/api/me":
+            user_id = self._require_user_id()
+            if user_id is None:
+                return
+            self._send_service_response(lambda: API_SERVICE.delete_me(user_id))
+            return
+        admin_node_prefix = "/api/admin/nodes/"
+        if path.startswith(admin_node_prefix):
+            node_id = path[len(admin_node_prefix):].strip("/")
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(lambda: API_SERVICE.admin_disable_node(admin_token, node_id))
+            return
+
+        self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
+
     def do_POST(self) -> None:
         if self._is_rate_limited():
             return
@@ -194,6 +228,14 @@ class ApiHandler(BaseHTTPRequestHandler):
             self._send_service_response(lambda: API_SERVICE.yookassa_webhook(payload))
             return
 
+        if path == "/api/admin/nodes":
+            payload = self._read_json()
+            if payload is None:
+                return
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(lambda: API_SERVICE.admin_upsert_node(admin_token, payload))
+            return
+
         admin_prefix = "/admin/subscriptions/"
         admin_suffix = "/activate"
         if path.startswith(admin_prefix) and path.endswith(admin_suffix):
@@ -209,19 +251,6 @@ class ApiHandler(BaseHTTPRequestHandler):
 
         if path in {"/api/webhook/apple", "/api/webhook/google"}:
             self._send_json(HTTPStatus.ACCEPTED, {"status": "accepted"})
-            return
-
-        self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
-
-    def do_DELETE(self) -> None:
-        if self._is_rate_limited():
-            return
-        path = urlparse(self.path).path
-        if path == "/api/me":
-            user_id = self._require_user_id()
-            if user_id is None:
-                return
-            self._send_service_response(lambda: API_SERVICE.delete_me(user_id))
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})

@@ -1,7 +1,7 @@
 PY ?= python3
 GRAPHIFY ?= graphify
 
-.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness libbox-android-check android-debug expo-typecheck run docker-build docker-up docker-down docker-health-check ci
+.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness libbox-android-check android-debug expo-typecheck run docker-build docker-up docker-down docker-health-check up up-ssl logs down ci
 
 test:
 	cd backend && $(PY) -m unittest discover -s tests
@@ -18,6 +18,22 @@ check-tracked-artifacts:
 run:
 	cd backend && VPN_ROUTER_REPOSITORY=sqlite $(PY) -m app.api.server
 
+## One-command deployment
+up:
+	./setup.sh
+
+up-ssl:
+	@test -n "$(DOMAIN)" || (echo "Usage: make up-ssl DOMAIN=vpn.example.com EMAIL=admin@example.com" && exit 1)
+	@test -n "$(EMAIL)"  || (echo "Usage: make up-ssl DOMAIN=vpn.example.com EMAIL=admin@example.com" && exit 1)
+	./setup.sh --ssl $(DOMAIN) $(EMAIL)
+
+logs:
+	docker compose logs -f
+
+down:
+	docker compose down
+
+## Low-level docker targets
 docker-build:
 	docker compose build
 
