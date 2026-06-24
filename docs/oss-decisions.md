@@ -32,3 +32,4 @@ This file records upstream projects checked before larger implementation work. D
 - Runtime integration decision details are tracked in `docs/runtime-integration-plan.md`.
 - Android runtime adapter is independently implemented in `apps/android/app/src/main/java/com/vpnrouter/app/vpn/ReflectionLibboxRunner.kt` and does not vendor upstream GPL source.
 - `subscription-link-mvp` does not embed native VPN runtimes or third-party client code. It sells V2Ray/VLESS subscription links for user-installed clients.
+- Xray-core (MPL-2.0) is used as a **deployed server-side component** (separate process, not linked). No Xray source is copied into this repository. See `docs/server-setup-vless-reality.md` for setup instructions.

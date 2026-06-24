@@ -1,0 +1,74 @@
+# Graph Report
+
+Fallback AST graph for the VPN Router MVP backend.
+
+- Files: 64
+- Symbols: 535
+- Edges: 634
+
+## Key Files
+
+- `backend/app/__init__.py`
+- `backend/app/api/__init__.py`
+- `backend/app/api/pages.py`
+- `backend/app/api/rate_limit.py`
+- `backend/app/api/server.py`
+- `backend/app/api/service.py`
+- `backend/app/cli/__init__.py`
+- `backend/app/cli/health_check.py`
+- `backend/app/core/__init__.py`
+- `backend/app/core/settings.py`
+- `backend/app/domain/__init__.py`
+- `backend/app/domain/config_builder.py`
+- `backend/app/domain/config_validation.py`
+- `backend/app/domain/health_checker.py`
+- `backend/app/domain/models.py`
+- `backend/app/domain/node_config.py`
+- `backend/app/domain/node_scoring.py`
+- `backend/app/domain/node_selection.py`
+- `backend/app/domain/qr_svg.py`
+- `backend/app/domain/receipt_fingerprint.py`
+- `backend/app/domain/rules_engine.py`
+- `backend/app/domain/tariffs.py`
+- `backend/app/domain/v2ray_subscription.py`
+- `backend/app/repositories/__init__.py`
+- `backend/app/repositories/factory.py`
+- `backend/app/repositories/memory.py`
+- `backend/app/repositories/sqlite.py`
+- `backend/app/security/__init__.py`
+- `backend/app/security/tokens.py`
+- `backend/app/services/__init__.py`
+- `backend/app/services/health_worker.py`
+- `backend/app/services/receipt_verifier.py`
+- `backend/app/services/yookassa.py`
+- `backend/tests/test_android_scaffold.py`
+- `backend/tests/test_api_server.py`
+- `backend/tests/test_config_builder.py`
+- `backend/tests/test_config_validation.py`
+- `backend/tests/test_cors_server.py`
+- `backend/tests/test_crypto_manual.py`
+- `backend/tests/test_env_ready_tool.py`
+- `backend/tests/test_expo_scaffold.py`
+- `backend/tests/test_health_check_cli.py`
+- `backend/tests/test_health_checker.py`
+- `backend/tests/test_health_worker.py`
+- `backend/tests/test_ios_scaffold.py`
+- `backend/tests/test_legal_docs.py`
+- `backend/tests/test_libbox_artifact_tool.py`
+- `backend/tests/test_mobile_build_readiness_tool.py`
+- `backend/tests/test_monitoring_assets.py`
+- `backend/tests/test_node_config.py`
+- `backend/tests/test_node_selection.py`
+- `backend/tests/test_openapi_contract.py`
+- `backend/tests/test_rate_limit.py`
+- `backend/tests/test_receipt_verifier.py`
+- `backend/tests/test_repository.py`
+- `backend/tests/test_rules_engine.py`
+- `backend/tests/test_security_headers.py`
+- `backend/tests/test_settings.py`
+- `backend/tests/test_sing_box_check_tool.py`
+- `backend/tests/test_sqlite_repository.py`
+- `backend/tests/test_subscription_link_mvp.py`
+- `backend/tests/test_tls_deploy_assets.py`
+- `backend/tests/test_tokens.py`
+- `backend/tests/test_yookassa_payments.py`

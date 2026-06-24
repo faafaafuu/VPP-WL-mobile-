@@ -43,12 +43,20 @@
       "line": 34
     },
     {
+      "id": "backend_app_api_pages_py_invoice_page",
+      "label": "invoice_page()",
+      "source_file": "backend/app/api/pages.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 116
+    },
+    {
       "id": "backend_app_api_pages_py_not_found_page",
       "label": "not_found_page()",
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 116
+      "line": 184
     },
     {
       "id": "backend_app_api_pages_py__tariff_card",
@@ -56,7 +64,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 132
+      "line": 200
     },
     {
       "id": "backend_app_api_pages_py__price",
@@ -64,7 +72,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 147
+      "line": 215
     },
     {
       "id": "backend_app_api_pages_py__page",
@@ -72,7 +80,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 153
+      "line": 221
     },
     {
       "id": "backend_app_api_rate_limit_py",
@@ -110,7 +118,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 52
+      "line": 54
     },
     {
       "id": "backend_app_api_server_py_run",
@@ -118,7 +126,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 352
+      "line": 371
     },
     {
       "id": "backend_app_api_server_py_do_options",
@@ -126,7 +134,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 55
+      "line": 57
     },
     {
       "id": "backend_app_api_server_py_do_get",
@@ -134,7 +142,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 62
+      "line": 64
     },
     {
       "id": "backend_app_api_server_py_do_post",
@@ -142,7 +150,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 135
+      "line": 154
     },
     {
       "id": "backend_app_api_server_py_do_delete",
@@ -150,7 +158,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 197
+      "line": 216
     },
     {
       "id": "backend_app_api_server_py_do_patch",
@@ -158,7 +166,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 210
+      "line": 229
     },
     {
       "id": "backend_app_api_server_py_log_message",
@@ -166,7 +174,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 227
+      "line": 246
     },
     {
       "id": "backend_app_api_server_py__require_user_id",
@@ -174,7 +182,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 230
+      "line": 249
     },
     {
       "id": "backend_app_api_server_py__is_rate_limited",
@@ -182,7 +190,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 238
+      "line": 257
     },
     {
       "id": "backend_app_api_server_py__read_json",
@@ -190,7 +198,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 250
+      "line": 269
     },
     {
       "id": "backend_app_api_server_py__read_form_or_json",
@@ -198,7 +206,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 263
+      "line": 282
     },
     {
       "id": "backend_app_api_server_py__send_service_response",
@@ -206,7 +214,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 272
+      "line": 291
     },
     {
       "id": "backend_app_api_server_py__send_text_response",
@@ -214,7 +222,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 278
+      "line": 297
     },
     {
       "id": "backend_app_api_server_py__send_json",
@@ -222,7 +230,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 284
+      "line": 303
     },
     {
       "id": "backend_app_api_server_py__send_text",
@@ -230,7 +238,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 295
+      "line": 314
     },
     {
       "id": "backend_app_api_server_py__send_html",
@@ -238,7 +246,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 306
+      "line": 325
     },
     {
       "id": "backend_app_api_server_py__send_redirect",
@@ -246,7 +254,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 317
+      "line": 336
     },
     {
       "id": "backend_app_api_server_py__send_cors_headers",
@@ -254,7 +262,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 326
+      "line": 345
     },
     {
       "id": "backend_app_api_server_py__send_security_headers",
@@ -262,7 +270,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 344
+      "line": 363
     },
     {
       "id": "backend_app_api_service_py",
@@ -277,7 +285,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 25
+      "line": 26
     },
     {
       "id": "backend_app_api_service_py_apiservice",
@@ -285,7 +293,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 30
+      "line": 31
     },
     {
       "id": "backend_app_api_service_py__public_node",
@@ -293,7 +301,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 491
+      "line": 513
     },
     {
       "id": "backend_app_api_service_py__public_subscription",
@@ -301,7 +309,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 508
+      "line": 530
     },
     {
       "id": "backend_app_api_service_py__admin_node",
@@ -309,7 +317,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 517
+      "line": 539
     },
     {
       "id": "backend_app_api_service_py__admin_audit_event",
@@ -317,7 +325,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 529
+      "line": 551
     },
     {
       "id": "backend_app_api_service_py__admin_health_update_details",
@@ -325,7 +333,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 541
+      "line": 563
     },
     {
       "id": "backend_app_api_service_py__metric_escape",
@@ -333,7 +341,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 560
+      "line": 582
     },
     {
       "id": "backend_app_api_service_py__repository_backend_name",
@@ -341,7 +349,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 564
+      "line": 586
     },
     {
       "id": "backend_app_api_service_py__mask_token",
@@ -349,7 +357,15 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 573
+      "line": 595
+    },
+    {
+      "id": "backend_app_api_service_py__rub_to_usdt",
+      "label": "_rub_to_usdt()",
+      "source_file": "backend/app/api/service.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 601
     },
     {
       "id": "backend_app_api_service_py___init__",
@@ -357,7 +373,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 31
+      "line": 32
     },
     {
       "id": "backend_app_api_service_py_auth_init",
@@ -365,7 +381,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 56
+      "line": 61
     },
     {
       "id": "backend_app_api_service_py_version",
@@ -373,7 +389,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 63
+      "line": 68
     },
     {
       "id": "backend_app_api_service_py_landing_html",
@@ -381,7 +397,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 82
+      "line": 87
     },
     {
       "id": "backend_app_api_service_py_checkout",
@@ -389,7 +405,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 85
+      "line": 90
     },
     {
       "id": "backend_app_api_service_py_connect_html",
@@ -397,7 +413,23 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 114
+      "line": 120
+    },
+    {
+      "id": "backend_app_api_service_py_invoice_html",
+      "label": "invoice_html()",
+      "source_file": "backend/app/api/service.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 124
+    },
+    {
+      "id": "backend_app_api_service_py_invoice_wallet_qr_svg",
+      "label": "invoice_wallet_qr_svg()",
+      "source_file": "backend/app/api/service.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 134
     },
     {
       "id": "backend_app_api_service_py_subscription_url",
@@ -405,7 +437,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 118
+      "line": 140
     },
     {
       "id": "backend_app_api_service_py_v2ray_subscription",
@@ -413,7 +445,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 121
+      "line": 143
     },
     {
       "id": "backend_app_api_service_py_raw_v2ray_subscription",
@@ -421,7 +453,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 128
+      "line": 150
     },
     {
       "id": "backend_app_api_service_py_subscription_qr_svg",
@@ -429,7 +461,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 135
+      "line": 157
     },
     {
       "id": "backend_app_api_service_py_admin_activate_commercial_subscription",
@@ -437,7 +469,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 142
+      "line": 164
     },
     {
       "id": "backend_app_api_service_py_prometheus_metrics",
@@ -445,7 +477,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 174
+      "line": 196
     },
     {
       "id": "backend_app_api_service_py_auth_receipt",
@@ -453,7 +485,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 214
+      "line": 236
     },
     {
       "id": "backend_app_api_service_py_create_yookassa_payment",
@@ -461,7 +493,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 231
+      "line": 253
     },
     {
       "id": "backend_app_api_service_py_yookassa_webhook",
@@ -469,7 +501,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 248
+      "line": 270
     },
     {
       "id": "backend_app_api_service_py_nodes",
@@ -477,7 +509,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 294
+      "line": 316
     },
     {
       "id": "backend_app_api_service_py_me",
@@ -485,7 +517,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 298
+      "line": 320
     },
     {
       "id": "backend_app_api_service_py_export_me",
@@ -493,7 +525,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 306
+      "line": 328
     },
     {
       "id": "backend_app_api_service_py_delete_me",
@@ -501,7 +533,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 312
+      "line": 334
     },
     {
       "id": "backend_app_api_service_py_admin_nodes",
@@ -509,7 +541,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 317
+      "line": 339
     },
     {
       "id": "backend_app_api_service_py_admin_audit_events",
@@ -517,7 +549,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 321
+      "line": 343
     },
     {
       "id": "backend_app_api_service_py_admin_update_node_health",
@@ -525,7 +557,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 325
+      "line": 347
     },
     {
       "id": "backend_app_api_service_py_config",
@@ -533,7 +565,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 362
+      "line": 384
     },
     {
       "id": "backend_app_api_service_py_user_id_from_authorization",
@@ -541,7 +573,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 373
+      "line": 395
     },
     {
       "id": "backend_app_api_service_py__commercial_subscription",
@@ -549,7 +581,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 384
+      "line": 406
     },
     {
       "id": "backend_app_api_service_py__require_active_commercial_subscription",
@@ -557,7 +589,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 390
+      "line": 412
     },
     {
       "id": "backend_app_api_service_py__tariff_from_payload",
@@ -565,7 +597,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 395
+      "line": 417
     },
     {
       "id": "backend_app_api_service_py__require_admin",
@@ -573,7 +605,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 402
+      "line": 424
     },
     {
       "id": "backend_app_api_service_py__health_score_from_payload",
@@ -581,7 +613,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 406
+      "line": 428
     },
     {
       "id": "backend_app_api_service_py__node_status_from_payload",
@@ -589,7 +621,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 415
+      "line": 437
     },
     {
       "id": "backend_app_api_service_py__latency_from_payload",
@@ -597,7 +629,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 424
+      "line": 446
     },
     {
       "id": "backend_app_api_service_py__success_rate_from_payload",
@@ -605,7 +637,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 436
+      "line": 458
     },
     {
       "id": "backend_app_api_service_py__health_from_payload",
@@ -613,7 +645,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 448
+      "line": 470
     },
     {
       "id": "backend_app_api_service_py__receipt_claim_from_payload",
@@ -621,7 +653,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 457
+      "line": 479
     },
     {
       "id": "backend_app_api_service_py__require_known_user",
@@ -629,7 +661,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 472
+      "line": 494
     },
     {
       "id": "backend_app_api_service_py__verify_yookassa_claim",
@@ -637,7 +669,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 476
+      "line": 498
     },
     {
       "id": "backend_app_cli___init___py",
@@ -689,7 +721,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 19
+      "line": 21
     },
     {
       "id": "backend_app_core_settings_py_settings",
@@ -697,7 +729,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 24
+      "line": 26
     },
     {
       "id": "backend_app_core_settings_py_load_settings",
@@ -705,7 +737,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 43
+      "line": 48
     },
     {
       "id": "backend_app_core_settings_py__required_secret",
@@ -713,7 +745,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 100
+      "line": 118
     },
     {
       "id": "backend_app_core_settings_py__optional_secret",
@@ -721,7 +753,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 111
+      "line": 129
     },
     {
       "id": "backend_app_core_settings_py__port",
@@ -729,7 +761,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 122
+      "line": 140
     },
     {
       "id": "backend_app_core_settings_py__csv",
@@ -737,7 +769,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 132
+      "line": 150
     },
     {
       "id": "backend_app_core_settings_py__optional_url",
@@ -745,7 +777,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 136
+      "line": 154
     },
     {
       "id": "backend_app_core_settings_py__required_url",
@@ -753,7 +785,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 147
+      "line": 165
     },
     {
       "id": "backend_app_core_settings_py__product_prices",
@@ -761,7 +793,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 156
+      "line": 174
     },
     {
       "id": "backend_app_core_settings_py__non_negative_int",
@@ -769,7 +801,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 176
+      "line": 194
     },
     {
       "id": "backend_app_core_settings_py__bool",
@@ -777,7 +809,15 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 186
+      "line": 204
+    },
+    {
+      "id": "backend_app_core_settings_py__decimal_str",
+      "label": "_decimal_str()",
+      "source_file": "backend/app/core/settings.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 213
     },
     {
       "id": "backend_app_domain___init___py",
@@ -1181,6 +1221,29 @@
       "file_type": "code",
       "kind": "symbol",
       "line": 127
+    },
+    {
+      "id": "backend_app_domain_node_config_py",
+      "label": "node_config.py",
+      "source_file": "backend/app/domain/node_config.py",
+      "file_type": "code",
+      "kind": "file"
+    },
+    {
+      "id": "backend_app_domain_node_config_py_nodeconfigerror",
+      "label": "NodeConfigError",
+      "source_file": "backend/app/domain/node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 11
+    },
+    {
+      "id": "backend_app_domain_node_config_py_parse_nodes_from_env",
+      "label": "parse_nodes_from_env()",
+      "source_file": "backend/app/domain/node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 15
     },
     {
       "id": "backend_app_domain_node_scoring_py",
@@ -1770,7 +1833,7 @@
       "source_file": "backend/app/repositories/memory.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 300
+      "line": 303
     },
     {
       "id": "backend_app_repositories_memory_py___init__",
@@ -1977,7 +2040,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 502
+      "line": 504
     },
     {
       "id": "backend_app_repositories_sqlite_py__subscription_from_row",
@@ -1985,7 +2048,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 506
+      "line": 508
     },
     {
       "id": "backend_app_repositories_sqlite_py__commercial_subscription_from_row",
@@ -1993,7 +2056,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 516
+      "line": 518
     },
     {
       "id": "backend_app_repositories_sqlite_py__subscription_export",
@@ -2001,7 +2064,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 528
+      "line": 530
     },
     {
       "id": "backend_app_repositories_sqlite_py__node_from_row",
@@ -2009,7 +2072,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 538
+      "line": 540
     },
     {
       "id": "backend_app_repositories_sqlite_py__health_event_from_row",
@@ -2017,7 +2080,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 561
+      "line": 563
     },
     {
       "id": "backend_app_repositories_sqlite_py__admin_audit_event_from_row",
@@ -2025,7 +2088,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 579
+      "line": 581
     },
     {
       "id": "backend_app_repositories_sqlite_py__options_to_json",
@@ -2033,7 +2096,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 594
+      "line": 596
     },
     {
       "id": "backend_app_repositories_sqlite_py__options_from_json",
@@ -2041,7 +2104,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 634
+      "line": 636
     },
     {
       "id": "backend_app_repositories_sqlite_py__dt_to_text",
@@ -2049,7 +2112,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 666
+      "line": 668
     },
     {
       "id": "backend_app_repositories_sqlite_py__dt_from_text",
@@ -2057,7 +2120,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 670
+      "line": 672
     },
     {
       "id": "backend_app_repositories_sqlite_py___init__",
@@ -2073,7 +2136,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 41
+      "line": 42
     },
     {
       "id": "backend_app_repositories_sqlite_py_close",
@@ -2081,7 +2144,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 47
+      "line": 48
     },
     {
       "id": "backend_app_repositories_sqlite_py_get_or_create_user",
@@ -2089,7 +2152,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 50
+      "line": 51
     },
     {
       "id": "backend_app_repositories_sqlite_py_get_user",
@@ -2097,7 +2160,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 66
+      "line": 67
     },
     {
       "id": "backend_app_repositories_sqlite_py_export_user_data",
@@ -2105,7 +2168,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 73
+      "line": 74
     },
     {
       "id": "backend_app_repositories_sqlite_py_delete_user",
@@ -2113,7 +2176,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 95
+      "line": 96
     },
     {
       "id": "backend_app_repositories_sqlite_py_activate_subscription",
@@ -2121,7 +2184,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 100
+      "line": 101
     },
     {
       "id": "backend_app_repositories_sqlite_py_get_active_subscription",
@@ -2129,7 +2192,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 134
+      "line": 135
     },
     {
       "id": "backend_app_repositories_sqlite_py_create_commercial_subscription",
@@ -2137,7 +2200,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 148
+      "line": 149
     },
     {
       "id": "backend_app_repositories_sqlite_py_get_commercial_subscription",
@@ -2145,7 +2208,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 182
+      "line": 183
     },
     {
       "id": "backend_app_repositories_sqlite_py_activate_commercial_subscription",
@@ -2153,7 +2216,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 193
+      "line": 194
     },
     {
       "id": "backend_app_repositories_sqlite_py_list_nodes",
@@ -2161,7 +2224,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 221
+      "line": 222
     },
     {
       "id": "backend_app_repositories_sqlite_py_get_node",
@@ -2169,7 +2232,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 233
+      "line": 234
     },
     {
       "id": "backend_app_repositories_sqlite_py_upsert_node",
@@ -2177,7 +2240,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 246
+      "line": 247
     },
     {
       "id": "backend_app_repositories_sqlite_py_update_node_health",
@@ -2185,7 +2248,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 294
+      "line": 295
     },
     {
       "id": "backend_app_repositories_sqlite_py_add_node_health_event",
@@ -2193,7 +2256,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 332
+      "line": 333
     },
     {
       "id": "backend_app_repositories_sqlite_py_add_admin_audit_event",
@@ -2201,7 +2264,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 359
+      "line": 360
     },
     {
       "id": "backend_app_repositories_sqlite_py_list_admin_audit_events",
@@ -2209,7 +2272,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 378
+      "line": 379
     },
     {
       "id": "backend_app_repositories_sqlite_py_prune_admin_audit_events",
@@ -2217,7 +2280,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 390
+      "line": 391
     },
     {
       "id": "backend_app_repositories_sqlite_py_list_node_health_events",
@@ -2225,7 +2288,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 398
+      "line": 399
     },
     {
       "id": "backend_app_repositories_sqlite_py_prune_node_health_events",
@@ -2233,7 +2296,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 413
+      "line": 414
     },
     {
       "id": "backend_app_repositories_sqlite_py_count_node_health_events_by_result",
@@ -2241,7 +2304,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 421
+      "line": 422
     },
     {
       "id": "backend_app_repositories_sqlite_py_count_admin_audit_events",
@@ -2249,7 +2312,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 436
+      "line": 437
     },
     {
       "id": "backend_app_repositories_sqlite_py_seed_nodes_if_empty",
@@ -2257,7 +2320,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 440
+      "line": 441
     },
     {
       "id": "backend_app_repositories_sqlite_py__ensure_node_columns",
@@ -2265,7 +2328,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 447
+      "line": 449
     },
     {
       "id": "backend_app_security___init___py",
@@ -2905,6 +2968,221 @@
       "line": 11
     },
     {
+      "id": "backend_tests_test_crypto_manual_py",
+      "label": "test_crypto_manual.py",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "file"
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py__service",
+      "label": "_service()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 12
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_cryptomanualcheckouttest",
+      "label": "CryptoManualCheckoutTest",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 29
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_rubtousdttest",
+      "label": "RubToUsdtTest",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 155
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_cryptosettingstest",
+      "label": "CryptoSettingsTest",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 173
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_checkout_redirects_to_invoice",
+      "label": "test_checkout_redirects_to_invoice()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 30
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_checkout_creates_pending_subscription",
+      "label": "test_checkout_creates_pending_subscription()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 39
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_wallet_address",
+      "label": "test_invoice_html_contains_wallet_address()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 50
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_shows_usdt_amount",
+      "label": "test_invoice_html_shows_usdt_amount()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 59
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_order_ref",
+      "label": "test_invoice_html_contains_order_ref()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 67
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_connect_status_link",
+      "label": "test_invoice_html_contains_connect_status_link()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 75
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_unknown_token_raises_404",
+      "label": "test_invoice_html_unknown_token_raises_404()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 83
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_without_crypto_address_raises_503",
+      "label": "test_invoice_html_without_crypto_address_raises_503()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 91
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_wallet_qr_svg_returns_svg",
+      "label": "test_invoice_wallet_qr_svg_returns_svg()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 100
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_connect_page_shows_pending_state",
+      "label": "test_connect_page_shows_pending_state()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 108
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_admin_can_activate_after_crypto_payment",
+      "label": "test_admin_can_activate_after_crypto_payment()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 116
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_connect_page_shows_active_after_admin_activation",
+      "label": "test_connect_page_shows_active_after_admin_activation()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 127
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_works_after_activation",
+      "label": "test_v2ray_subscription_works_after_activation()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 136
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_blocked_while_pending",
+      "label": "test_v2ray_subscription_blocked_while_pending()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 145
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_basic_conversion_rounds_up",
+      "label": "test_basic_conversion_rounds_up()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 156
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_exact_division",
+      "label": "test_exact_division()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 161
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_rounds_up_not_down",
+      "label": "test_rounds_up_not_down()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 166
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py__base_env",
+      "label": "_base_env()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 174
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_crypto_manual_requires_wallet_address",
+      "label": "test_crypto_manual_requires_wallet_address()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 181
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_crypto_manual_with_address_ok",
+      "label": "test_crypto_manual_with_address_ok()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 191
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_custom_usdt_rate",
+      "label": "test_custom_usdt_rate()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 205
+    },
+    {
+      "id": "backend_tests_test_crypto_manual_py_test_invalid_usdt_rate_raises",
+      "label": "test_invalid_usdt_rate_raises()",
+      "source_file": "backend/tests/test_crypto_manual.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 217
+    },
+    {
       "id": "backend_tests_test_env_ready_tool_py",
       "label": "test_env_ready_tool.py",
       "source_file": "backend/tests/test_env_ready_tool.py",
@@ -3421,6 +3699,245 @@
       "file_type": "code",
       "kind": "symbol",
       "line": 31
+    },
+    {
+      "id": "backend_tests_test_node_config_py",
+      "label": "test_node_config.py",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "file"
+    },
+    {
+      "id": "backend_tests_test_node_config_py__base_env",
+      "label": "_base_env()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 9
+    },
+    {
+      "id": "backend_tests_test_node_config_py_nodeconfigparsetest",
+      "label": "NodeConfigParseTest",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 20
+    },
+    {
+      "id": "backend_tests_test_node_config_py_nodeconfiginmemoryrepotest",
+      "label": "NodeConfigInMemoryRepoTest",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 178
+    },
+    {
+      "id": "backend_tests_test_node_config_py_nodeconfigsettingstest",
+      "label": "NodeConfigSettingsTest",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 201
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_empty_env_returns_no_nodes",
+      "label": "test_empty_env_returns_no_nodes()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 21
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_single_node_minimal_config",
+      "label": "test_single_node_minimal_config()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 24
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_five_nodes_sorted_by_default_priority",
+      "label": "test_five_nodes_sorted_by_default_priority()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 45
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_gap_in_numbering_skips_missing_index",
+      "label": "test_gap_in_numbering_skips_missing_index()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 56
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_disabled_node_has_disabled_status",
+      "label": "test_disabled_node_has_disabled_status()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 65
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_disabled_node_is_not_usable",
+      "label": "test_disabled_node_is_not_usable()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 73
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_active_node_is_usable",
+      "label": "test_active_node_is_usable()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 80
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_custom_label_region_country_priority",
+      "label": "test_custom_label_region_country_priority()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 85
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_custom_flow_and_fingerprint",
+      "label": "test_custom_flow_and_fingerprint()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 102
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_missing_uuid_raises_error",
+      "label": "test_missing_uuid_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 115
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_missing_public_key_raises_error",
+      "label": "test_missing_public_key_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 123
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_missing_short_id_raises_error",
+      "label": "test_missing_short_id_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 131
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_missing_sni_raises_error",
+      "label": "test_missing_sni_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 139
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_invalid_port_raises_error",
+      "label": "test_invalid_port_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 147
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_out_of_range_port_raises_error",
+      "label": "test_out_of_range_port_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 155
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_invalid_enabled_value_raises_error",
+      "label": "test_invalid_enabled_value_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 161
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_invalid_priority_raises_error",
+      "label": "test_invalid_priority_raises_error()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 169
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_env_nodes_replace_demo_seeds",
+      "label": "test_env_nodes_replace_demo_seeds()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 179
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_no_env_nodes_uses_demo_seeds",
+      "label": "test_no_env_nodes_uses_demo_seeds()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 190
+    },
+    {
+      "id": "backend_tests_test_node_config_py__base_settings_env",
+      "label": "_base_settings_env()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 202
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_settings_loads_nodes_from_env",
+      "label": "test_settings_loads_nodes_from_env()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 209
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_settings_empty_nodes_when_no_env",
+      "label": "test_settings_empty_nodes_when_no_env()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 218
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_settings_rejects_node_with_missing_uuid",
+      "label": "test_settings_rejects_node_with_missing_uuid()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 225
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_settings_accepts_crypto_manual_checkout_mode",
+      "label": "test_settings_accepts_crypto_manual_checkout_mode()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 239
+    },
+    {
+      "id": "backend_tests_test_node_config_py_test_settings_rejects_unknown_checkout_mode",
+      "label": "test_settings_rejects_unknown_checkout_mode()",
+      "source_file": "backend/tests/test_node_config.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 251
     },
     {
       "id": "backend_tests_test_node_selection_py",
@@ -4207,6 +4724,14 @@
       "file_type": "code",
       "kind": "symbol",
       "line": 90
+    },
+    {
+      "id": "backend_tests_test_yookassa_payments_py_test_yookassa_webhook_activates_commercial_subscription_token",
+      "label": "test_yookassa_webhook_activates_commercial_subscription_token()",
+      "source_file": "backend/tests/test_yookassa_payments.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 107
     }
   ],
   "edges": [
@@ -4219,6 +4744,12 @@
     {
       "source": "backend_app_api_pages_py",
       "target": "backend_app_api_pages_py_connect_page",
+      "relation": "contains",
+      "source_file": "backend/app/api/pages.py"
+    },
+    {
+      "source": "backend_app_api_pages_py",
+      "target": "backend_app_api_pages_py_invoice_page",
       "relation": "contains",
       "source_file": "backend/app/api/pages.py"
     },
@@ -4506,6 +5037,12 @@
     },
     {
       "source": "backend_app_api_service_py",
+      "target": "backend_app_api_service_py__rub_to_usdt",
+      "relation": "contains",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
       "target": "backend_app_api_service_py___init__",
       "relation": "contains",
       "source_file": "backend/app/api/service.py"
@@ -4537,6 +5074,18 @@
     {
       "source": "backend_app_api_service_py",
       "target": "backend_app_api_service_py_connect_html",
+      "relation": "contains",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
+      "target": "backend_app_api_service_py_invoice_html",
+      "relation": "contains",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
+      "target": "backend_app_api_service_py_invoice_wallet_qr_svg",
       "relation": "contains",
       "source_file": "backend/app/api/service.py"
     },
@@ -4896,6 +5445,24 @@
     },
     {
       "source": "backend_app_core_settings_py",
+      "target": "backend_app_core_settings_py__decimal_str",
+      "relation": "contains",
+      "source_file": "backend/app/core/settings.py"
+    },
+    {
+      "source": "backend_app_core_settings_py",
+      "target": "backend_app_domain_node_config_py",
+      "relation": "imports",
+      "source_file": "backend/app/core/settings.py"
+    },
+    {
+      "source": "backend_app_core_settings_py",
+      "target": "backend_app_domain_models_py",
+      "relation": "imports",
+      "source_file": "backend/app/core/settings.py"
+    },
+    {
+      "source": "backend_app_core_settings_py",
       "target": "backend_app_domain_tariffs_py",
       "relation": "imports",
       "source_file": "backend/app/core/settings.py"
@@ -5199,6 +5766,24 @@
       "target": "backend_app_domain_models_py_is_usable",
       "relation": "contains",
       "source_file": "backend/app/domain/models.py"
+    },
+    {
+      "source": "backend_app_domain_node_config_py",
+      "target": "backend_app_domain_node_config_py_nodeconfigerror",
+      "relation": "contains",
+      "source_file": "backend/app/domain/node_config.py"
+    },
+    {
+      "source": "backend_app_domain_node_config_py",
+      "target": "backend_app_domain_node_config_py_parse_nodes_from_env",
+      "relation": "contains",
+      "source_file": "backend/app/domain/node_config.py"
+    },
+    {
+      "source": "backend_app_domain_node_config_py",
+      "target": "backend_app_domain_models_py",
+      "relation": "imports",
+      "source_file": "backend/app/domain/node_config.py"
     },
     {
       "source": "backend_app_domain_node_scoring_py",
@@ -6539,6 +7124,186 @@
       "source_file": "backend/tests/test_cors_server.py"
     },
     {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py__service",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_cryptomanualcheckouttest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_rubtousdttest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_cryptosettingstest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_checkout_redirects_to_invoice",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_checkout_creates_pending_subscription",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_wallet_address",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_shows_usdt_amount",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_order_ref",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_connect_status_link",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_unknown_token_raises_404",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_without_crypto_address_raises_503",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_wallet_qr_svg_returns_svg",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_connect_page_shows_pending_state",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_admin_can_activate_after_crypto_payment",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_connect_page_shows_active_after_admin_activation",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_works_after_activation",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_blocked_while_pending",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_basic_conversion_rounds_up",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_exact_division",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_rounds_up_not_down",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py__base_env",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_crypto_manual_requires_wallet_address",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_crypto_manual_with_address_ok",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_custom_usdt_rate",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_tests_test_crypto_manual_py_test_invalid_usdt_rate_raises",
+      "relation": "contains",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_app_api_service_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_app_domain_config_builder_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_app_repositories_memory_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
+      "source": "backend_tests_test_crypto_manual_py",
+      "target": "backend_app_security_tokens_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_crypto_manual.py"
+    },
+    {
       "source": "backend_tests_test_env_ready_tool_py",
       "target": "backend_tests_test_env_ready_tool_py_envreadytooltest",
       "relation": "contains",
@@ -6915,6 +7680,192 @@
       "target": "backend_tests_test_monitoring_assets_py_test_grafana_dashboard_is_valid_json_for_probe_metrics",
       "relation": "contains",
       "source_file": "backend/tests/test_monitoring_assets.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py__base_env",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_nodeconfigparsetest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_nodeconfiginmemoryrepotest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_nodeconfigsettingstest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_empty_env_returns_no_nodes",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_single_node_minimal_config",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_five_nodes_sorted_by_default_priority",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_gap_in_numbering_skips_missing_index",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_disabled_node_has_disabled_status",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_disabled_node_is_not_usable",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_active_node_is_usable",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_custom_label_region_country_priority",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_custom_flow_and_fingerprint",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_missing_uuid_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_missing_public_key_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_missing_short_id_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_missing_sni_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_invalid_port_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_out_of_range_port_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_invalid_enabled_value_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_invalid_priority_raises_error",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_env_nodes_replace_demo_seeds",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_no_env_nodes_uses_demo_seeds",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py__base_settings_env",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_settings_loads_nodes_from_env",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_settings_empty_nodes_when_no_env",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_settings_rejects_node_with_missing_uuid",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_settings_accepts_crypto_manual_checkout_mode",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_tests_test_node_config_py_test_settings_rejects_unknown_checkout_mode",
+      "relation": "contains",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_app_domain_models_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_node_config.py"
+    },
+    {
+      "source": "backend_tests_test_node_config_py",
+      "target": "backend_app_domain_node_config_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_node_config.py"
     },
     {
       "source": "backend_tests_test_node_selection_py",
@@ -7549,6 +8500,12 @@
     {
       "source": "backend_tests_test_yookassa_payments_py",
       "target": "backend_tests_test_yookassa_payments_py_test_yookassa_webhook_activates_without_returning_access_token",
+      "relation": "contains",
+      "source_file": "backend/tests/test_yookassa_payments.py"
+    },
+    {
+      "source": "backend_tests_test_yookassa_payments_py",
+      "target": "backend_tests_test_yookassa_payments_py_test_yookassa_webhook_activates_commercial_subscription_token",
       "relation": "contains",
       "source_file": "backend/tests/test_yookassa_payments.py"
     },
