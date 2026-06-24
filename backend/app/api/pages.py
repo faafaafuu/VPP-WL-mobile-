@@ -15,17 +15,21 @@ def landing_page(tariffs: tuple[Tariff, ...]) -> str:
           <section class="hero-copy">
             <p class="eyebrow">VPN Router</p>
             <h1>Быстрый VPN-доступ</h1>
-            <p class="lead">Работает с YouTube, Telegram, Instagram, ChatGPT и сайтами. Подключение за 1 минуту, без установки нашего приложения.</p>
+            <p class="lead">Работает с YouTube, Telegram, Instagram, ChatGPT и сайтами. Берёте готовый клиент, вставляете ссылку — подключение за 1 минуту.</p>
             <a class="primary-link" href="#pricing">Выбрать тариф</a>
           </section>
           <section id="pricing" class="pricing" aria-label="Тарифы">
             {cards}
           </section>
+          <section class="steps" aria-label="Как это работает">
+            <div class="step"><span class="step-num">1</span><p>Оплатите тариф удобной криптовалютой</p></div>
+            <div class="step"><span class="step-num">2</span><p>Установите клиент: v2rayN (ПК), v2rayNG или Hiddify (телефон)</p></div>
+            <div class="step"><span class="step-num">3</span><p>После подтверждения оплаты получите ссылку и подключитесь</p></div>
+          </section>
           <section class="notes">
-            <span>Без сложной настройки</span>
             <span>До 3 устройств на одну подписку</span>
-            <span>Готовые клиенты: v2rayN, v2rayNG, Hiddify, Streisand</span>
-            <span>Ссылка подключения сразу после оплаты</span>
+            <span>Основной клиент — v2rayN</span>
+            <span>Без сложной настройки</span>
           </section>
         </main>
         """,
@@ -72,21 +76,40 @@ def connect_page(
         <main class="shell connect">
           {status}
           <section class="instructions">
+            <p class="instructions-title">Инструкция по установке</p>
             <details open>
-              <summary>iPhone / Hiddify / Streisand / Shadowrocket</summary>
-              <ol><li>Установите клиент из App Store.</li><li>Нажмите “Подключить”.</li><li>Если не открылось, отсканируйте QR или вставьте ссылку.</li></ol>
+              <summary>Windows · v2rayN <span class="tag">основной</span></summary>
+              <ol>
+                <li>Скачайте v2rayN и распакуйте архив.</li>
+                <li>Нажмите «Скопировать ссылку» выше.</li>
+                <li>В v2rayN: Subscriptions → Add subscription.</li>
+                <li>Вставьте ссылку, сохраните и нажмите Update subscription.</li>
+                <li>Выберите сервер и включите системный прокси.</li>
+              </ol>
             </details>
             <details>
-              <summary>Android / Hiddify</summary>
-              <ol><li>Установите Hiddify.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
+              <summary>Android · v2rayNG</summary>
+              <ol>
+                <li>Установите v2rayNG из Google Play.</li>
+                <li>Нажмите «Скопировать ссылку» выше.</li>
+                <li>«+» → Импорт из буфера обмена.</li>
+                <li>Обновите подписку, выберите сервер и подключитесь.</li>
+              </ol>
             </details>
             <details>
-              <summary>Android / v2rayNG</summary>
-              <ol><li>Установите v2rayNG.</li><li>Нажмите “Скопировать ссылку”.</li><li>Добавьте subscription URL.</li></ol>
+              <summary>iPhone · Hiddify / Streisand</summary>
+              <ol>
+                <li>Установите Hiddify или Streisand из App Store.</li>
+                <li>Нажмите «Подключить» выше или отсканируйте QR.</li>
+                <li>Если не открылось — вставьте скопированную ссылку вручную.</li>
+              </ol>
             </details>
             <details>
-              <summary>Windows / v2rayN</summary>
-              <ol><li>Установите v2rayN.</li><li>Нажмите “Скопировать ссылку”.</li><li>Subscriptions → Add subscription.</li><li>Вставьте ссылку и нажмите Update subscription.</li></ol>
+              <summary>Android · Hiddify</summary>
+              <ol>
+                <li>Установите Hiddify из Google Play.</li>
+                <li>Нажмите «Подключить» или вставьте ссылку подписки.</li>
+              </ol>
             </details>
           </section>
           <section class="pricing compact-pricing">
@@ -258,7 +281,7 @@ def _tariff_card(tariff: Tariff, compact: bool = False) -> str:
         <input type="hidden" name="tariff_id" value="{escape(tariff.id)}">
         <h2>{escape(tariff.title)}</h2>
         <p class="price">{escape(_price(tariff.price_rub))}</p>
-        <p>До {tariff.max_devices} устройств. Ссылка сразу после оплаты.</p>
+        <p>До {tariff.max_devices} устройств. Ссылка после подтверждения оплаты.</p>
         <button class="button primary" type="submit">Оплатить</button>
       </form>
     """
@@ -327,8 +350,14 @@ def _page(title: str, body: str) -> str:
     .tariff p {{ margin: 0; color: var(--muted); line-height: 1.45; }}
     .price {{ color: var(--text) !important; font-size: 2.05rem; font-weight: 900; }}
     .badge {{ position: absolute; top: 14px; right: 14px; color: #061018; background: var(--green); border-radius: 999px; padding: 5px 9px; font-size: .74rem; font-weight: 900; }}
+    .steps {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }}
+    .step {{ display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: var(--panel); }}
+    .step p {{ margin: 0; color: var(--muted); line-height: 1.45; }}
+    .step-num {{ flex-shrink: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--green)); color: #061018; font-weight: 900; }}
     .notes {{ display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); }}
     .notes span {{ border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; background: rgba(255,255,255,.05); }}
+    .instructions-title {{ margin: 0; font-size: .82rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }}
+    .tag {{ display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(54,231,255,.16); color: var(--cyan); font-size: .68rem; font-weight: 800; letter-spacing: .04em; vertical-align: middle; }}
     .status-card {{ margin-top: 22px; padding: 24px; overflow: hidden; }}
     .status-card.active {{ background: linear-gradient(145deg, rgba(54,231,255,.14), rgba(255,255,255,.08)); }}
     .status-card.expired {{ background: linear-gradient(145deg, rgba(255,95,95,.14), rgba(255,255,255,.08)); }}
@@ -346,7 +375,7 @@ def _page(title: str, body: str) -> str:
     @media (max-width: 760px) {{
       .shell {{ width: min(100% - 22px, 560px); }}
       .hero {{ min-height: auto; padding: 26px 0 38px; }}
-      .pricing, .compact-pricing {{ grid-template-columns: 1fr; }}
+      .pricing, .compact-pricing, .steps {{ grid-template-columns: 1fr; }}
       h1 {{ font-size: clamp(2.45rem, 15vw, 4rem); }}
       .status-card {{ padding: 18px; }}
       .actions {{ display: grid; grid-template-columns: 1fr; }}
