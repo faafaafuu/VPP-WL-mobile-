@@ -86,6 +86,49 @@ if grep -q "SERVER_IP\|example\.com" .env 2>/dev/null; then
     ok "Set PUBLIC_BASE_URL=${BASE_URL}"
 fi
 
+# ── check port conflicts ──────────────────────────────────────────────────────
+_free_port() {
+    local port="$1"
+    # ss is preferred; fall back to netstat or lsof
+    local pid_info
+    if command -v ss >/dev/null 2>&1; then
+        pid_info=$(ss -tlnp "sport = :${port}" 2>/dev/null | grep -v "^Netid" || true)
+    elif command -v netstat >/dev/null 2>&1; then
+        pid_info=$(netstat -tlnp 2>/dev/null | grep ":${port} " || true)
+    else
+        pid_info=$(lsof -iTCP:"${port}" -sTCP:LISTEN -n -P 2>/dev/null || true)
+    fi
+    [[ -z "$pid_info" ]] && return 0   # port is free
+
+    warn "Port ${port} is already in use:"
+    echo "  $pid_info"
+
+    # Stop system web servers that commonly occupy 80/443
+    for svc in nginx apache2 apache httpd caddy; do
+        if systemctl is-active --quiet "$svc" 2>/dev/null; then
+            warn "Stopping system service: ${svc}"
+            systemctl stop "$svc" && systemctl disable "$svc" \
+                && ok "Stopped ${svc} (disabled at boot)" \
+                || warn "Could not stop ${svc} — free port ${port} manually, then re-run setup.sh"
+            return 0
+        fi
+    done
+
+    # Check if it's a Docker container
+    local docker_info
+    docker_info=$(docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep ":${port}->" || true)
+    if [[ -n "$docker_info" ]]; then
+        die "Port ${port} is used by a Docker container:\n  ${docker_info}\nStop it first: docker stop <name>"
+    fi
+
+    die "Port ${port} is in use by an unknown process. Free it and re-run setup.sh."
+}
+
+info "Checking ports 80 and 443..."
+_free_port 80
+_free_port 443
+ok "Ports 80 and 443 are free"
+
 # ── nginx: HTTP mode (default) ───────────────────────────────────────────────
 if [[ -z "$SSL_DOMAIN" ]]; then
     info "nginx → HTTP mode (port 80)"
