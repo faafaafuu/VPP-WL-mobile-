@@ -74,7 +74,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     if yookassa_shop_id and not yookassa_return_url:
         raise SettingsError("VPN_ROUTER_YOOKASSA_RETURN_URL is required when YooKassa credentials are set")
     product_prices_rub = _product_prices(
-        source.get("VPN_ROUTER_PRODUCT_PRICES_RUB", "vpn.monthly:399.00,vpn.1m:399.00,vpn.3m:999.00,vpn.6m:1799.00")
+        source.get("VPN_ROUTER_PRODUCT_PRICES_RUB", "vpn.monthly:200.00,vpn.1m:200.00,vpn.3m:500.00,vpn.6m:900.00")
     )
     public_base_url = _required_url(source.get("PUBLIC_BASE_URL", f"http://127.0.0.1:{port}"), "PUBLIC_BASE_URL")
     checkout_mode = source.get("CHECKOUT_MODE", "mock").strip().lower()

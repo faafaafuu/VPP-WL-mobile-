@@ -70,13 +70,13 @@ class CryptoManualCheckoutTest(unittest.TestCase):
         self.assertIn("TRC20", html)
 
     def test_invoice_html_shows_usdt_amount(self) -> None:
-        # vpn.1m default = 399 RUB / 100 RUB per USDT = 3.99 USDT
+        # vpn.1m default = 200 RUB / 100 RUB per USDT = 2.00 USDT
         svc = _service(rate_rub="100.00")
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
         html = svc.invoice_html(token)
 
-        self.assertIn("3.99", html)
+        self.assertIn("2.00", html)
         self.assertIn("USDT", html)
 
     def test_invoice_html_contains_order_ref(self) -> None:

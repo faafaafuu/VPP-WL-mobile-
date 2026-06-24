@@ -23,6 +23,7 @@ def landing_page(tariffs: tuple[Tariff, ...]) -> str:
           </section>
           <section class="notes">
             <span>Без сложной настройки</span>
+            <span>До 3 устройств на одну подписку</span>
             <span>Готовые клиенты: v2rayN, v2rayNG, Hiddify, Streisand</span>
             <span>Ссылка подключения сразу после оплаты</span>
           </section>
@@ -36,13 +37,16 @@ def connect_page(
     subscription_url: str,
     tariffs: tuple[Tariff, ...],
 ) -> str:
+    tariff_map = {t.id: t for t in tariffs}
+    current_tariff = tariff_map.get(subscription.tariff_id)
+    max_devices = current_tariff.max_devices if current_tariff else 3
     if subscription.is_active():
         expires = subscription.expires_at.strftime("%d.%m.%Y") if subscription.expires_at else ""
         status = f"""
           <div class="status-card active">
             <p class="eyebrow">Подписка</p>
             <h1>Ваш VPN активен</h1>
-            <p class="lead compact">Действует до {escape(expires)}. Нажмите подключить или импортируйте ссылку в клиент.</p>
+            <p class="lead compact">Действует до {escape(expires)}. До {max_devices} устройств — установите ссылку на каждом.</p>
             <div class="actions">
               <button class="button primary" type="button" onclick="connectClient()">Подключить</button>
               <button class="button" type="button" onclick="copySub()">Скопировать ссылку</button>
@@ -254,7 +258,7 @@ def _tariff_card(tariff: Tariff, compact: bool = False) -> str:
         <input type="hidden" name="tariff_id" value="{escape(tariff.id)}">
         <h2>{escape(tariff.title)}</h2>
         <p class="price">{escape(_price(tariff.price_rub))}</p>
-        <p>Выберите тариф и получите ссылку подключения.</p>
+        <p>До {tariff.max_devices} устройств. Ссылка сразу после оплаты.</p>
         <button class="button primary" type="submit">Оплатить</button>
       </form>
     """
