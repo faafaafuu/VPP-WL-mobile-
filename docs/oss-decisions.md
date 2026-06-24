@@ -19,6 +19,7 @@ This file records upstream projects checked before larger implementation work. D
 | Expo | https://github.com/expo/expo | MIT | Use for UI shell, config plugin, secure storage, and development-build workflow. | Expo Go cannot host the VPN native runtime, but Expo Development Builds/EAS can include custom native modules. |
 | Marzban | https://github.com/Gozargah/Marzban | AGPL-3.0 | Reference or separate deployed component only. | Useful panel/backend reference, but AGPL is not acceptable for copying into closed backend. |
 | 3X-UI | https://github.com/MHSanaei/3x-ui | GPL-3.0 | Reference or separate deployed component only. | Useful Xray node/panel reference; do not copy GPL code. |
+| v2rayN / Hiddify / Streisand / Shadowrocket | External user-installed clients | Mixed external licenses / proprietary distribution | Do not embed; support through subscription URL, QR, and short instructions only. | The subscription-link MVP avoids shipping our own app in this branch. No external client source code is copied into the backend. |
 
 ## Current Choice
 
@@ -30,3 +31,5 @@ This file records upstream projects checked before larger implementation work. D
 - GPL/AGPL projects other than the approved sing-box/libbox runtime remain documentation/reference sources only in this repository.
 - Runtime integration decision details are tracked in `docs/runtime-integration-plan.md`.
 - Android runtime adapter is independently implemented in `apps/android/app/src/main/java/com/vpnrouter/app/vpn/ReflectionLibboxRunner.kt` and does not vendor upstream GPL source.
+- `subscription-link-mvp` does not embed native VPN runtimes or third-party client code. It sells V2Ray/VLESS subscription links for user-installed clients.
+- Xray-core (MPL-2.0) is used as a **deployed server-side component** (separate process, not linked). No Xray source is copied into this repository. See `docs/server-setup-vless-reality.md` for setup instructions.

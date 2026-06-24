@@ -12,6 +12,19 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     original_transaction_id TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS commercial_subscriptions (
+    token TEXT PRIMARY KEY,
+    tariff_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    expires_at TEXT,
+    payment_id TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_commercial_subscriptions_status_expires
+ON commercial_subscriptions(status, expires_at);
+
 CREATE TABLE IF NOT EXISTS nodes (
     id TEXT PRIMARY KEY,
     tag TEXT NOT NULL UNIQUE,

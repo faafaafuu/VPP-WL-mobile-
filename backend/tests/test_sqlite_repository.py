@@ -48,6 +48,18 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertIsNotNone(self.repo.get_active_subscription(subscription.user_id))
         self.assertTrue(subscription.original_transaction_id.startswith("yookassa:sha256:"))
 
+    def test_persists_and_extends_commercial_subscription(self) -> None:
+        created = self.repo.create_commercial_subscription("token-1", "vpn.1m", payment_id="payment-1")
+        first = self.repo.activate_commercial_subscription("token-1", 30)
+        second = self.repo.activate_commercial_subscription("token-1", 30, payment_id="payment-2")
+
+        reloaded = self.repo.get_commercial_subscription("token-1")
+        self.assertEqual(created.status, "pending")
+        self.assertTrue(first.is_active())
+        self.assertTrue(second.expires_at > first.expires_at + timedelta(days=29))
+        self.assertEqual(reloaded.payment_id, "payment-2")
+        self.assertIsNone(self.repo.activate_commercial_subscription("missing-token", 30))
+
     def test_exports_and_deletes_user_data(self) -> None:
         subscription = self.repo.activate_subscription(
             ReceiptClaim(platform=Platform.SANDBOX, receipt="demo", device_id="device-1")

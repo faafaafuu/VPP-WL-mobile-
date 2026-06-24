@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from secrets import token_urlsafe
 from typing import Any
 from uuid import uuid4
 
@@ -54,12 +55,32 @@ class Subscription:
 
 
 @dataclass(frozen=True)
+class CommercialSubscription:
+    token: str
+    tariff_id: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    expires_at: datetime | None = None
+    payment_id: str | None = None
+
+    def is_active(self, now: datetime | None = None) -> bool:
+        current = now or datetime.now(timezone.utc)
+        return self.status == "active" and self.expires_at is not None and self.expires_at > current
+
+
+@dataclass(frozen=True)
 class VlessOptions:
     uuid: str
     server_name: str
     flow: str | None = None
     transport: dict[str, Any] | None = None
     reality: dict[str, Any] | None = None
+    security: str = "reality"
+    public_key: str | None = None
+    short_id: str | None = None
+    fingerprint: str = "chrome"
+    label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -150,3 +171,7 @@ class AdminAuditEvent:
 
 def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid4().hex}"
+
+
+def new_subscription_token() -> str:
+    return token_urlsafe(32)

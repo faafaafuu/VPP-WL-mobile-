@@ -5,7 +5,17 @@ from typing import Protocol as TypingProtocol
 
 from datetime import datetime
 
-from app.domain.models import AdminAuditEvent, NodeHealth, NodeHealthEvent, NodeStatus, ReceiptClaim, Subscription, User, VpnNode
+from app.domain.models import (
+    AdminAuditEvent,
+    CommercialSubscription,
+    NodeHealth,
+    NodeHealthEvent,
+    NodeStatus,
+    ReceiptClaim,
+    Subscription,
+    User,
+    VpnNode,
+)
 from app.repositories.memory import InMemoryRepository
 from app.repositories.sqlite import SqliteRepository
 
@@ -27,6 +37,25 @@ class Repository(TypingProtocol):
         ...
 
     def get_active_subscription(self, user_id: str) -> Subscription | None:
+        ...
+
+    def create_commercial_subscription(
+        self,
+        token: str,
+        tariff_id: str,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription:
+        ...
+
+    def get_commercial_subscription(self, token: str) -> CommercialSubscription | None:
+        ...
+
+    def activate_commercial_subscription(
+        self,
+        token: str,
+        duration_days: int,
+        payment_id: str | None = None,
+    ) -> CommercialSubscription | None:
         ...
 
     def list_nodes(self) -> list[VpnNode]:
@@ -75,11 +104,11 @@ class Repository(TypingProtocol):
         ...
 
 
-def create_repository() -> Repository:
+def create_repository(nodes: list[VpnNode] | None = None) -> Repository:
     backend = os.getenv("VPN_ROUTER_REPOSITORY", "sqlite").lower()
     if backend == "memory":
-        return InMemoryRepository()
+        return InMemoryRepository(nodes=nodes)
     if backend == "sqlite":
         database_path = os.getenv("VPN_ROUTER_SQLITE_PATH", "data/vpn-router.db")
-        return SqliteRepository(database_path)
+        return SqliteRepository(database_path, nodes=nodes)
     raise ValueError(f"unsupported repository backend: {backend}")

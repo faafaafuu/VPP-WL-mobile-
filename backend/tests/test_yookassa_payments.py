@@ -13,7 +13,7 @@ class FakeYooKassaProvider:
     def __init__(self) -> None:
         self.payments: dict[str, dict[str, object]] = {}
 
-    def create_payment(self, device_id: str, product_id: str) -> YooKassaPayment:
+    def create_payment(self, device_id: str, product_id: str, return_url: str | None = None) -> YooKassaPayment:
         payment_id = "yk-payment-1"
         self.payments[payment_id] = {
             "id": payment_id,
@@ -103,6 +103,33 @@ class YooKassaPaymentsTest(unittest.TestCase):
         self.assertEqual(response["status"], "activated")
         self.assertIn("user_id", response)
         self.assertNotIn("access_token", response)
+
+    def test_yookassa_webhook_activates_commercial_subscription_token(self) -> None:
+        service = ApiService(
+            InMemoryRepository(),
+            TokenService("test-secret-with-length"),
+            ConfigBuilder(),
+            admin_token="test-admin",
+            yookassa_provider=self.provider,
+            public_base_url="http://203.0.113.10:8080",
+            checkout_mode="yookassa",
+        )
+        checkout = service.checkout({"tariff_id": "vpn.1m"})
+        token = checkout["token"]
+        self.provider.payments["yk-payment-1"]["status"] = "succeeded"
+        self.provider.payments["yk-payment-1"]["paid"] = True
+
+        response = service.yookassa_webhook(
+            {
+                "type": "notification",
+                "event": "payment.succeeded",
+                "object": {"id": "yk-payment-1", "status": "succeeded", "paid": True},
+            }
+        )
+
+        self.assertEqual(response["status"], "activated")
+        self.assertEqual(response["connect_url"], f"http://203.0.113.10:8080/connect/{token}")
+        self.assertTrue(service.repository.get_commercial_subscription(token).is_active())
 
 
 if __name__ == "__main__":

@@ -6,8 +6,9 @@ from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
+from app.api.pages import not_found_page
 from app.api.rate_limit import RateLimiter
 from app.api.service import ApiError, ApiService
 from app.core.settings import load_settings
@@ -20,7 +21,7 @@ from app.services.yookassa import DisabledYooKassaProvider, HttpYooKassaProvider
 
 SETTINGS = load_settings()
 RATE_LIMITER = RateLimiter(SETTINGS.rate_limit_per_minute)
-REPOSITORY = create_repository()
+REPOSITORY = create_repository(nodes=list(SETTINGS.nodes) if SETTINGS.nodes else None)
 TOKEN_SERVICE = TokenService(SETTINGS.token_secret)
 CONFIG_BUILDER = ConfigBuilder()
 YOOKASSA_PROVIDER = (
@@ -42,6 +43,11 @@ API_SERVICE = ApiService(
     admin_token=SETTINGS.admin_token,
     receipt_verifier=MvpReceiptVerifier(SETTINGS.allowed_product_ids),
     yookassa_provider=YOOKASSA_PROVIDER,
+    public_base_url=SETTINGS.public_base_url,
+    checkout_mode=SETTINGS.checkout_mode,
+    tariffs=SETTINGS.tariffs,
+    crypto_usdt_trc20_address=SETTINGS.crypto_usdt_trc20_address,
+    crypto_usdt_rate_rub=SETTINGS.crypto_usdt_rate_rub,
 )
 
 
@@ -59,8 +65,50 @@ class ApiHandler(BaseHTTPRequestHandler):
         if self._is_rate_limited():
             return
         path = urlparse(self.path).path
+        if path == "/":
+            self._send_html(HTTPStatus.OK, API_SERVICE.landing_html())
+            return
         if path == "/health":
             self._send_json(HTTPStatus.OK, {"status": "ok"})
+            return
+        if path.startswith("/connect/"):
+            token = path.removeprefix("/connect/").strip("/")
+            try:
+                self._send_html(HTTPStatus.OK, API_SERVICE.connect_html(token))
+            except ApiError as exc:
+                if exc.status == HTTPStatus.NOT_FOUND:
+                    self._send_html(HTTPStatus.NOT_FOUND, not_found_page())
+                else:
+                    self._send_json(exc.status, exc.payload)
+            return
+        if path.startswith("/sub/") and path.endswith("/raw"):
+            token = path.removeprefix("/sub/")[: -len("/raw")].strip("/")
+            self._send_text_response(lambda: API_SERVICE.raw_v2ray_subscription(token), "text/plain")
+            return
+        if path.startswith("/sub/") and path.endswith("/qr"):
+            token = path.removeprefix("/sub/")[: -len("/qr")].strip("/")
+            self._send_text_response(lambda: API_SERVICE.subscription_qr_svg(token), "image/svg+xml")
+            return
+        if path.startswith("/sub/"):
+            token = path.removeprefix("/sub/").strip("/")
+            self._send_text_response(lambda: API_SERVICE.v2ray_subscription(token), "text/plain")
+            return
+        if path.startswith("/invoice/") and path.endswith("/qr"):
+            token = path.removeprefix("/invoice/")[: -len("/qr")].strip("/")
+            try:
+                self._send_text(HTTPStatus.OK, API_SERVICE.invoice_wallet_qr_svg(token), "image/svg+xml")
+            except ApiError as exc:
+                self._send_json(exc.status, exc.payload)
+            return
+        if path.startswith("/invoice/"):
+            token = path.removeprefix("/invoice/").strip("/")
+            try:
+                self._send_html(HTTPStatus.OK, API_SERVICE.invoice_html(token))
+            except ApiError as exc:
+                if exc.status == HTTPStatus.NOT_FOUND:
+                    self._send_html(HTTPStatus.NOT_FOUND, not_found_page())
+                else:
+                    self._send_json(exc.status, exc.payload)
             return
         if path == "/api/version":
             self._send_service_response(lambda: API_SERVICE.version())
@@ -107,6 +155,17 @@ class ApiHandler(BaseHTTPRequestHandler):
         if self._is_rate_limited():
             return
         path = urlparse(self.path).path
+        if path == "/checkout":
+            payload = self._read_form_or_json()
+            if payload is None:
+                return
+            try:
+                response = API_SERVICE.checkout(payload)
+                self._send_redirect(str(response["redirect_url"]))
+            except ApiError as exc:
+                self._send_json(exc.status, exc.payload)
+            return
+
         if path == "/api/auth/init":
             payload = self._read_json()
             if payload is None:
@@ -133,6 +192,19 @@ class ApiHandler(BaseHTTPRequestHandler):
             if payload is None:
                 return
             self._send_service_response(lambda: API_SERVICE.yookassa_webhook(payload))
+            return
+
+        admin_prefix = "/admin/subscriptions/"
+        admin_suffix = "/activate"
+        if path.startswith(admin_prefix) and path.endswith(admin_suffix):
+            payload = self._read_json()
+            if payload is None:
+                return
+            token = path[len(admin_prefix) : -len(admin_suffix)]
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(
+                lambda: API_SERVICE.admin_activate_commercial_subscription(admin_token, token, payload)
+            )
             return
 
         if path in {"/api/webhook/apple", "/api/webhook/google"}:
@@ -207,11 +279,26 @@ class ApiHandler(BaseHTTPRequestHandler):
             return None
         return payload
 
+    def _read_form_or_json(self) -> dict[str, Any] | None:
+        content_type = self.headers.get("Content-Type", "")
+        if "application/json" in content_type:
+            return self._read_json()
+        content_length = int(self.headers.get("Content-Length", "0") or "0")
+        raw_body = self.rfile.read(content_length).decode("utf-8")
+        parsed = parse_qs(raw_body, keep_blank_values=True)
+        return {key: values[-1] if values else "" for key, values in parsed.items()}
+
     def _send_service_response(self, action: Any) -> None:
         try:
             self._send_json(HTTPStatus.OK, action())
         except ApiError as exc:
             self._send_json(exc.status, exc.payload)
+
+    def _send_text_response(self, action: Any, content_type: str) -> None:
+        try:
+            self._send_text(HTTPStatus.OK, action(), content_type)
+        except ApiError as exc:
+            self._send_text(exc.status, str(exc.payload.get("error", "error")), "text/plain")
 
     def _send_json(self, status: HTTPStatus, payload: dict[str, Any]) -> None:
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -234,6 +321,26 @@ class ApiHandler(BaseHTTPRequestHandler):
         self._send_security_headers()
         self.end_headers()
         self.wfile.write(body)
+
+    def _send_html(self, status: HTTPStatus, payload: str) -> None:
+        body = payload.encode("utf-8")
+        self.send_response(status.value)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self._send_cors_headers()
+        self._send_security_headers()
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_redirect(self, location: str) -> None:
+        self.send_response(HTTPStatus.SEE_OTHER.value)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", "no-store")
+        self._send_cors_headers()
+        self._send_security_headers()
+        self.end_headers()
 
     def _send_cors_headers(self) -> None:
         origin = self.headers.get("Origin")
