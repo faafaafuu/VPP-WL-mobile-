@@ -63,6 +63,14 @@ else
     ok "Generated VPN_ROUTER_TOKEN_SECRET and VPN_ROUTER_ADMIN_TOKEN"
 fi
 
+# ── sanitize .env: comment out any remaining placeholder values ───────────────
+# Settings validation rejects "replace-with-*" values; comment them out so the
+# API treats optional services (YooKassa, etc.) as unconfigured rather than crashing.
+if grep -qE '^[^#].*=replace-with-' .env 2>/dev/null; then
+    warn "Found placeholder values in .env — commenting them out (configure manually when needed)"
+    sed -i 's|^\([^#][^=]*=replace-with-[^[:space:]]*\)|# \1|g' .env
+fi
+
 # ── set PUBLIC_BASE_URL ──────────────────────────────────────────────────────
 if [[ -n "$SSL_DOMAIN" ]]; then
     BASE_URL="https://${SSL_DOMAIN}"
