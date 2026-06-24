@@ -58,8 +58,9 @@ Current iOS skeleton:
 - uses `NETunnelProviderManager` to create or load the VPN profile;
 - stores the backend-provided sing-box config JSON in `providerConfiguration`;
 - reads `VpnRouterTunnelProviderBundleIdentifier` from Info.plist;
-- includes a `ios/PacketTunnel` template for the future `NEPacketTunnelProvider` target;
-- requires a real Network Extension target and entitlements before device testing.
+- uses the Expo config plugin to generate a `VPNRouterTunnel` Packet Tunnel extension target during EAS/prebuild;
+- copies the Packet Tunnel Swift sources, Info.plist, and entitlements into the generated iOS project;
+- requires Apple Network Extension capability and a real sing-box/libbox iOS framework before real VPN device testing.
 
 iOS still needs EAS or a macOS/Xcode runner for actual builds.
 
@@ -169,10 +170,10 @@ What can be tested now:
 - backend auth/config/subscription screens;
 - privacy/terms links;
 - Android VPN native module with the existing Android runtime path.
+- EAS iOS prebuild wiring for the Packet Tunnel extension target.
 
 What still blocks real iPhone VPN use:
 
-- the generated iOS project must include an actual Packet Tunnel extension target;
 - Apple Developer account must have Network Extension capability enabled;
 - signing profiles must include `packet-tunnel-provider`;
 - the Packet Tunnel target must bundle the real sing-box/libbox iOS framework instead of `MissingSingBoxTunnelRunner`.
@@ -182,6 +183,6 @@ Until those items are done, the iPhone build is useful for UI/backend QA, but no
 ## Files To Add Later
 
 - Native Android implementation of `VpnRouterNative`.
-- Native iOS Expo module that controls the app-side `NETunnelProviderManager`.
-- iOS Network Extension target generated/maintained through config plugin or dedicated native project, using `modules/vpn-router-native/ios/PacketTunnel` as its starting source template.
+- Native iOS Expo module hardening around `NETunnelProviderManager` status sync and error mapping.
+- iOS sing-box/libbox framework packaging for the generated `VPNRouterTunnel` target.
 - Store purchase UI and receipt flow.

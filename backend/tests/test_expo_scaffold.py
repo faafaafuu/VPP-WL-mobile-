@@ -154,11 +154,31 @@ class ExpoScaffoldTest(unittest.TestCase):
 
         self.assertIn("withAndroidManifest", plugin)
         self.assertIn("withEntitlementsPlist", plugin)
+        self.assertIn("withXcodeProject", plugin)
+        self.assertIn("copyTunnelTemplate", plugin)
+        self.assertIn("ensurePacketTunnelTarget", plugin)
+        self.assertIn("project.addTarget(TUNNEL_TARGET_NAME, \"app_extension\"", plugin)
+        self.assertIn("VPNRouterTunnel", plugin)
+        self.assertIn("VPNRouterTunnel-Info.plist", plugin)
+        self.assertIn("VPNRouterTunnel.entitlements", plugin)
+        self.assertIn("NetworkExtension.framework", plugin)
+        self.assertIn("CODE_SIGN_ENTITLEMENTS", plugin)
+        self.assertIn("APPLICATION_EXTENSION_API_ONLY", plugin)
         self.assertIn("packet-tunnel-provider", plugin)
         self.assertIn("android.permission.FOREGROUND_SERVICE", plugin)
         self.assertIn("android.permission.BIND_VPN_SERVICE", plugin)
         self.assertIn("com.vpnrouter.nativevpn.VpnRouterService", plugin)
         self.assertIn("VpnRouterTunnelProviderBundleIdentifier", plugin)
+
+    def test_expo_ios_packet_tunnel_target_templates_are_present(self) -> None:
+        packet_tunnel_root = EXPO_ROOT / "modules/vpn-router-native/ios/PacketTunnel"
+        info_plist = (packet_tunnel_root / "VPNRouterTunnel-Info.plist").read_text(encoding="utf-8")
+        entitlements = (packet_tunnel_root / "VPNRouterTunnel.entitlements").read_text(encoding="utf-8")
+
+        self.assertIn("com.apple.networkextension.packet-tunnel", info_plist)
+        self.assertIn("VpnRouterPacketTunnelProvider", info_plist)
+        self.assertIn("packet-tunnel-provider", entitlements)
+        self.assertIn("com.apple.developer.networking.networkextension", entitlements)
 
     def test_expo_android_native_module_declares_vpn_service(self) -> None:
         module_config = json.loads(
@@ -229,7 +249,7 @@ class ExpoScaffoldTest(unittest.TestCase):
         self.assertIn("protocol SingBoxTunnelRunner", runner)
         self.assertIn("MissingSingBoxTunnelRunner", missing_runner)
         self.assertIn("runtimeMissing", errors)
-        self.assertIn("ios/PacketTunnel", readme)
+        self.assertIn("Packet Tunnel Swift sources", readme)
 
 
 if __name__ == "__main__":
