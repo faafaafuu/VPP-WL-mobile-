@@ -56,7 +56,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 221
+      "line": 223
     },
     {
       "id": "backend_app_api_pages_py__coin_tab_buttons",
@@ -64,7 +64,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 238
+      "line": 240
     },
     {
       "id": "backend_app_api_pages_py__coin_block",
@@ -72,7 +72,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 250
+      "line": 251
     },
     {
       "id": "backend_app_api_pages_py__coins_js",
@@ -80,7 +80,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 273
+      "line": 272
     },
     {
       "id": "backend_app_api_pages_py_not_found_page",
@@ -88,7 +88,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 279
+      "line": 278
     },
     {
       "id": "backend_app_api_pages_py__tariff_card",
@@ -96,7 +96,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 295
+      "line": 294
     },
     {
       "id": "backend_app_api_pages_py__price",
@@ -104,7 +104,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 310
+      "line": 309
     },
     {
       "id": "backend_app_api_pages_py__page",
@@ -112,7 +112,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 316
+      "line": 315
     },
     {
       "id": "backend_app_api_rate_limit_py",
@@ -150,7 +150,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 58
+      "line": 59
     },
     {
       "id": "backend_app_api_server_py_run",
@@ -158,7 +158,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 420
+      "line": 421
     },
     {
       "id": "backend_app_api_server_py_do_options",
@@ -166,7 +166,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 61
+      "line": 62
     },
     {
       "id": "backend_app_api_server_py_do_get",
@@ -174,7 +174,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 68
+      "line": 69
     },
     {
       "id": "backend_app_api_server_py_do_delete",
@@ -182,7 +182,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 169
+      "line": 170
     },
     {
       "id": "backend_app_api_server_py_do_post",
@@ -190,7 +190,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 188
+      "line": 189
     },
     {
       "id": "backend_app_api_server_py_do_patch",
@@ -198,7 +198,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 266
+      "line": 267
     },
     {
       "id": "backend_app_api_server_py_log_message",
@@ -206,7 +206,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 295
+      "line": 296
     },
     {
       "id": "backend_app_api_server_py__require_user_id",
@@ -214,7 +214,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 298
+      "line": 299
     },
     {
       "id": "backend_app_api_server_py__is_rate_limited",
@@ -222,7 +222,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 306
+      "line": 307
     },
     {
       "id": "backend_app_api_server_py__read_json",
@@ -230,7 +230,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 318
+      "line": 319
     },
     {
       "id": "backend_app_api_server_py__read_form_or_json",
@@ -238,7 +238,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 331
+      "line": 332
     },
     {
       "id": "backend_app_api_server_py__send_service_response",
@@ -246,7 +246,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 340
+      "line": 341
     },
     {
       "id": "backend_app_api_server_py__send_text_response",
@@ -254,7 +254,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 346
+      "line": 347
     },
     {
       "id": "backend_app_api_server_py__send_json",
@@ -262,7 +262,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 352
+      "line": 353
     },
     {
       "id": "backend_app_api_server_py__send_text",
@@ -270,7 +270,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 363
+      "line": 364
     },
     {
       "id": "backend_app_api_server_py__send_html",
@@ -278,7 +278,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 374
+      "line": 375
     },
     {
       "id": "backend_app_api_server_py__send_redirect",
@@ -286,7 +286,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 385
+      "line": 386
     },
     {
       "id": "backend_app_api_server_py__send_cors_headers",
@@ -294,7 +294,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 394
+      "line": 395
     },
     {
       "id": "backend_app_api_server_py__send_security_headers",
@@ -302,7 +302,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 412
+      "line": 413
     },
     {
       "id": "backend_app_api_service_py",
@@ -333,7 +333,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 665
+      "line": 670
     },
     {
       "id": "backend_app_api_service_py__public_subscription",
@@ -341,7 +341,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 682
+      "line": 687
     },
     {
       "id": "backend_app_api_service_py__opt_str",
@@ -349,7 +349,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 691
+      "line": 696
     },
     {
       "id": "backend_app_api_service_py__admin_node",
@@ -357,7 +357,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 698
+      "line": 703
     },
     {
       "id": "backend_app_api_service_py__admin_audit_event",
@@ -365,7 +365,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 718
+      "line": 723
     },
     {
       "id": "backend_app_api_service_py__admin_health_update_details",
@@ -373,7 +373,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 730
+      "line": 735
     },
     {
       "id": "backend_app_api_service_py__metric_escape",
@@ -381,7 +381,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 749
+      "line": 754
     },
     {
       "id": "backend_app_api_service_py__repository_backend_name",
@@ -389,7 +389,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 753
+      "line": 758
     },
     {
       "id": "backend_app_api_service_py__mask_token",
@@ -397,7 +397,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 762
+      "line": 767
     },
     {
       "id": "backend_app_api_service_py__rub_to_usdt",
@@ -405,7 +405,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 768
+      "line": 773
     },
     {
       "id": "backend_app_api_service_py__node_from_payload",
@@ -413,7 +413,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 775
+      "line": 780
     },
     {
       "id": "backend_app_api_service_py__build_coin_options",
@@ -421,7 +421,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 853
+      "line": 858
     },
     {
       "id": "backend_app_api_service_py___init__",
@@ -437,7 +437,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 72
+      "line": 74
     },
     {
       "id": "backend_app_api_service_py_version",
@@ -445,7 +445,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 79
+      "line": 81
     },
     {
       "id": "backend_app_api_service_py_landing_html",
@@ -453,7 +453,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 98
+      "line": 100
     },
     {
       "id": "backend_app_api_service_py_checkout",
@@ -461,7 +461,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 101
+      "line": 103
     },
     {
       "id": "backend_app_api_service_py_connect_html",
@@ -469,7 +469,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 131
+      "line": 133
     },
     {
       "id": "backend_app_api_service_py__public_configs",
@@ -477,7 +477,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 136
+      "line": 138
     },
     {
       "id": "backend_app_api_service_py_invoice_html",
@@ -485,7 +485,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 149
+      "line": 151
     },
     {
       "id": "backend_app_api_service_py_invoice_wallet_qr_svg",
@@ -493,7 +493,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 161
+      "line": 166
     },
     {
       "id": "backend_app_api_service_py__wallet_address_for_coin",
@@ -501,7 +501,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 168
+      "line": 173
     },
     {
       "id": "backend_app_api_service_py_subscription_url",
@@ -509,7 +509,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 180
+      "line": 185
     },
     {
       "id": "backend_app_api_service_py_v2ray_subscription",
@@ -517,7 +517,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 183
+      "line": 188
     },
     {
       "id": "backend_app_api_service_py_raw_v2ray_subscription",
@@ -525,7 +525,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 190
+      "line": 195
     },
     {
       "id": "backend_app_api_service_py_subscription_qr_svg",
@@ -533,7 +533,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 197
+      "line": 202
     },
     {
       "id": "backend_app_api_service_py_admin_activate_commercial_subscription",
@@ -541,7 +541,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 204
+      "line": 209
     },
     {
       "id": "backend_app_api_service_py_prometheus_metrics",
@@ -549,7 +549,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 236
+      "line": 241
     },
     {
       "id": "backend_app_api_service_py_auth_receipt",
@@ -557,7 +557,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 276
+      "line": 281
     },
     {
       "id": "backend_app_api_service_py_create_yookassa_payment",
@@ -565,7 +565,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 293
+      "line": 298
     },
     {
       "id": "backend_app_api_service_py_yookassa_webhook",
@@ -573,7 +573,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 310
+      "line": 315
     },
     {
       "id": "backend_app_api_service_py_nodes",
@@ -581,7 +581,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 356
+      "line": 361
     },
     {
       "id": "backend_app_api_service_py_me",
@@ -589,7 +589,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 360
+      "line": 365
     },
     {
       "id": "backend_app_api_service_py_export_me",
@@ -597,7 +597,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 368
+      "line": 373
     },
     {
       "id": "backend_app_api_service_py_delete_me",
@@ -605,7 +605,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 374
+      "line": 379
     },
     {
       "id": "backend_app_api_service_py_admin_nodes",
@@ -613,7 +613,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 379
+      "line": 384
     },
     {
       "id": "backend_app_api_service_py_admin_audit_events",
@@ -621,7 +621,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 383
+      "line": 388
     },
     {
       "id": "backend_app_api_service_py_admin_update_node_health",
@@ -629,7 +629,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 387
+      "line": 392
     },
     {
       "id": "backend_app_api_service_py_admin_upsert_node",
@@ -637,7 +637,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 424
+      "line": 429
     },
     {
       "id": "backend_app_api_service_py_admin_disable_node",
@@ -645,7 +645,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 441
+      "line": 446
     },
     {
       "id": "backend_app_api_service_py_admin_import_vless",
@@ -653,7 +653,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 463
+      "line": 468
     },
     {
       "id": "backend_app_api_service_py_admin_patch_node",
@@ -661,7 +661,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 497
+      "line": 502
     },
     {
       "id": "backend_app_api_service_py_config",
@@ -669,7 +669,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 536
+      "line": 541
     },
     {
       "id": "backend_app_api_service_py_user_id_from_authorization",
@@ -677,7 +677,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 547
+      "line": 552
     },
     {
       "id": "backend_app_api_service_py__commercial_subscription",
@@ -685,7 +685,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 558
+      "line": 563
     },
     {
       "id": "backend_app_api_service_py__require_active_commercial_subscription",
@@ -693,7 +693,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 564
+      "line": 569
     },
     {
       "id": "backend_app_api_service_py__tariff_from_payload",
@@ -701,7 +701,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 569
+      "line": 574
     },
     {
       "id": "backend_app_api_service_py__require_admin",
@@ -709,7 +709,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 576
+      "line": 581
     },
     {
       "id": "backend_app_api_service_py__health_score_from_payload",
@@ -717,7 +717,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 580
+      "line": 585
     },
     {
       "id": "backend_app_api_service_py__node_status_from_payload",
@@ -725,7 +725,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 589
+      "line": 594
     },
     {
       "id": "backend_app_api_service_py__latency_from_payload",
@@ -733,7 +733,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 598
+      "line": 603
     },
     {
       "id": "backend_app_api_service_py__success_rate_from_payload",
@@ -741,7 +741,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 610
+      "line": 615
     },
     {
       "id": "backend_app_api_service_py__health_from_payload",
@@ -749,7 +749,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 622
+      "line": 627
     },
     {
       "id": "backend_app_api_service_py__receipt_claim_from_payload",
@@ -757,7 +757,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 631
+      "line": 636
     },
     {
       "id": "backend_app_api_service_py__require_known_user",
@@ -765,7 +765,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 646
+      "line": 651
     },
     {
       "id": "backend_app_api_service_py__verify_yookassa_claim",
@@ -773,7 +773,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 650
+      "line": 655
     },
     {
       "id": "backend_app_cli___init___py",
@@ -872,7 +872,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 50
+      "line": 51
     },
     {
       "id": "backend_app_core_settings_py__required_secret",
@@ -880,7 +880,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 134
+      "line": 137
     },
     {
       "id": "backend_app_core_settings_py__optional_secret",
@@ -888,7 +888,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 145
+      "line": 148
     },
     {
       "id": "backend_app_core_settings_py__port",
@@ -896,7 +896,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 156
+      "line": 159
     },
     {
       "id": "backend_app_core_settings_py__csv",
@@ -904,7 +904,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 166
+      "line": 169
     },
     {
       "id": "backend_app_core_settings_py__optional_url",
@@ -912,7 +912,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 170
+      "line": 173
     },
     {
       "id": "backend_app_core_settings_py__required_url",
@@ -920,7 +920,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 181
+      "line": 184
     },
     {
       "id": "backend_app_core_settings_py__product_prices",
@@ -928,7 +928,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 190
+      "line": 193
     },
     {
       "id": "backend_app_core_settings_py__non_negative_int",
@@ -936,7 +936,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 210
+      "line": 213
     },
     {
       "id": "backend_app_core_settings_py__bool",
@@ -944,7 +944,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 220
+      "line": 223
     },
     {
       "id": "backend_app_core_settings_py__decimal_str",
@@ -952,7 +952,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 229
+      "line": 232
     },
     {
       "id": "backend_app_core_settings_py__parse_crypto_wallets",
@@ -960,7 +960,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 239
+      "line": 242
     },
     {
       "id": "backend_app_domain___init___py",
@@ -3423,7 +3423,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 170
+      "line": 173
     },
     {
       "id": "backend_tests_test_crypto_manual_py_cryptosettingstest",
@@ -3431,7 +3431,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 188
+      "line": 191
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_checkout_redirects_to_invoice",
@@ -3466,8 +3466,8 @@
       "line": 72
     },
     {
-      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_order_ref",
-      "label": "test_invoice_html_contains_order_ref()",
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_has_no_memo_or_order_ref",
+      "label": "test_invoice_html_has_no_memo_or_order_ref()",
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
@@ -3479,7 +3479,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 90
+      "line": 93
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invoice_html_unknown_token_raises_404",
@@ -3487,7 +3487,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 98
+      "line": 101
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invoice_html_without_crypto_address_raises_503",
@@ -3495,7 +3495,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 106
+      "line": 109
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invoice_wallet_qr_svg_returns_svg",
@@ -3503,7 +3503,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 115
+      "line": 118
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_connect_page_shows_pending_state",
@@ -3511,7 +3511,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 123
+      "line": 126
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_admin_can_activate_after_crypto_payment",
@@ -3519,7 +3519,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 131
+      "line": 134
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_connect_page_shows_active_after_admin_activation",
@@ -3527,7 +3527,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 142
+      "line": 145
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_works_after_activation",
@@ -3535,7 +3535,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 151
+      "line": 154
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_blocked_while_pending",
@@ -3543,7 +3543,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 160
+      "line": 163
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_basic_conversion_rounds_up",
@@ -3551,7 +3551,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 171
+      "line": 174
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_exact_division",
@@ -3559,7 +3559,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 176
+      "line": 179
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_rounds_up_not_down",
@@ -3567,7 +3567,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 181
+      "line": 184
     },
     {
       "id": "backend_tests_test_crypto_manual_py__base_env",
@@ -3575,7 +3575,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 189
+      "line": 192
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_crypto_manual_requires_wallet_address",
@@ -3583,7 +3583,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 196
+      "line": 199
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_crypto_manual_with_address_ok",
@@ -3591,7 +3591,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 206
+      "line": 209
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_custom_usdt_rate",
@@ -3599,7 +3599,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 220
+      "line": 223
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invalid_usdt_rate_raises",
@@ -3607,7 +3607,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 232
+      "line": 235
     },
     {
       "id": "backend_tests_test_env_ready_tool_py",
@@ -3677,7 +3677,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 169
+      "line": 195
     },
     {
       "id": "backend_tests_test_exchange_rates_py__svc",
@@ -3840,12 +3840,36 @@
       "line": 157
     },
     {
+      "id": "backend_tests_test_exchange_rates_py_test_eth_wallet_shows_usdt_on_erc20_and_bep20",
+      "label": "test_eth_wallet_shows_usdt_on_erc20_and_bep20()",
+      "source_file": "backend/tests/test_exchange_rates.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 168
+    },
+    {
+      "id": "backend_tests_test_exchange_rates_py_test_testnet_hidden_by_default",
+      "label": "test_testnet_hidden_by_default()",
+      "source_file": "backend/tests/test_exchange_rates.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 178
+    },
+    {
+      "id": "backend_tests_test_exchange_rates_py_test_testnet_shown_with_fixed_amount_when_enabled",
+      "label": "test_testnet_shown_with_fixed_amount_when_enabled()",
+      "source_file": "backend/tests/test_exchange_rates.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 185
+    },
+    {
       "id": "backend_tests_test_exchange_rates_py__base",
       "label": "_base()",
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 170
+      "line": 196
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_wallets_parsed_from_env",
@@ -3853,7 +3877,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 177
+      "line": 203
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_legacy_usdt_address_backfilled_into_wallets",
@@ -3861,7 +3885,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 195
+      "line": 221
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_rate_provider_default_is_coingecko",
@@ -3869,7 +3893,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 204
+      "line": 230
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_rate_provider_fixed",
@@ -3877,7 +3901,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 211
+      "line": 237
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_invalid_rate_provider_raises",
@@ -3885,7 +3909,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 220
+      "line": 246
     },
     {
       "id": "backend_tests_test_expo_scaffold_py",
@@ -8426,7 +8450,7 @@
     },
     {
       "source": "backend_tests_test_crypto_manual_py",
-      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_order_ref",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_has_no_memo_or_order_ref",
       "relation": "contains",
       "source_file": "backend/tests/test_crypto_manual.py"
     },
@@ -8721,6 +8745,24 @@
     {
       "source": "backend_tests_test_exchange_rates_py",
       "target": "backend_tests_test_exchange_rates_py_test_amount_is_correct",
+      "relation": "contains",
+      "source_file": "backend/tests/test_exchange_rates.py"
+    },
+    {
+      "source": "backend_tests_test_exchange_rates_py",
+      "target": "backend_tests_test_exchange_rates_py_test_eth_wallet_shows_usdt_on_erc20_and_bep20",
+      "relation": "contains",
+      "source_file": "backend/tests/test_exchange_rates.py"
+    },
+    {
+      "source": "backend_tests_test_exchange_rates_py",
+      "target": "backend_tests_test_exchange_rates_py_test_testnet_hidden_by_default",
+      "relation": "contains",
+      "source_file": "backend/tests/test_exchange_rates.py"
+    },
+    {
+      "source": "backend_tests_test_exchange_rates_py",
+      "target": "backend_tests_test_exchange_rates_py_test_testnet_shown_with_fixed_amount_when_enabled",
       "relation": "contains",
       "source_file": "backend/tests/test_exchange_rates.py"
     },

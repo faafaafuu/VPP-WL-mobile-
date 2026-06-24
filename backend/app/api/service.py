@@ -47,6 +47,7 @@ class ApiService:
         crypto_usdt_rate_rub: str = "90.00",
         crypto_wallets: dict[str, str] | None = None,
         exchange_rate_service: ExchangeRateService | None = None,
+        crypto_enable_testnet: bool = False,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -68,6 +69,7 @@ class ApiService:
             _wallets["trc20"] = crypto_usdt_trc20_address
         self.crypto_wallets = _wallets
         self.exchange_rate_service = exchange_rate_service or ExchangeRateService("fixed")
+        self.crypto_enable_testnet = crypto_enable_testnet
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -153,7 +155,10 @@ class ApiService:
             raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "tariff not found"})
         if not self.crypto_wallets:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
-        coin_options = _build_coin_options(tariff.price_rub, self.crypto_wallets, self.exchange_rate_service)
+        coin_options = _build_coin_options(
+            tariff.price_rub, self.crypto_wallets, self.exchange_rate_service,
+            include_testnet=self.crypto_enable_testnet,
+        )
         if not coin_options:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "no configured crypto wallets"})
         return invoice_page(subscription, tariff, coin_options)
@@ -854,26 +859,26 @@ def _build_coin_options(
     price_rub: str,
     wallets: dict[str, str],
     rate_svc: ExchangeRateService,
+    include_testnet: bool = False,
 ) -> list[dict[str, str]]:
-    """Return list of {id, label, network_label, amount, address, color} for configured coins."""
-    seen_wallet_keys: set[str] = set()
+    """Return list of {id, label, network_label, amount, address, testnet} for configured coins."""
     result: list[dict[str, str]] = []
     for coin in ALL_COINS:
+        if coin.testnet and not include_testnet:
+            continue
         addr = wallets.get(coin.wallet_key)
         if not addr:
             continue
-        # deduplicate: same wallet_key already added a coin with same address
-        entry_key = (coin.wallet_key, coin.coingecko_id)
-        if entry_key in seen_wallet_keys:
-            continue
-        seen_wallet_keys.add(entry_key)
-        amount = rate_svc.coin_amount(price_rub, coin) or "—"
+        if coin.testnet and coin.fixed_amount:
+            amount = coin.fixed_amount
+        else:
+            amount = rate_svc.coin_amount(price_rub, coin) or "—"
         result.append({
             "id": coin.id,
             "label": coin.label,
             "network_label": coin.network_label,
             "amount": amount,
             "address": addr,
-            "color": coin.color,
+            "testnet": "1" if coin.testnet else "",
         })
     return result

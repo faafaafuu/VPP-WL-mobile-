@@ -165,6 +165,32 @@ class BuildCoinOptionsTest(unittest.TestCase):
         usdt_opt = next(o for o in opts if o["id"] == "usdt_trc20")
         self.assertEqual(usdt_opt["amount"], "2.00")
 
+    def test_eth_wallet_shows_usdt_on_erc20_and_bep20(self) -> None:
+        from app.api.service import _build_coin_options
+        from app.services.exchange_rates import ExchangeRateService
+
+        opts = _build_coin_options("200.00", {"eth": "0xabc"}, ExchangeRateService("fixed"))
+        ids = [o["id"] for o in opts]
+        self.assertIn("usdt_erc20", ids)
+        self.assertIn("usdt_bep20", ids)
+        self.assertIn("usdc_erc20", ids)
+
+    def test_testnet_hidden_by_default(self) -> None:
+        from app.api.service import _build_coin_options
+        from app.services.exchange_rates import ExchangeRateService
+
+        opts = _build_coin_options("200.00", {"eth": "0xabc"}, ExchangeRateService("fixed"))
+        self.assertNotIn("eth_sepolia", [o["id"] for o in opts])
+
+    def test_testnet_shown_with_fixed_amount_when_enabled(self) -> None:
+        from app.api.service import _build_coin_options
+        from app.services.exchange_rates import ExchangeRateService
+
+        opts = _build_coin_options("200.00", {"eth": "0xabc"}, ExchangeRateService("fixed"), include_testnet=True)
+        testnet = next(o for o in opts if o["id"] == "eth_sepolia")
+        self.assertEqual(testnet["amount"], "0.001")
+        self.assertEqual(testnet["testnet"], "1")
+
 
 class SettingsCryptoWalletsTest(unittest.TestCase):
     def _base(self) -> dict[str, str]:

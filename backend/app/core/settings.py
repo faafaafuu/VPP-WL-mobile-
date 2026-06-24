@@ -45,6 +45,7 @@ class Settings:
     crypto_usdt_rate_rub: str = "90.00"
     crypto_wallets: dict[str, str] = field(default_factory=dict)
     crypto_rate_provider: str = "coingecko"
+    crypto_enable_testnet: bool = False
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -106,6 +107,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     crypto_rate_provider_raw = source.get("CRYPTO_RATE_PROVIDER", "coingecko").strip().lower()
     if crypto_rate_provider_raw not in {"coingecko", "fixed"}:
         raise SettingsError("CRYPTO_RATE_PROVIDER must be coingecko or fixed")
+    crypto_enable_testnet = _bool(source.get("CRYPTO_ENABLE_TESTNET", "false"), "CRYPTO_ENABLE_TESTNET")
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -128,6 +130,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         crypto_usdt_rate_rub=crypto_usdt_rate_rub,
         crypto_wallets=crypto_wallets,
         crypto_rate_provider=crypto_rate_provider_raw,
+        crypto_enable_testnet=crypto_enable_testnet,
     )
 
 

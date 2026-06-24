@@ -79,13 +79,16 @@ class CryptoManualCheckoutTest(unittest.TestCase):
         self.assertIn("2.00", html)
         self.assertIn("USDT", html)
 
-    def test_invoice_html_contains_order_ref(self) -> None:
+    def test_invoice_html_has_no_memo_or_order_ref(self) -> None:
+        # Simplified flow: no memo / order reference shown to the user.
         svc = _service()
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
         html = svc.invoice_html(token)
 
-        self.assertIn(token[:12].upper(), html)
+        self.assertNotIn("мемо", html.lower())
+        self.assertNotIn("номер заказа", html.lower())
+        self.assertNotIn(token[:12].upper(), html)
 
     def test_invoice_html_contains_connect_status_link(self) -> None:
         svc = _service()

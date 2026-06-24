@@ -52,6 +52,7 @@ API_SERVICE = ApiService(
     crypto_usdt_rate_rub=SETTINGS.crypto_usdt_rate_rub,
     crypto_wallets=SETTINGS.crypto_wallets,
     exchange_rate_service=EXCHANGE_RATE_SERVICE,
+    crypto_enable_testnet=SETTINGS.crypto_enable_testnet,
 )
 
 

@@ -3,8 +3,8 @@
 Fallback AST graph for the VPN Router MVP backend.
 
 - Files: 71
-- Symbols: 639
-- Edges: 762
+- Symbols: 642
+- Edges: 765
 
 ## Key Files
 

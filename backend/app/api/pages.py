@@ -148,40 +148,33 @@ def invoice_page(
     tariff: Tariff,
     coin_options: list[dict[str, str]],
 ) -> str:
-    order_ref = subscription.token[:12].upper()
     price_rub = _price(tariff.price_rub)
     coins_js = _coins_js(coin_options)
     coin_blocks = "\n".join(_coin_block(i, opt, subscription.token) for i, opt in enumerate(coin_options))
     return _page(
-        "Оплата криптовалютой",
+        "Оплата",
         f"""
-        <main class="shell connect">
-          <div class="status-card active" style="background:linear-gradient(145deg,rgba(103,247,165,.13),rgba(255,255,255,.08))">
-            <p class="eyebrow">Оплата криптовалютой</p>
-            <h1>{escape(tariff.title)}</h1>
-            <p class="lead compact">Стоимость: <strong>{escape(price_rub)}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;Заказ: <code>{escape(order_ref)}</code></p>
-            <p class="lead compact" style="margin-top:6px">Выберите валюту и переведите точную сумму.</p>
-            <div class="coin-tabs" id="coinTabs">
+        <main class="shell pay">
+          <section class="pay-card">
+            <p class="eyebrow">Оплата</p>
+            <h1 class="pay-title">{escape(tariff.title)}</h1>
+            <p class="pay-price">{escape(price_rub)}</p>
+
+            <p class="pay-step">Валюта и сеть</p>
+            <div class="coin-tabs">
               {_coin_tab_buttons(coin_options)}
             </div>
+
             {coin_blocks}
-            <div class="instructions" style="margin-top:18px">
-              <details open>
-                <summary>Как оплатить</summary>
-                <ol>
-                  <li>Выберите валюту, которая удобна вам.</li>
-                  <li>Откройте ваш кошелёк (Binance, OKX, Bybit, Trust Wallet и др.).</li>
-                  <li>Убедитесь, что выбрали правильную <strong>сеть</strong> (TRC20, BSC, TON и т.д.).</li>
-                  <li>Переведите <strong>точную сумму</strong> — без округления.</li>
-                  <li>В комментарии/мемо укажите номер заказа: <strong>{escape(order_ref)}</strong>.</li>
-                  <li>После подтверждения транзакции активируем доступ — обычно в течение 30 минут.</li>
-                </ol>
-              </details>
-            </div>
-            <div style="margin-top:20px">
-              <a class="button" href="/connect/{escape(subscription.token)}">Проверить статус доступа</a>
-            </div>
-          </div>
+
+            <ol class="pay-how">
+              <li>Выберите валюту и сеть.</li>
+              <li>Переведите точную сумму на адрес.</li>
+              <li>Доступ откроется после подтверждения перевода.</li>
+            </ol>
+
+            <a class="button wide" href="/connect/{escape(subscription.token)}">Проверить статус</a>
+          </section>
         </main>
         <script>
           {coins_js}
@@ -192,7 +185,7 @@ def invoice_page(
           async function copyAddr(idx) {{
             await navigator.clipboard.writeText(COINS[idx].address);
             const hint = document.getElementById('copyHint' + idx);
-            if (hint) hint.hidden = false;
+            if (hint) {{ hint.hidden = false; setTimeout(() => hint.hidden = true, 2500); }}
           }}
           function toggleQr(idx) {{
             const qr = document.getElementById('addrQr' + idx);
@@ -201,18 +194,27 @@ def invoice_page(
           selectCoin(0);
         </script>
         <style>
-          .coin-tabs {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }}
-          .coin-tab {{ padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; color: var(--text); }}
-          .coin-tab.active {{ border-color: var(--cyan); color: var(--cyan); background: rgba(54,231,255,.10); }}
-          .coin-panel {{ margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: rgba(0,0,0,.22); }}
-          .crypto-meta {{ display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }}
-          .crypto-dot {{ width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }}
-          .crypto-net {{ color: var(--muted); font-size: .8rem; }}
-          .crypto-amount {{ font-size: 1.9rem; font-weight: 900; margin: 0 0 12px; }}
-          .crypto-label {{ margin: 0 0 4px; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; }}
-          .crypto-addr {{ margin: 0 0 12px; font-family: monospace; font-size: .88rem; word-break: break-all; color: var(--cyan); }}
-          .hint {{ color: var(--green); margin-top: 8px; }}
-          code {{ font-family: monospace; color: var(--cyan); }}
+          .pay {{ padding: 32px 0 56px; display: grid; place-items: start center; }}
+          .pay-card {{ width: 100%; max-width: 520px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 28px; }}
+          .pay-title {{ margin: 4px 0 0; font-size: 1.6rem; letter-spacing: 0; }}
+          .pay-price {{ margin: 2px 0 22px; font-size: 2.6rem; font-weight: 900; }}
+          .pay-step {{ margin: 0 0 10px; font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }}
+          .coin-tabs {{ display: flex; flex-wrap: wrap; gap: 8px; }}
+          .coin-tab {{ display: inline-flex; align-items: baseline; gap: 6px; padding: 9px 13px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.03); font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; color: var(--text); transition: border-color .15s, background .15s; }}
+          .coin-tab:hover {{ border-color: rgba(255,255,255,.32); }}
+          .coin-tab .net {{ font-weight: 500; font-size: .76rem; color: var(--muted); }}
+          .coin-tab.active {{ border-color: var(--cyan); background: rgba(54,231,255,.08); }}
+          .coin-tab.active .net {{ color: var(--cyan); }}
+          .coin-panel {{ margin-top: 18px; border: 1px solid var(--line); border-radius: 12px; padding: 20px; background: rgba(0,0,0,.2); }}
+          .crypto-net {{ margin: 0 0 2px; color: var(--muted); font-size: .82rem; }}
+          .crypto-amount {{ font-size: 2rem; font-weight: 900; margin: 0 0 16px; letter-spacing: -.01em; }}
+          .crypto-amount .unit {{ font-size: 1.1rem; font-weight: 700; color: var(--muted); margin-left: 6px; }}
+          .crypto-label {{ margin: 0 0 6px; color: var(--muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; }}
+          .crypto-addr {{ margin: 0 0 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; word-break: break-all; line-height: 1.5; }}
+          .testnet-badge {{ display: inline-block; margin-left: 8px; padding: 2px 7px; border-radius: 6px; background: rgba(255,176,32,.16); color: #ffb020; font-size: .66rem; font-weight: 800; letter-spacing: .04em; vertical-align: middle; }}
+          .pay-how {{ margin: 22px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.7; }}
+          .button.wide {{ width: 100%; margin-top: 20px; }}
+          .hint {{ color: var(--green); margin-top: 10px; font-size: .9rem; }}
         </style>
         """,
     )
@@ -238,25 +240,22 @@ def _configs_block(configs: list[dict[str, str]]) -> str:
 def _coin_tab_buttons(coin_options: list[dict[str, str]]) -> str:
     parts = []
     for i, opt in enumerate(coin_options):
-        dot = f'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{escape(opt["color"])};margin-right:5px"></span>'
         parts.append(
             f'<button class="coin-tab" type="button" onclick="selectCoin({i})">'
-            f'{dot}{escape(opt["label"])} <span style="opacity:.6;font-weight:400">{escape(opt["network_label"])}</span>'
+            f'{escape(opt["label"])} <span class="net">{escape(opt["network_label"])}</span>'
             f'</button>'
         )
     return "\n".join(parts)
 
 
 def _coin_block(idx: int, opt: dict[str, str], token: str) -> str:
+    is_testnet = opt.get("testnet") == "1"
+    badge = '<span class="testnet-badge">TESTNET</span>' if is_testnet else ""
     return f"""
       <div class="coin-panel" id="coinPanel{idx}" hidden>
-        <div class="crypto-meta">
-          <span class="crypto-dot" style="background:{escape(opt['color'])}"></span>
-          <span style="font-weight:700">{escape(opt['label'])}</span>
-          <span class="crypto-net">{escape(opt['network_label'])}</span>
-        </div>
-        <p class="crypto-amount">{escape(opt['amount'])} {escape(opt['label'])}</p>
-        <p class="crypto-label">Адрес кошелька</p>
+        <p class="crypto-net">{escape(opt['network_label'])}{badge}</p>
+        <p class="crypto-amount">{escape(opt['amount'])}<span class="unit">{escape(opt['label'])}</span></p>
+        <p class="crypto-label">Адрес</p>
         <p class="crypto-addr">{escape(opt['address'])}</p>
         <div class="actions">
           <button class="button primary" type="button" onclick="copyAddr({idx})">Скопировать адрес</button>
