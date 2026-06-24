@@ -86,48 +86,43 @@ if grep -q "SERVER_IP\|example\.com" .env 2>/dev/null; then
     ok "Set PUBLIC_BASE_URL=${BASE_URL}"
 fi
 
-# ── check port conflicts ──────────────────────────────────────────────────────
+# ── stop and remove all existing project containers ───────────────────────────
+info "Stopping existing containers..."
+docker compose down --remove-orphans 2>/dev/null || true
+# Also clean up containers from old project name (directory rename, etc.)
+old_containers=$(docker ps -a --format "{{.Names}}" 2>/dev/null \
+    | grep -E "^(vpp-wl-mobile--|vpn-router-)" || true)
+if [[ -n "$old_containers" ]]; then
+    warn "Removing stale containers: $(echo "$old_containers" | tr '\n' ' ')"
+    echo "$old_containers" | xargs docker rm -f 2>/dev/null || true
+fi
+ok "Cleaned up old containers"
+
+# ── check for system services holding ports 80/443 ────────────────────────────
 _free_port() {
     local port="$1"
-    # ss is preferred; fall back to netstat or lsof
-    local pid_info
+    # Only match actual LISTEN lines, not headers
+    local listening
     if command -v ss >/dev/null 2>&1; then
-        pid_info=$(ss -tlnp "sport = :${port}" 2>/dev/null | grep -v "^Netid" || true)
+        listening=$(ss -tlnp 2>/dev/null | awk 'NR>1 && /LISTEN/' | grep ":${port} \|:${port}$" || true)
     elif command -v netstat >/dev/null 2>&1; then
-        pid_info=$(netstat -tlnp 2>/dev/null | grep ":${port} " || true)
+        listening=$(netstat -tlnp 2>/dev/null | grep "LISTEN" | grep ":${port} " || true)
     else
-        pid_info=$(lsof -iTCP:"${port}" -sTCP:LISTEN -n -P 2>/dev/null || true)
+        listening=$(lsof -iTCP:"${port}" -sTCP:LISTEN -n -P 2>/dev/null || true)
     fi
-    [[ -z "$pid_info" ]] && return 0   # port is free
+    [[ -z "$listening" ]] && return 0   # port is free
 
-    warn "Port ${port} is already in use:"
-    echo "  $pid_info"
-
-    # Stop system web servers that commonly occupy 80/443
+    warn "Port ${port} is still in use by a system process — trying to stop web servers..."
     for svc in nginx apache2 apache httpd caddy; do
         if systemctl is-active --quiet "$svc" 2>/dev/null; then
-            warn "Stopping system service: ${svc}"
             systemctl stop "$svc" && systemctl disable "$svc" \
-                && ok "Stopped ${svc} (disabled at boot)" \
-                || warn "Could not stop ${svc} — free port ${port} manually, then re-run setup.sh"
+                && ok "Stopped system service: ${svc}" \
+                || die "Could not stop ${svc}. Run: systemctl stop ${svc}"
             return 0
         fi
     done
 
-    # Check if it's a Docker container — stop it automatically
-    local container
-    container=$(docker ps --format "{{.Names}}" 2>/dev/null | while read -r name; do
-        docker port "$name" 2>/dev/null | grep -q ":${port}$" && echo "$name"
-    done | head -1 || true)
-    if [[ -n "$container" ]]; then
-        warn "Port ${port} is used by container '${container}' — stopping it"
-        docker stop "$container" && docker rm "$container" \
-            && ok "Removed container ${container}" \
-            || die "Could not remove container ${container}. Try: docker rm -f ${container}"
-        return 0
-    fi
-
-    die "Port ${port} is in use by an unknown process. Free it and re-run setup.sh."
+    die "Port ${port} is held by an unknown process:\n  ${listening}\nFree it and re-run setup.sh."
 }
 
 info "Checking ports 80 and 443..."
