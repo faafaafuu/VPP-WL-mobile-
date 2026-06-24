@@ -2,9 +2,9 @@
 
 Fallback AST graph for the VPN Router MVP backend.
 
-- Files: 64
-- Symbols: 535
-- Edges: 634
+- Files: 68
+- Symbols: 602
+- Edges: 713
 
 ## Key Files
 
@@ -19,6 +19,7 @@ Fallback AST graph for the VPN Router MVP backend.
 - `backend/app/core/__init__.py`
 - `backend/app/core/settings.py`
 - `backend/app/domain/__init__.py`
+- `backend/app/domain/coins.py`
 - `backend/app/domain/config_builder.py`
 - `backend/app/domain/config_validation.py`
 - `backend/app/domain/health_checker.py`
@@ -38,9 +39,11 @@ Fallback AST graph for the VPN Router MVP backend.
 - `backend/app/security/__init__.py`
 - `backend/app/security/tokens.py`
 - `backend/app/services/__init__.py`
+- `backend/app/services/exchange_rates.py`
 - `backend/app/services/health_worker.py`
 - `backend/app/services/receipt_verifier.py`
 - `backend/app/services/yookassa.py`
+- `backend/tests/test_admin_node_crud.py`
 - `backend/tests/test_android_scaffold.py`
 - `backend/tests/test_api_server.py`
 - `backend/tests/test_config_builder.py`
@@ -48,6 +51,7 @@ Fallback AST graph for the VPN Router MVP backend.
 - `backend/tests/test_cors_server.py`
 - `backend/tests/test_crypto_manual.py`
 - `backend/tests/test_env_ready_tool.py`
+- `backend/tests/test_exchange_rates.py`
 - `backend/tests/test_expo_scaffold.py`
 - `backend/tests/test_health_check_cli.py`
 - `backend/tests/test_health_checker.py`

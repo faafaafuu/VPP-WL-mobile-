@@ -166,6 +166,25 @@ class ApiHandler(BaseHTTPRequestHandler):
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
+    def do_DELETE(self) -> None:
+        if self._is_rate_limited():
+            return
+        path = urlparse(self.path).path
+        if path == "/api/me":
+            user_id = self._require_user_id()
+            if user_id is None:
+                return
+            self._send_service_response(lambda: API_SERVICE.delete_me(user_id))
+            return
+        admin_node_prefix = "/api/admin/nodes/"
+        if path.startswith(admin_node_prefix):
+            node_id = path[len(admin_node_prefix):].strip("/")
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(lambda: API_SERVICE.admin_disable_node(admin_token, node_id))
+            return
+
+        self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
+
     def do_POST(self) -> None:
         if self._is_rate_limited():
             return
@@ -209,6 +228,14 @@ class ApiHandler(BaseHTTPRequestHandler):
             self._send_service_response(lambda: API_SERVICE.yookassa_webhook(payload))
             return
 
+        if path == "/api/admin/nodes":
+            payload = self._read_json()
+            if payload is None:
+                return
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(lambda: API_SERVICE.admin_upsert_node(admin_token, payload))
+            return
+
         admin_prefix = "/admin/subscriptions/"
         admin_suffix = "/activate"
         if path.startswith(admin_prefix) and path.endswith(admin_suffix):
@@ -224,19 +251,6 @@ class ApiHandler(BaseHTTPRequestHandler):
 
         if path in {"/api/webhook/apple", "/api/webhook/google"}:
             self._send_json(HTTPStatus.ACCEPTED, {"status": "accepted"})
-            return
-
-        self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
-
-    def do_DELETE(self) -> None:
-        if self._is_rate_limited():
-            return
-        path = urlparse(self.path).path
-        if path == "/api/me":
-            user_id = self._require_user_id()
-            if user_id is None:
-                return
-            self._send_service_response(lambda: API_SERVICE.delete_me(user_id))
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})

@@ -11,7 +11,7 @@ from app.api.pages import connect_page, invoice_page, landing_page
 from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
-from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
+from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
 from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
 from app.domain.qr_svg import qr_svg
@@ -406,6 +406,45 @@ class ApiService:
         )
         return {"node": _admin_node(node)}
 
+    def admin_upsert_node(self, admin_token: str, payload: dict[str, Any]) -> dict[str, Any]:
+        self._require_admin(admin_token)
+        node = _node_from_payload(payload)
+        self.repository.upsert_node(node)
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="node.upsert",
+                target_type="node",
+                target_id=node.id,
+                result="success",
+                details={"host": node.host, "port": node.port, "protocol": node.protocol.value},
+            )
+        )
+        return {"node": _admin_node(node)}
+
+    def admin_disable_node(self, admin_token: str, node_id: str) -> dict[str, Any]:
+        self._require_admin(admin_token)
+        from dataclasses import replace
+        from app.domain.models import NodeHealth, NodeStatus
+        node = self.repository.get_node(node_id)
+        if node is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "node not found"})
+        disabled = replace(node, status=NodeStatus.DISABLED, health=NodeHealth.DISABLED)
+        self.repository.upsert_node(disabled)
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="node.disable",
+                target_type="node",
+                target_id=node_id,
+                result="success",
+                details={},
+            )
+        )
+        return {"node": _admin_node(disabled)}
+
     def config(self, user_id: str) -> dict[str, Any]:
         self._require_known_user(user_id)
         if self.repository.get_active_subscription(user_id) is None:
@@ -628,6 +667,84 @@ def _rub_to_usdt(price_rub: str, rate_rub: str) -> str:
     rate = Decimal(rate_rub)
     usdt = (rub / rate).quantize(Decimal("0.01"), rounding=ROUND_UP)
     return str(usdt)
+
+
+def _node_from_payload(payload: dict[str, Any]) -> VpnNode:
+    node_id = str(payload.get("id", "")).strip()
+    if not node_id:
+        raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "id is required"})
+    host = str(payload.get("host", "")).strip()
+    if not host:
+        raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "host is required"})
+    try:
+        port = int(payload.get("port", 443))
+    except (TypeError, ValueError) as exc:
+        raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "port must be an integer"}) from exc
+    if not 1 <= port <= 65535:
+        raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "port must be between 1 and 65535"})
+
+    protocol_raw = str(payload.get("protocol", "vless")).strip().lower()
+    try:
+        protocol = Protocol(protocol_raw)
+    except ValueError as exc:
+        raise ApiError(HTTPStatus.BAD_REQUEST, {"error": f"unknown protocol: {protocol_raw}"}) from exc
+
+    status_raw = str(payload.get("status", "active")).strip().lower()
+    try:
+        status = NodeStatus(status_raw)
+    except ValueError:
+        status = NodeStatus.ACTIVE
+
+    health_raw = str(payload.get("health", "healthy")).strip().lower()
+    try:
+        health = NodeHealth(health_raw)
+    except ValueError:
+        health = NodeHealth.HEALTHY
+
+    priority = int(payload.get("priority", 50))
+    region = str(payload.get("region", "unknown")).strip()
+    country_code = str(payload.get("country_code", "XX")).strip()
+    provider = str(payload.get("provider", "manual")).strip()
+
+    options: VlessOptions | None = None
+    if protocol == Protocol.VLESS:
+        opts = payload.get("options") or {}
+        uuid = str(opts.get("uuid", "")).strip()
+        sni = str(opts.get("server_name", "")).strip()
+        public_key = str(opts.get("public_key", "")).strip()
+        short_id = str(opts.get("short_id", "")).strip()
+        if not uuid:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "options.uuid is required for VLESS"})
+        if not public_key:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "options.public_key is required for VLESS"})
+        if not short_id:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "options.short_id is required for VLESS"})
+        if not sni:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "options.server_name (SNI) is required for VLESS"})
+        options = VlessOptions(
+            uuid=uuid,
+            server_name=sni,
+            public_key=public_key,
+            short_id=short_id,
+            flow=str(opts.get("flow", "xtls-rprx-vision")).strip() or None,
+            fingerprint=str(opts.get("fingerprint", "chrome")).strip() or "chrome",
+            label=str(opts.get("label", f"Node {node_id}")).strip() or None,
+        )
+
+    return VpnNode(
+        id=node_id,
+        tag=str(payload.get("tag", node_id)).strip(),
+        region=region,
+        provider=provider,
+        country_code=country_code,
+        host=host,
+        port=port,
+        protocol=protocol,
+        status=status,
+        health=health,
+        priority=priority,
+        options=options,
+    )
 
 
 def _build_coin_options(
