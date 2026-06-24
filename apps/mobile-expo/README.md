@@ -133,6 +133,52 @@ Without an Expo account token, EAS exits before build scheduling with "An Expo u
 - `preview`: internal APK/TestFlight-style validation.
 - `production`: store-oriented build with local app versioning.
 
+## Installing On iPhone
+
+You cannot use Expo Go for this app because VPN requires a custom native module and iOS Network Extension entitlements.
+
+Use one of these flows:
+
+1. Development install for internal testing:
+
+```bash
+cd apps/mobile-expo
+npm install
+EXPO_TOKEN=... \
+EXPO_PUBLIC_API_BASE_URL=https://staging-api.example.com \
+EXPO_PUBLIC_PRIVACY_URL=https://example.com/privacy \
+EXPO_PUBLIC_TERMS_URL=https://example.com/terms \
+npx eas build --profile development --platform ios --non-interactive
+```
+
+EAS will ask for Apple Developer credentials or use credentials already stored in the Expo account. The iPhone must be registered for internal/ad hoc development distribution unless the build is sent through TestFlight.
+
+2. TestFlight install for external QA:
+
+```bash
+cd apps/mobile-expo
+EXPO_TOKEN=... npx eas build --profile production --platform ios --non-interactive
+EXPO_TOKEN=... npx eas submit --platform ios --latest --non-interactive
+```
+
+After Apple processing, install the app from TestFlight.
+
+What can be tested now:
+
+- React Native product UI;
+- backend auth/config/subscription screens;
+- privacy/terms links;
+- Android VPN native module with the existing Android runtime path.
+
+What still blocks real iPhone VPN use:
+
+- the generated iOS project must include an actual Packet Tunnel extension target;
+- Apple Developer account must have Network Extension capability enabled;
+- signing profiles must include `packet-tunnel-provider`;
+- the Packet Tunnel target must bundle the real sing-box/libbox iOS framework instead of `MissingSingBoxTunnelRunner`.
+
+Until those items are done, the iPhone build is useful for UI/backend QA, but not for a working system VPN tunnel.
+
 ## Files To Add Later
 
 - Native Android implementation of `VpnRouterNative`.
