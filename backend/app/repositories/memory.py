@@ -23,7 +23,7 @@ from app.domain.receipt_fingerprint import receipt_transaction_id
 
 
 class InMemoryRepository:
-    def __init__(self) -> None:
+    def __init__(self, nodes: list[VpnNode] | None = None) -> None:
         self.users_by_id: dict[str, User] = {}
         self.users_by_device_id: dict[str, str] = {}
         self.subscriptions_by_user_id: dict[str, Subscription] = {}
@@ -31,7 +31,7 @@ class InMemoryRepository:
         self.nodes_by_id: dict[str, VpnNode] = {}
         self.health_events_by_node_id: dict[str, list[NodeHealthEvent]] = {}
         self.admin_audit_events: list[AdminAuditEvent] = []
-        self._seed_nodes()
+        self._seed_nodes(nodes)
 
     def get_or_create_user(self, device_id: str) -> User:
         existing_user_id = self.users_by_device_id.get(device_id)
@@ -205,7 +205,10 @@ class InMemoryRepository:
     def count_admin_audit_events(self) -> int:
         return len(self.admin_audit_events)
 
-    def _seed_nodes(self) -> None:
+    def _seed_nodes(self, nodes: list[VpnNode] | None = None) -> None:
+        if nodes:
+            self.nodes_by_id = {node.id: node for node in nodes}
+            return
         nodes = [
             VpnNode(
                 id="node_eu_1",

@@ -29,12 +29,13 @@ from app.repositories.memory import InMemoryRepository
 
 
 class SqliteRepository:
-    def __init__(self, database_path: str | Path) -> None:
+    def __init__(self, database_path: str | Path, nodes: list[VpnNode] | None = None) -> None:
         self.database_path = Path(database_path)
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self.connection = sqlite3.connect(self.database_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
         self.connection.execute("PRAGMA foreign_keys = ON")
+        self._initial_nodes = nodes
         self.migrate()
         self.seed_nodes_if_empty()
 
@@ -441,7 +442,8 @@ class SqliteRepository:
         count = self.connection.execute("SELECT COUNT(*) AS count FROM nodes").fetchone()["count"]
         if count:
             return
-        for node in InMemoryRepository().list_nodes():
+        seed_source = self._initial_nodes or InMemoryRepository().list_nodes()
+        for node in seed_source:
             self.upsert_node(node)
 
     def _ensure_node_columns(self) -> None:

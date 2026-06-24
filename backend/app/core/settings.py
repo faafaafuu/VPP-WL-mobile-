@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import Mapping
 
+from app.domain.node_config import NodeConfigError, parse_nodes_from_env
+from app.domain.models import VpnNode
 from app.domain.tariffs import Tariff, parse_tariffs
 
 
@@ -38,6 +40,7 @@ class Settings:
     public_base_url: str = "http://127.0.0.1:8080"
     checkout_mode: str = "mock"
     tariffs: tuple[Tariff, ...] = field(default_factory=parse_tariffs)
+    nodes: tuple[VpnNode, ...] = field(default_factory=tuple)
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -71,12 +74,16 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     )
     public_base_url = _required_url(source.get("PUBLIC_BASE_URL", f"http://127.0.0.1:{port}"), "PUBLIC_BASE_URL")
     checkout_mode = source.get("CHECKOUT_MODE", "mock").strip().lower()
-    if checkout_mode not in {"mock", "yookassa"}:
-        raise SettingsError("CHECKOUT_MODE must be mock or yookassa")
+    if checkout_mode not in {"mock", "yookassa", "crypto_manual"}:
+        raise SettingsError("CHECKOUT_MODE must be mock, yookassa, or crypto_manual")
     try:
         tariffs = parse_tariffs(source.get("VPN_ROUTER_TARIFFS", ""), product_prices_rub)
     except ValueError as exc:
         raise SettingsError(f"VPN_ROUTER_TARIFFS invalid: {exc}") from exc
+    try:
+        nodes = tuple(parse_nodes_from_env(source))
+    except NodeConfigError as exc:
+        raise SettingsError(str(exc)) from exc
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -94,6 +101,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         public_base_url=public_base_url,
         checkout_mode=checkout_mode,
         tariffs=tariffs,
+        nodes=nodes,
     )
 
 

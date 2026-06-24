@@ -21,7 +21,7 @@ from app.services.yookassa import DisabledYooKassaProvider, HttpYooKassaProvider
 
 SETTINGS = load_settings()
 RATE_LIMITER = RateLimiter(SETTINGS.rate_limit_per_minute)
-REPOSITORY = create_repository()
+REPOSITORY = create_repository(nodes=list(SETTINGS.nodes) if SETTINGS.nodes else None)
 TOKEN_SERVICE = TokenService(SETTINGS.token_secret)
 CONFIG_BUILDER = ConfigBuilder()
 YOOKASSA_PROVIDER = (
