@@ -98,21 +98,46 @@ if [[ -n "$old_containers" ]]; then
 fi
 ok "Cleaned up old containers"
 
-# ── check for system services holding ports 80/443 ────────────────────────────
+# ── check for processes holding ports 80/443 ──────────────────────────────────
+_listeners_on_port() {
+    local port="$1"
+    if command -v ss >/dev/null 2>&1; then
+        ss -tlnp 2>/dev/null | awk 'NR>1 && /LISTEN/' | grep -E ":${port}([^0-9]|$)" || true
+    elif command -v netstat >/dev/null 2>&1; then
+        netstat -tlnp 2>/dev/null | grep "LISTEN" | grep -E ":${port}([^0-9]|$)" || true
+    else
+        lsof -iTCP:"${port}" -sTCP:LISTEN -n -P 2>/dev/null || true
+    fi
+}
+
 _free_port() {
     local port="$1"
-    # Only match actual LISTEN lines, not headers
     local listening
-    if command -v ss >/dev/null 2>&1; then
-        listening=$(ss -tlnp 2>/dev/null | awk 'NR>1 && /LISTEN/' | grep ":${port} \|:${port}$" || true)
-    elif command -v netstat >/dev/null 2>&1; then
-        listening=$(netstat -tlnp 2>/dev/null | grep "LISTEN" | grep ":${port} " || true)
-    else
-        listening=$(lsof -iTCP:"${port}" -sTCP:LISTEN -n -P 2>/dev/null || true)
-    fi
+    listening=$(_listeners_on_port "$port")
     [[ -z "$listening" ]] && return 0   # port is free
 
-    warn "Port ${port} is still in use by a system process — trying to stop web servers..."
+    # Case 1: held by docker-proxy → a container still publishes this port
+    if echo "$listening" | grep -q docker-proxy; then
+        local containers
+        containers=$(docker ps -a --format '{{.ID}} {{.Ports}}' 2>/dev/null \
+            | grep -E ":${port}->" | awk '{print $1}' || true)
+        if [[ -n "$containers" ]]; then
+            warn "Removing containers publishing port ${port}..."
+            echo "$containers" | xargs docker rm -f 2>/dev/null || true
+            sleep 1
+        fi
+        # Re-check: if docker-proxy still lingers, it's orphaned → restart daemon
+        listening=$(_listeners_on_port "$port")
+        if echo "$listening" | grep -q docker-proxy; then
+            warn "Orphaned docker-proxy on port ${port} — restarting Docker daemon..."
+            systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
+            sleep 3
+        fi
+        listening=$(_listeners_on_port "$port")
+        [[ -z "$listening" ]] && return 0
+    fi
+
+    # Case 2: held by a system web server → stop it
     for svc in nginx apache2 apache httpd caddy; do
         if systemctl is-active --quiet "$svc" 2>/dev/null; then
             systemctl stop "$svc" && systemctl disable "$svc" \
@@ -122,6 +147,8 @@ _free_port() {
         fi
     done
 
+    listening=$(_listeners_on_port "$port")
+    [[ -z "$listening" ]] && return 0
     die "Port ${port} is held by an unknown process:\n  ${listening}\nFree it and re-run setup.sh."
 }
 
