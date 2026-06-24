@@ -3,10 +3,11 @@ from __future__ import annotations
 import hmac
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from decimal import ROUND_UP, Decimal
 from http import HTTPStatus
 from typing import Any
 
-from app.api.pages import connect_page, landing_page
+from app.api.pages import connect_page, invoice_page, landing_page
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
 from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, ReceiptClaim, new_id, new_subscription_token
@@ -39,6 +40,8 @@ class ApiService:
         public_base_url: str = "http://127.0.0.1:8080",
         checkout_mode: str = "mock",
         tariffs: tuple[Tariff, ...] | None = None,
+        crypto_usdt_trc20_address: str | None = None,
+        crypto_usdt_rate_rub: str = "90.00",
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -52,6 +55,8 @@ class ApiService:
         self.checkout_mode = checkout_mode
         self.tariffs = tariffs or parse_tariffs(None)
         self.tariffs_by_id = tariffs_by_id(self.tariffs)
+        self.crypto_usdt_trc20_address = crypto_usdt_trc20_address
+        self.crypto_usdt_rate_rub = crypto_usdt_rate_rub
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -94,6 +99,9 @@ class ApiService:
                 raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "subscription create failed"})
             return {"redirect_url": connect_url, "token": token, "mode": "mock"}
 
+        if self.checkout_mode == "crypto_manual":
+            return {"redirect_url": f"/invoice/{token}", "token": token, "mode": "crypto_manual"}
+
         try:
             payment = self.yookassa_provider.create_payment(
                 device_id=token,
@@ -112,6 +120,22 @@ class ApiService:
     def connect_html(self, token: str) -> str:
         subscription = self._commercial_subscription(token)
         return connect_page(subscription, self.subscription_url(token), self.tariffs)
+
+    def invoice_html(self, token: str) -> str:
+        subscription = self._commercial_subscription(token)
+        tariff = self.tariffs_by_id.get(subscription.tariff_id)
+        if tariff is None:
+            raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "tariff not found"})
+        if not self.crypto_usdt_trc20_address:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
+        amount_usdt = _rub_to_usdt(tariff.price_rub, self.crypto_usdt_rate_rub)
+        return invoice_page(subscription, tariff, self.crypto_usdt_trc20_address, amount_usdt)
+
+    def invoice_wallet_qr_svg(self, token: str) -> str:
+        self._commercial_subscription(token)
+        if not self.crypto_usdt_trc20_address:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
+        return qr_svg(self.crypto_usdt_trc20_address)
 
     def subscription_url(self, token: str) -> str:
         return f"{self.public_base_url}/sub/{token}"
@@ -572,3 +596,10 @@ def _mask_token(token: str) -> str:
     if len(token) <= 8:
         return "***"
     return f"{token[:4]}...{token[-4:]}"
+
+
+def _rub_to_usdt(price_rub: str, rate_rub: str) -> str:
+    rub = Decimal(price_rub)
+    rate = Decimal(rate_rub)
+    usdt = (rub / rate).quantize(Decimal("0.01"), rounding=ROUND_UP)
+    return str(usdt)

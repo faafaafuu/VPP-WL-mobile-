@@ -239,7 +239,11 @@ class NodeConfigSettingsTest(unittest.TestCase):
     def test_settings_accepts_crypto_manual_checkout_mode(self) -> None:
         from app.core.settings import load_settings
 
-        env = {**self._base_settings_env(), "CHECKOUT_MODE": "crypto_manual"}
+        env = {
+            **self._base_settings_env(),
+            "CHECKOUT_MODE": "crypto_manual",
+            "CRYPTO_USDT_TRC20_ADDRESS": "TWalletAddr123",
+        }
         settings = load_settings(env)
 
         self.assertEqual(settings.checkout_mode, "crypto_manual")

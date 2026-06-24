@@ -46,6 +46,8 @@ API_SERVICE = ApiService(
     public_base_url=SETTINGS.public_base_url,
     checkout_mode=SETTINGS.checkout_mode,
     tariffs=SETTINGS.tariffs,
+    crypto_usdt_trc20_address=SETTINGS.crypto_usdt_trc20_address,
+    crypto_usdt_rate_rub=SETTINGS.crypto_usdt_rate_rub,
 )
 
 
@@ -90,6 +92,23 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path.startswith("/sub/"):
             token = path.removeprefix("/sub/").strip("/")
             self._send_text_response(lambda: API_SERVICE.v2ray_subscription(token), "text/plain")
+            return
+        if path.startswith("/invoice/") and path.endswith("/qr"):
+            token = path.removeprefix("/invoice/")[: -len("/qr")].strip("/")
+            try:
+                self._send_text(HTTPStatus.OK, API_SERVICE.invoice_wallet_qr_svg(token), "image/svg+xml")
+            except ApiError as exc:
+                self._send_json(exc.status, exc.payload)
+            return
+        if path.startswith("/invoice/"):
+            token = path.removeprefix("/invoice/").strip("/")
+            try:
+                self._send_html(HTTPStatus.OK, API_SERVICE.invoice_html(token))
+            except ApiError as exc:
+                if exc.status == HTTPStatus.NOT_FOUND:
+                    self._send_html(HTTPStatus.NOT_FOUND, not_found_page())
+                else:
+                    self._send_json(exc.status, exc.payload)
             return
         if path == "/api/version":
             self._send_service_response(lambda: API_SERVICE.version())

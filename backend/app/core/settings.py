@@ -41,6 +41,8 @@ class Settings:
     checkout_mode: str = "mock"
     tariffs: tuple[Tariff, ...] = field(default_factory=parse_tariffs)
     nodes: tuple[VpnNode, ...] = field(default_factory=tuple)
+    crypto_usdt_trc20_address: str | None = None
+    crypto_usdt_rate_rub: str = "90.00"
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -84,6 +86,12 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         nodes = tuple(parse_nodes_from_env(source))
     except NodeConfigError as exc:
         raise SettingsError(str(exc)) from exc
+    crypto_usdt_trc20_address = source.get("CRYPTO_USDT_TRC20_ADDRESS", "").strip() or None
+    if checkout_mode == "crypto_manual" and not crypto_usdt_trc20_address:
+        raise SettingsError("CRYPTO_USDT_TRC20_ADDRESS is required when CHECKOUT_MODE=crypto_manual")
+    crypto_usdt_rate_rub = _decimal_str(
+        source.get("CRYPTO_USDT_RATE_RUB", "90.00"), "CRYPTO_USDT_RATE_RUB"
+    )
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -102,6 +110,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         checkout_mode=checkout_mode,
         tariffs=tariffs,
         nodes=nodes,
+        crypto_usdt_trc20_address=crypto_usdt_trc20_address,
+        crypto_usdt_rate_rub=crypto_usdt_rate_rub,
     )
 
 
@@ -198,3 +208,13 @@ def _bool(raw_value: str, key: str) -> bool:
     if normalized in {"0", "false", "no", "off"}:
         return False
     raise SettingsError(f"{key} must be true or false")
+
+
+def _decimal_str(raw_value: str, key: str) -> str:
+    try:
+        amount = Decimal(raw_value.strip())
+    except InvalidOperation as exc:
+        raise SettingsError(f"{key} must be a decimal number") from exc
+    if amount <= 0:
+        raise SettingsError(f"{key} must be positive")
+    return f"{amount:.2f}"

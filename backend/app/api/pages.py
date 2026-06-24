@@ -113,6 +113,74 @@ def connect_page(
     )
 
 
+def invoice_page(
+    subscription: CommercialSubscription,
+    tariff: Tariff,
+    usdt_trc20_address: str,
+    amount_usdt: str,
+) -> str:
+    order_ref = subscription.token[:12].upper()
+    price_rub = _price(tariff.price_rub)
+    return _page(
+        "Оплата криптовалютой",
+        f"""
+        <main class="shell connect">
+          <div class="status-card active" style="background:linear-gradient(145deg,rgba(103,247,165,.13),rgba(255,255,255,.08))">
+            <p class="eyebrow">Оплата</p>
+            <h1>{escape(tariff.title)}</h1>
+            <p class="lead compact">Переведите <strong>{escape(amount_usdt)} USDT TRC20</strong> на адрес ниже.<br>
+            Стоимость тарифа: {escape(price_rub)}. Номер заказа: <code>{escape(order_ref)}</code></p>
+            <div class="crypto-card">
+              <p class="crypto-label">USDT TRC20 адрес</p>
+              <p class="crypto-addr" id="walletAddr">{escape(usdt_trc20_address)}</p>
+              <div class="actions">
+                <button class="button primary" type="button" onclick="copyAddr()">Скопировать адрес</button>
+                <button class="button" type="button" onclick="toggleAddrQr()">QR-код адреса</button>
+              </div>
+              <div class="qr-wrap" id="addrQr" hidden>
+                <img src="/invoice/{escape(subscription.token)}/qr" alt="QR адреса кошелька">
+              </div>
+              <p class="hint" id="copyHint" hidden>Адрес скопирован.</p>
+            </div>
+            <div class="instructions" style="margin-top:18px">
+              <details open>
+                <summary>Как оплатить</summary>
+                <ol>
+                  <li>Откройте ваш крипто-кошелёк (Binance, OKX, Trust Wallet, Bybit и др.).</li>
+                  <li>Выберите сеть <strong>TRC20 (Tron)</strong>.</li>
+                  <li>Переведите ровно <strong>{escape(amount_usdt)} USDT</strong>.</li>
+                  <li>В комментарии/мемо укажите номер заказа: <strong>{escape(order_ref)}</strong>.</li>
+                  <li>После подтверждения транзакции администратор активирует доступ — обычно в течение 30 минут.</li>
+                </ol>
+              </details>
+            </div>
+            <div style="margin-top:20px">
+              <a class="button" href="/connect/{escape(subscription.token)}">Проверить статус доступа</a>
+            </div>
+          </div>
+        </main>
+        <script>
+          const walletAddr = {usdt_trc20_address!r};
+          async function copyAddr() {{
+            await navigator.clipboard.writeText(walletAddr);
+            const hint = document.getElementById('copyHint');
+            hint.hidden = false;
+          }}
+          function toggleAddrQr() {{
+            const qr = document.getElementById('addrQr');
+            qr.hidden = !qr.hidden;
+          }}
+        </script>
+        <style>
+          .crypto-card {{ margin-top: 18px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: rgba(0,0,0,.22); }}
+          .crypto-label {{ margin: 0 0 6px; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; }}
+          .crypto-addr {{ margin: 0 0 14px; font-family: monospace; font-size: .92rem; word-break: break-all; color: var(--cyan); }}
+          code {{ font-family: monospace; color: var(--cyan); }}
+        </style>
+        """,
+    )
+
+
 def not_found_page() -> str:
     return _page(
         "Ссылка не найдена",
