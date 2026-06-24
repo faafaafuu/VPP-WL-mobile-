@@ -8,9 +8,10 @@ from http import HTTPStatus
 from typing import Any
 
 from app.api.pages import connect_page, invoice_page, landing_page
+from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
-from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, ReceiptClaim, new_id, new_subscription_token
+from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
 from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
 from app.domain.qr_svg import qr_svg
@@ -18,6 +19,7 @@ from app.domain.tariffs import Tariff, parse_tariffs, tariffs_by_id
 from app.domain.v2ray_subscription import encoded_subscription, raw_subscription
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
+from app.services.exchange_rates import ExchangeRateService
 from app.services.receipt_verifier import MvpReceiptVerifier, ReceiptVerifier
 from app.services.yookassa import DisabledYooKassaProvider, YooKassaError, YooKassaProvider
 
@@ -42,6 +44,8 @@ class ApiService:
         tariffs: tuple[Tariff, ...] | None = None,
         crypto_usdt_trc20_address: str | None = None,
         crypto_usdt_rate_rub: str = "90.00",
+        crypto_wallets: dict[str, str] | None = None,
+        exchange_rate_service: ExchangeRateService | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -57,6 +61,12 @@ class ApiService:
         self.tariffs_by_id = tariffs_by_id(self.tariffs)
         self.crypto_usdt_trc20_address = crypto_usdt_trc20_address
         self.crypto_usdt_rate_rub = crypto_usdt_rate_rub
+        # wallets dict: wallet_key → address (e.g. "trc20" → "TXxx...")
+        _wallets = dict(crypto_wallets or {})
+        if crypto_usdt_trc20_address and "trc20" not in _wallets:
+            _wallets["trc20"] = crypto_usdt_trc20_address
+        self.crypto_wallets = _wallets
+        self.exchange_rate_service = exchange_rate_service or ExchangeRateService("fixed")
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -126,16 +136,31 @@ class ApiService:
         tariff = self.tariffs_by_id.get(subscription.tariff_id)
         if tariff is None:
             raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "tariff not found"})
-        if not self.crypto_usdt_trc20_address:
+        if not self.crypto_wallets:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
-        amount_usdt = _rub_to_usdt(tariff.price_rub, self.crypto_usdt_rate_rub)
-        return invoice_page(subscription, tariff, self.crypto_usdt_trc20_address, amount_usdt)
+        coin_options = _build_coin_options(tariff.price_rub, self.crypto_wallets, self.exchange_rate_service)
+        if not coin_options:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "no configured crypto wallets"})
+        return invoice_page(subscription, tariff, coin_options)
 
-    def invoice_wallet_qr_svg(self, token: str) -> str:
+    def invoice_wallet_qr_svg(self, token: str, coin_id: str | None = None) -> str:
         self._commercial_subscription(token)
-        if not self.crypto_usdt_trc20_address:
+        address = self._wallet_address_for_coin(coin_id)
+        if not address:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
-        return qr_svg(self.crypto_usdt_trc20_address)
+        return qr_svg(address)
+
+    def _wallet_address_for_coin(self, coin_id: str | None) -> str | None:
+        if coin_id:
+            coin = COINS_BY_ID.get(coin_id)
+            if coin:
+                return self.crypto_wallets.get(coin.wallet_key)
+        # fallback: first configured wallet
+        for coin in ALL_COINS:
+            addr = self.crypto_wallets.get(coin.wallet_key)
+            if addr:
+                return addr
+        return None
 
     def subscription_url(self, token: str) -> str:
         return f"{self.public_base_url}/sub/{token}"
@@ -603,3 +628,32 @@ def _rub_to_usdt(price_rub: str, rate_rub: str) -> str:
     rate = Decimal(rate_rub)
     usdt = (rub / rate).quantize(Decimal("0.01"), rounding=ROUND_UP)
     return str(usdt)
+
+
+def _build_coin_options(
+    price_rub: str,
+    wallets: dict[str, str],
+    rate_svc: ExchangeRateService,
+) -> list[dict[str, str]]:
+    """Return list of {id, label, network_label, amount, address, color} for configured coins."""
+    seen_wallet_keys: set[str] = set()
+    result: list[dict[str, str]] = []
+    for coin in ALL_COINS:
+        addr = wallets.get(coin.wallet_key)
+        if not addr:
+            continue
+        # deduplicate: same wallet_key already added a coin with same address
+        entry_key = (coin.wallet_key, coin.coingecko_id)
+        if entry_key in seen_wallet_keys:
+            continue
+        seen_wallet_keys.add(entry_key)
+        amount = rate_svc.coin_amount(price_rub, coin) or "—"
+        result.append({
+            "id": coin.id,
+            "label": coin.label,
+            "network_label": coin.network_label,
+            "amount": amount,
+            "address": addr,
+            "color": coin.color,
+        })
+    return result

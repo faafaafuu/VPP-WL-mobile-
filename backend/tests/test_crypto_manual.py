@@ -1,19 +1,31 @@
 from __future__ import annotations
 
 import unittest
+from decimal import Decimal
 from http import HTTPStatus
 
 from app.api.service import ApiError, ApiService
 from app.domain.config_builder import ConfigBuilder
 from app.repositories.memory import InMemoryRepository
 from app.security.tokens import TokenService
+from app.services.exchange_rates import make_fixed_rate_service
+
+_WALLET = "TTestWalletAddress1234567890ABCDE"
+_STABLECOIN_RATE = Decimal("100.00")  # 1 USDT = 100 RUB for easy math
 
 
 def _service(
     checkout_mode: str = "crypto_manual",
-    crypto_address: str | None = "TTestWalletAddress1234567890ABCDE",
-    rate_rub: str = "90.00",
+    crypto_address: str | None = _WALLET,
+    rate_rub: str = "100.00",
 ) -> ApiService:
+    rate_svc = make_fixed_rate_service({
+        "tether": Decimal(rate_rub),
+        "usd-coin": Decimal(rate_rub),
+        "toncoin": Decimal("650.00"),
+        "bitcoin": Decimal("9000000.00"),
+        "ethereum": Decimal("320000.00"),
+    })
     return ApiService(
         InMemoryRepository(),
         TokenService("test-secret-with-length"),
@@ -23,6 +35,7 @@ def _service(
         checkout_mode=checkout_mode,
         crypto_usdt_trc20_address=crypto_address,
         crypto_usdt_rate_rub=rate_rub,
+        exchange_rate_service=rate_svc,
     )
 
 
@@ -53,16 +66,18 @@ class CryptoManualCheckoutTest(unittest.TestCase):
 
         html = svc.invoice_html(token)
 
-        self.assertIn("TTestWalletAddress1234567890ABCDE", html)
-        self.assertIn("USDT TRC20", html)
+        self.assertIn(_WALLET, html)
+        self.assertIn("TRC20", html)
 
     def test_invoice_html_shows_usdt_amount(self) -> None:
+        # vpn.1m default = 399 RUB / 100 RUB per USDT = 3.99 USDT
         svc = _service(rate_rub="100.00")
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
         html = svc.invoice_html(token)
 
         self.assertIn("3.99", html)
+        self.assertIn("USDT", html)
 
     def test_invoice_html_contains_order_ref(self) -> None:
         svc = _service()
@@ -186,7 +201,7 @@ class CryptoSettingsTest(unittest.TestCase):
         with self.assertRaises(SettingsError) as ctx:
             load_settings(env)
 
-        self.assertIn("CRYPTO_USDT_TRC20_ADDRESS", str(ctx.exception))
+        self.assertIn("CRYPTO_WALLET", str(ctx.exception))
 
     def test_crypto_manual_with_address_ok(self) -> None:
         from app.core.settings import load_settings

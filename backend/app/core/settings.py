@@ -43,6 +43,8 @@ class Settings:
     nodes: tuple[VpnNode, ...] = field(default_factory=tuple)
     crypto_usdt_trc20_address: str | None = None
     crypto_usdt_rate_rub: str = "90.00"
+    crypto_wallets: dict[str, str] = field(default_factory=dict)
+    crypto_rate_provider: str = "coingecko"
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -86,12 +88,24 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         nodes = tuple(parse_nodes_from_env(source))
     except NodeConfigError as exc:
         raise SettingsError(str(exc)) from exc
-    crypto_usdt_trc20_address = source.get("CRYPTO_USDT_TRC20_ADDRESS", "").strip() or None
-    if checkout_mode == "crypto_manual" and not crypto_usdt_trc20_address:
-        raise SettingsError("CRYPTO_USDT_TRC20_ADDRESS is required when CHECKOUT_MODE=crypto_manual")
+    # crypto wallets: CRYPTO_WALLET_TRC20, _TON, _ETH, _BTC
+    # CRYPTO_USDT_TRC20_ADDRESS is a legacy alias for CRYPTO_WALLET_TRC20
+    crypto_wallets = _parse_crypto_wallets(source)
+    crypto_usdt_trc20_address = crypto_wallets.get("trc20") or source.get("CRYPTO_USDT_TRC20_ADDRESS", "").strip() or None
+    if checkout_mode == "crypto_manual" and not crypto_wallets and not crypto_usdt_trc20_address:
+        raise SettingsError(
+            "At least one crypto wallet required for CHECKOUT_MODE=crypto_manual "
+            "(set CRYPTO_WALLET_TRC20, CRYPTO_WALLET_TON, CRYPTO_WALLET_ETH or CRYPTO_WALLET_BTC)"
+        )
+    # backfill legacy address into wallets dict if only legacy env is set
+    if crypto_usdt_trc20_address and "trc20" not in crypto_wallets:
+        crypto_wallets = {**crypto_wallets, "trc20": crypto_usdt_trc20_address}
     crypto_usdt_rate_rub = _decimal_str(
         source.get("CRYPTO_USDT_RATE_RUB", "90.00"), "CRYPTO_USDT_RATE_RUB"
     )
+    crypto_rate_provider_raw = source.get("CRYPTO_RATE_PROVIDER", "coingecko").strip().lower()
+    if crypto_rate_provider_raw not in {"coingecko", "fixed"}:
+        raise SettingsError("CRYPTO_RATE_PROVIDER must be coingecko or fixed")
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -112,6 +126,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         nodes=nodes,
         crypto_usdt_trc20_address=crypto_usdt_trc20_address,
         crypto_usdt_rate_rub=crypto_usdt_rate_rub,
+        crypto_wallets=crypto_wallets,
+        crypto_rate_provider=crypto_rate_provider_raw,
     )
 
 
@@ -218,3 +234,12 @@ def _decimal_str(raw_value: str, key: str) -> str:
     if amount <= 0:
         raise SettingsError(f"{key} must be positive")
     return f"{amount:.2f}"
+
+
+def _parse_crypto_wallets(source: Mapping[str, str]) -> dict[str, str]:
+    wallets: dict[str, str] = {}
+    for key in ("trc20", "ton", "eth", "btc"):
+        addr = source.get(f"CRYPTO_WALLET_{key.upper()}", "").strip()
+        if addr:
+            wallets[key] = addr
+    return wallets
