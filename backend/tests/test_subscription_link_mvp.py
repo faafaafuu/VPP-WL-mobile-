@@ -63,6 +63,48 @@ class SubscriptionLinkMvpTest(unittest.TestCase):
         self.assertNotIn("vless-disabled", decoded)
         self.assertNotIn("ss-eu-2", decoded)
 
+    def test_pending_subscription_connect_page_shows_awaiting_payment(self) -> None:
+        crypto_service = ApiService(
+            self.repository,
+            TokenService("test-secret-with-length"),
+            ConfigBuilder(),
+            admin_token="test-admin",
+            public_base_url="http://203.0.113.10:8080",
+            checkout_mode="crypto_manual",
+            crypto_wallets={"trc20": "TTestWallet"},
+        )
+        token = crypto_service.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = crypto_service.connect_html(token)
+
+        self.assertIn("Ожидание оплаты", html)
+        self.assertIn(f"/invoice/{token}", html)
+        self.assertNotIn("Подписка закончилась", html)
+
+    def test_admin_activate_records_paid_tx_and_payer(self) -> None:
+        crypto_service = ApiService(
+            self.repository,
+            TokenService("test-secret-with-length"),
+            ConfigBuilder(),
+            admin_token="test-admin",
+            public_base_url="http://203.0.113.10:8080",
+            checkout_mode="crypto_manual",
+            crypto_wallets={"trc20": "TTestWallet"},
+        )
+        token = crypto_service.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        result = crypto_service.admin_activate_commercial_subscription(
+            "test-admin",
+            token,
+            {"duration_days": 30, "paid_tx": "0xabc", "payer": "0xdef", "payment_id": "crypto:eth"},
+        )
+
+        self.assertEqual(result["status"], "activated")
+        subscription = self.repository.commercial_subscriptions_by_token[token]
+        self.assertEqual(subscription.paid_tx, "0xabc")
+        self.assertEqual(subscription.payer, "0xdef")
+        self.assertEqual(subscription.payment_id, "crypto:eth")
+
     def test_tls_vless_node_generates_link_without_reality_params(self) -> None:
         from app.domain.models import NodeHealth, NodeStatus, Protocol, VlessOptions, VpnNode
         from app.domain.v2ray_subscription import vless_links

@@ -50,6 +50,7 @@ def connect_page(
     subscription: CommercialSubscription,
     subscription_url: str,
     tariffs: tuple[Tariff, ...],
+    invoice_url: str | None = None,
 ) -> str:
     tariff_map = {t.id: t for t in tariffs}
     current_tariff = tariff_map.get(subscription.tariff_id)
@@ -70,6 +71,16 @@ def connect_page(
             <p class="mono-box" id="subUrl">{escape(subscription_url)}</p>
             <p class="hint c-green" id="connectHint" hidden>Если клиент не открылся, скопируйте ссылку или отсканируйте QR.</p>
             <div class="qr-wrap" id="qrWrap" hidden><img src="/sub/{escape(subscription.token)}/qr" alt="QR код подписки"></div>
+          </div>
+        """
+    elif subscription.status == "pending":
+        pay_href = invoice_url or "/#pricing"
+        status = f"""
+          <div class="block block-yellow">
+            <div class="dim">root@core:~$ ./vpn_router --status</div>
+            <h1 class="small c-yellow">Ожидание оплаты<span class="cursor"></span></h1>
+            <div class="subhead">// заказ создан, оплата ещё не поступила<br>// после подтверждения сети доступ включится автоматически</div>
+            <a class="cta" href="{escape(pay_href)}">$ оплатить --run</a>
           </div>
         """
     else:
@@ -413,6 +424,7 @@ def _page(title: str, body: str) -> str:
     .block {{ border: 1px solid var(--green-line); padding: 16px; margin-bottom: 18px; }}
     .block-green {{ background: rgba(0,255,65,.04); }}
     .block-red {{ border-color: rgba(255,43,77,.5); background: rgba(255,43,77,.05); }}
+    .block-yellow {{ border-color: rgba(255,214,10,.5); background: rgba(255,214,10,.05); }}
     .actions {{ display: flex; flex-wrap: wrap; gap: 10px; }}
     .actions .cta, .actions .btn {{ margin-top: 14px; }}
     .mono-box {{

@@ -126,7 +126,8 @@ class CryptoManualCheckoutTest(unittest.TestCase):
 
         html = svc.connect_html(token)
 
-        self.assertIn("Подписка закончилась", html)
+        self.assertIn("Ожидание оплаты", html)
+        self.assertIn(f"/invoice/{token}", html)
 
     def test_admin_can_activate_after_crypto_payment(self) -> None:
         svc = _service()

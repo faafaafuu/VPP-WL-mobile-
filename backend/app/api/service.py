@@ -130,7 +130,8 @@ class ApiService:
 
     def connect_html(self, token: str) -> str:
         subscription = self._commercial_subscription(token)
-        return connect_page(subscription, self.subscription_url(token), self.tariffs)
+        invoice_url = f"/invoice/{subscription.token}" if self.checkout_mode == "crypto_manual" else None
+        return connect_page(subscription, self.subscription_url(token), self.tariffs, invoice_url=invoice_url)
 
     def invoice_html(self, token: str) -> str:
         subscription = self._commercial_subscription(token)
@@ -260,9 +261,21 @@ class ApiService:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "duration_days must be an integer"}) from exc
         if duration_days <= 0:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "duration_days must be positive"})
-        subscription = self.repository.activate_commercial_subscription(token, duration_days)
+        paid_tx = str(payload.get("paid_tx") or "").strip() or None
+        payer = str(payload.get("payer") or "").strip() or None
+        payment_id = str(payload.get("payment_id") or "").strip() or None
+        subscription = self.repository.activate_commercial_subscription(
+            token,
+            duration_days,
+            payment_id=payment_id,
+            paid_tx=paid_tx,
+            payer=payer,
+        )
         if subscription is None:
             raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+        details: dict[str, Any] = {"duration_days": duration_days}
+        if paid_tx:
+            details["paid_tx"] = paid_tx
         self.repository.add_admin_audit_event(
             AdminAuditEvent(
                 id=new_id("aae"),
@@ -271,7 +284,7 @@ class ApiService:
                 target_type="commercial_subscription",
                 target_id=_mask_token(token),
                 result="success",
-                details={"duration_days": duration_days},
+                details=details,
             )
         )
         return {
