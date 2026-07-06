@@ -120,11 +120,29 @@ def connect_page(
         </div>
         <script>
           const subUrl = {subscription_url!r};
+          async function copyText(text) {{
+            if (navigator.clipboard && window.isSecureContext) {{
+              try {{ await navigator.clipboard.writeText(text); return true; }} catch (e) {{}}
+            }}
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            let ok = false;
+            try {{ ok = document.execCommand('copy'); }} catch (e) {{}}
+            document.body.removeChild(ta);
+            return ok;
+          }}
           async function copySub() {{
-            await navigator.clipboard.writeText(subUrl);
+            const ok = await copyText(subUrl);
             const hint = document.getElementById('connectHint');
             hint.hidden = false;
-            hint.textContent = 'Ссылка скопирована. Вставьте её в ваш VPN-клиент.';
+            hint.textContent = ok
+              ? 'Ссылка скопирована. Вставьте её в ваш VPN-клиент.'
+              : 'Не удалось скопировать — выделите ссылку ниже и скопируйте вручную.';
           }}
           function toggleQr() {{
             const wrap = document.getElementById('qrWrap');
@@ -236,13 +254,29 @@ def invoice_page(
               }} catch (e) {{}}
             }}, 5000);
           }}
+          async function copyText(text) {{
+            if (navigator.clipboard && window.isSecureContext) {{
+              try {{ await navigator.clipboard.writeText(text); return true; }} catch (e) {{}}
+            }}
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            let ok = false;
+            try {{ ok = document.execCommand('copy'); }} catch (e) {{}}
+            document.body.removeChild(ta);
+            return ok;
+          }}
           async function copyAddr(idx) {{
-            await navigator.clipboard.writeText(COINS[idx].address);
+            await copyText(COINS[idx].address);
             const hint = document.getElementById('copyHint' + idx);
             if (hint) hint.hidden = false;
           }}
           async function copyAmount(idx) {{
-            await navigator.clipboard.writeText(COINS[idx].amount);
+            await copyText(COINS[idx].amount);
           }}
           function toggleQr(idx) {{
             const qr = document.getElementById('addrQr' + idx);
