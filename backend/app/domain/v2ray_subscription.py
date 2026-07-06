@@ -41,21 +41,24 @@ def encoded_subscription(nodes: list[VpnNode]) -> str:
 
 def _vless_link(node: VpnNode, options: VlessOptions) -> str:
     reality = options.reality or {}
-    public_key = str(options.public_key or reality.get("public_key") or reality.get("pbk") or "").strip()
-    short_id = str(options.short_id or reality.get("short_id") or reality.get("sid") or "").strip()
-    if not public_key:
-        raise ValueError(f"VLESS node {node.id} is missing public_key")
-    if not short_id:
-        raise ValueError(f"VLESS node {node.id} is missing short_id")
+    security = str(options.security or reality.get("security") or "reality").strip().lower() or "reality"
 
     query = {
         "type": _transport_type(options),
-        "security": options.security or str(reality.get("security", "reality")),
-        "pbk": public_key,
-        "fp": options.fingerprint or str(reality.get("fingerprint", "chrome")),
-        "sni": options.server_name,
-        "sid": short_id,
+        "security": security,
     }
+    if security == "reality":
+        public_key = str(options.public_key or reality.get("public_key") or reality.get("pbk") or "").strip()
+        short_id = str(options.short_id or reality.get("short_id") or reality.get("sid") or "").strip()
+        if not public_key:
+            raise ValueError(f"VLESS node {node.id} is missing public_key")
+        if not short_id:
+            raise ValueError(f"VLESS node {node.id} is missing short_id")
+        query["pbk"] = public_key
+    query["fp"] = options.fingerprint or str(reality.get("fingerprint", "chrome"))
+    query["sni"] = options.server_name
+    if security == "reality":
+        query["sid"] = short_id
     if options.flow:
         query["flow"] = options.flow
 

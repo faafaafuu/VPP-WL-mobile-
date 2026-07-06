@@ -48,7 +48,7 @@ class SubscriptionLinkMvpTest(unittest.TestCase):
         html = self.service.connect_html(token)
 
         self.assertIn("Подписка закончилась", html)
-        self.assertIn("Продлить", html)
+        self.assertIn("продлить", html)
 
     def test_active_subscription_gets_base64_v2ray_subscription(self) -> None:
         token = self.service.checkout({"tariff_id": "vpn.1m"})["token"]
@@ -62,6 +62,37 @@ class SubscriptionLinkMvpTest(unittest.TestCase):
         self.assertIn("#VPN%20Router%201", decoded)
         self.assertNotIn("vless-disabled", decoded)
         self.assertNotIn("ss-eu-2", decoded)
+
+    def test_tls_vless_node_generates_link_without_reality_params(self) -> None:
+        from app.domain.models import NodeHealth, NodeStatus, Protocol, VlessOptions, VpnNode
+        from app.domain.v2ray_subscription import vless_links
+
+        node = VpnNode(
+            id="tls-1",
+            tag="TLS Node",
+            region="eu",
+            provider="3x-ui",
+            country_code="DE",
+            host="203.0.113.20",
+            port=26670,
+            protocol=Protocol.VLESS,
+            status=NodeStatus.ACTIVE,
+            priority=1,
+            options=VlessOptions(
+                uuid="00000000-0000-4000-8000-0000000000aa",
+                server_name="203.0.113.20",
+                security="tls",
+                fingerprint="safari",
+            ),
+        )
+
+        (link,) = vless_links([node])
+
+        self.assertIn("security=tls", link)
+        self.assertIn("fp=safari", link)
+        self.assertIn("sni=203.0.113.20", link)
+        self.assertNotIn("pbk=", link)
+        self.assertNotIn("sid=", link)
 
     def test_raw_subscription_returns_plain_vless_lines_sorted_by_priority(self) -> None:
         token = self.service.checkout({"tariff_id": "vpn.1m"})["token"]

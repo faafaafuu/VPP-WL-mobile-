@@ -38,6 +38,11 @@ YOOKASSA_PROVIDER = (
     else DisabledYooKassaProvider()
 )
 EXCHANGE_RATE_SERVICE = get_exchange_rate_service(SETTINGS.crypto_rate_provider)
+if SETTINGS.crypto_rate_provider == "fixed":
+    from decimal import Decimal as _Decimal
+
+    _fixed_rate = _Decimal(SETTINGS.crypto_usdt_rate_rub)
+    EXCHANGE_RATE_SERVICE.seed_rates({"tether": _fixed_rate, "usd-coin": _fixed_rate})
 API_SERVICE = ApiService(
     REPOSITORY,
     TOKEN_SERVICE,
@@ -96,6 +101,10 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path.startswith("/sub/"):
             token = path.removeprefix("/sub/").strip("/")
             self._send_text_response(lambda: API_SERVICE.v2ray_subscription(token), "text/plain")
+            return
+        if path.startswith("/invoice/") and path.endswith("/status"):
+            token = path.removeprefix("/invoice/")[: -len("/status")].strip("/")
+            self._send_service_response(lambda: API_SERVICE.invoice_status(token))
             return
         if path.startswith("/invoice/") and "/qr/" in path:
             # /invoice/{token}/qr/{coin_id}
@@ -198,6 +207,14 @@ class ApiHandler(BaseHTTPRequestHandler):
                 self._send_redirect(str(response["redirect_url"]))
             except ApiError as exc:
                 self._send_json(exc.status, exc.payload)
+            return
+
+        if path.startswith("/invoice/") and path.endswith("/select"):
+            payload = self._read_form_or_json()
+            if payload is None:
+                return
+            token = path.removeprefix("/invoice/")[: -len("/select")].strip("/")
+            self._send_service_response(lambda: API_SERVICE.select_invoice_coin(token, payload))
             return
 
         if path == "/api/auth/init":
@@ -397,9 +414,44 @@ class ApiHandler(BaseHTTPRequestHandler):
             self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
 
+def _start_payment_watcher() -> None:
+    if SETTINGS.checkout_mode != "crypto_manual" or SETTINGS.crypto_watch_interval_seconds <= 0:
+        return
+    from threading import Thread
+    from time import sleep
+
+    from app.domain.tariffs import tariffs_by_id
+    from app.services.chain_providers import build_providers
+    from app.services.payment_watcher import PaymentWatcher
+
+    providers = build_providers(SETTINGS.crypto_trongrid_api_key, SETTINGS.crypto_etherscan_api_key)
+    if not providers:
+        return
+    watcher = PaymentWatcher(
+        REPOSITORY,
+        providers,
+        tariffs_by_id(SETTINGS.tariffs),
+        min_confirmations=SETTINGS.crypto_min_confirmations,
+    )
+
+    def loop() -> None:
+        while True:
+            try:
+                summary = watcher.run_once()
+                if summary.activated:
+                    print(f"payment-watcher activated={summary.activated}")
+            except Exception as exc:  # the watcher must never kill the server
+                print(f"payment-watcher error: {exc}")
+            sleep(max(SETTINGS.crypto_watch_interval_seconds, 10))
+
+    Thread(target=loop, name="payment-watcher", daemon=True).start()
+    print(f"payment-watcher started interval={SETTINGS.crypto_watch_interval_seconds}s coins={sorted(providers)}")
+
+
 def run(host: str = "127.0.0.1", port: int = 8080) -> None:
     httpd = ThreadingHTTPServer((host, port), ApiHandler)
     started_at = datetime.now(timezone.utc).isoformat()
+    _start_payment_watcher()
     print(f"vpn-router backend listening on http://{host}:{port} started_at={started_at}")
     httpd.serve_forever()
 

@@ -1,7 +1,7 @@
 PY ?= python3
 GRAPHIFY ?= graphify
 
-.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness libbox-android-check android-debug expo-typecheck run docker-build docker-up docker-down docker-health-check up up-ssl logs down ci
+.PHONY: test compile compose-config check-tracked-artifacts graphify sing-box-check env-check mobile-readiness libbox-android-check android-debug expo-typecheck run docker-build docker-up docker-down docker-health-check docker-payment-watch payment-watch up up-ssl logs down ci
 
 test:
 	cd backend && $(PY) -m unittest discover -s tests
@@ -45,6 +45,12 @@ docker-down:
 
 docker-health-check:
 	docker compose --profile jobs run --rm health-check
+
+docker-payment-watch:
+	docker compose --profile jobs run --rm payment-watch
+
+payment-watch:
+	cd backend && $(PY) -m app.cli.payment_watch
 
 graphify:
 	$(GRAPHIFY) update . --force --no-cluster || $(PY) tools/mini_graphify.py

@@ -182,8 +182,8 @@ class SqliteRepository:
 
     def get_commercial_subscription(self, token: str) -> CommercialSubscription | None:
         row = self.connection.execute(
-            """
-            SELECT token, tariff_id, status, created_at, updated_at, expires_at, payment_id
+            f"""
+            SELECT {_COMMERCIAL_SUBSCRIPTION_COLUMNS}
             FROM commercial_subscriptions
             WHERE token = ?
             """,
@@ -196,6 +196,8 @@ class SqliteRepository:
         token: str,
         duration_days: int,
         payment_id: str | None = None,
+        paid_tx: str | None = None,
+        payer: str | None = None,
     ) -> CommercialSubscription | None:
         subscription = self.get_commercial_subscription(token)
         if subscription is None:
@@ -206,18 +208,53 @@ class SqliteRepository:
         self.connection.execute(
             """
             UPDATE commercial_subscriptions
-            SET status = 'active', expires_at = ?, payment_id = ?, updated_at = ?
+            SET status = 'active', expires_at = ?, payment_id = ?, paid_tx = ?, payer = ?, updated_at = ?
             WHERE token = ?
             """,
             (
                 _dt_to_text(expires_at),
                 payment_id or subscription.payment_id,
+                paid_tx or subscription.paid_tx,
+                payer or subscription.payer,
                 _dt_to_text(now),
                 token,
             ),
         )
         self.connection.commit()
         return self.get_commercial_subscription(token)
+
+    def set_payment_intent(
+        self,
+        token: str,
+        coin_id: str,
+        amount: str,
+        address: str,
+    ) -> CommercialSubscription | None:
+        subscription = self.get_commercial_subscription(token)
+        if subscription is None:
+            return None
+        self.connection.execute(
+            """
+            UPDATE commercial_subscriptions
+            SET pay_coin_id = ?, pay_amount = ?, pay_address = ?, updated_at = ?
+            WHERE token = ?
+            """,
+            (coin_id, amount, address, _dt_to_text(datetime.now(timezone.utc)), token),
+        )
+        self.connection.commit()
+        return self.get_commercial_subscription(token)
+
+    def list_commercial_subscriptions(self, status: str | None = None) -> list[CommercialSubscription]:
+        if status is None:
+            rows = self.connection.execute(
+                f"SELECT {_COMMERCIAL_SUBSCRIPTION_COLUMNS} FROM commercial_subscriptions"
+            ).fetchall()
+        else:
+            rows = self.connection.execute(
+                f"SELECT {_COMMERCIAL_SUBSCRIPTION_COLUMNS} FROM commercial_subscriptions WHERE status = ?",
+                (status,),
+            ).fetchall()
+        return [_commercial_subscription_from_row(row) for row in rows]
 
     def list_nodes(self) -> list[VpnNode]:
         rows = self.connection.execute(
@@ -499,6 +536,19 @@ class SqliteRepository:
             ON commercial_subscriptions(status, expires_at)
             """
         )
+        existing_commercial = {
+            row["name"]
+            for row in self.connection.execute("PRAGMA table_info(commercial_subscriptions)").fetchall()
+        }
+        for name in ("pay_coin_id", "pay_amount", "pay_address", "paid_tx", "payer"):
+            if name not in existing_commercial:
+                self.connection.execute(f"ALTER TABLE commercial_subscriptions ADD COLUMN {name} TEXT")
+
+
+_COMMERCIAL_SUBSCRIPTION_COLUMNS = (
+    "token, tariff_id, status, created_at, updated_at, expires_at, payment_id, "
+    "pay_coin_id, pay_amount, pay_address, paid_tx, payer"
+)
 
 
 def _user_from_row(row: sqlite3.Row) -> User:
@@ -524,6 +574,11 @@ def _commercial_subscription_from_row(row: sqlite3.Row) -> CommercialSubscriptio
         updated_at=_dt_from_text(row["updated_at"]),
         expires_at=_dt_from_text(row["expires_at"]) if row["expires_at"] else None,
         payment_id=row["payment_id"],
+        pay_coin_id=row["pay_coin_id"],
+        pay_amount=row["pay_amount"],
+        pay_address=row["pay_address"],
+        paid_tx=row["paid_tx"],
+        payer=row["payer"],
     )
 
 

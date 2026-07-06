@@ -91,6 +91,14 @@ export VPN_ROUTER_TARIFFS="vpn.1m:1 месяц:30:399.00,vpn.3m:3 месяца:9
 
 Use `CHECKOUT_MODE=mock` for local/dev sales-flow testing. It creates and activates a subscription immediately after the tariff form submit. Use `CHECKOUT_MODE=yookassa` only after YooKassa credentials and return URL are configured.
 
+`CHECKOUT_MODE=crypto_manual` enables the crypto invoice flow with automatic payment confirmation:
+
+- The invoice page fixes a per-order unique amount (base rate + micro-tail in the coin's least significant digits) via `POST /invoice/{token}/select`, so an incoming transfer maps to exactly one order by address + exact amount.
+- The payment watcher polls TronGrid (USDT/USDC TRC20) and Etherscan v2 (ETH native, USDT BEP20) and activates the subscription once a matching transfer has `CRYPTO_MIN_CONFIRMATIONS` confirmations, recording `paid_tx` and `payer`.
+- The invoice page polls `GET /invoice/{token}/status` and redirects to `/connect/{token}` automatically after activation.
+- Watcher runs as a background thread in the API server every `CRYPTO_WATCH_INTERVAL_SECONDS` (0 disables it), as a one-shot job via `make payment-watch` / `make docker-payment-watch`, or as `python3 -m app.cli.payment_watch [--loop]`.
+- Set `CRYPTO_TRONGRID_API_KEY` (optional, raises rate limits) and `CRYPTO_ETHERSCAN_API_KEY` (required for ETH/BEP20 watching). TON/BTC wallets can be shown on the invoice but are confirmed manually until their providers are added.
+
 Open the pricing page:
 
 ```bash

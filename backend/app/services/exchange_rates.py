@@ -40,6 +40,12 @@ class ExchangeRateService:
         with self._lock:
             self._refresh_locked()
 
+    def seed_rates(self, rates_rub: dict[str, Decimal]) -> None:
+        """Preload rates without hitting the network (fixed provider, tests)."""
+        with self._lock:
+            self._rates.update(rates_rub)
+            self._last_updated = datetime.now(timezone.utc)
+
     def last_updated(self) -> datetime | None:
         return self._last_updated
 

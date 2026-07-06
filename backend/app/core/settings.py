@@ -45,6 +45,10 @@ class Settings:
     crypto_usdt_rate_rub: str = "90.00"
     crypto_wallets: dict[str, str] = field(default_factory=dict)
     crypto_rate_provider: str = "coingecko"
+    crypto_trongrid_api_key: str | None = None
+    crypto_etherscan_api_key: str | None = None
+    crypto_min_confirmations: int = 1
+    crypto_watch_interval_seconds: int = 60
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -106,6 +110,14 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     crypto_rate_provider_raw = source.get("CRYPTO_RATE_PROVIDER", "coingecko").strip().lower()
     if crypto_rate_provider_raw not in {"coingecko", "fixed"}:
         raise SettingsError("CRYPTO_RATE_PROVIDER must be coingecko or fixed")
+    crypto_trongrid_api_key = source.get("CRYPTO_TRONGRID_API_KEY", "").strip() or None
+    crypto_etherscan_api_key = source.get("CRYPTO_ETHERSCAN_API_KEY", "").strip() or None
+    crypto_min_confirmations = _non_negative_int(
+        source.get("CRYPTO_MIN_CONFIRMATIONS", "1"), "CRYPTO_MIN_CONFIRMATIONS"
+    )
+    crypto_watch_interval_seconds = _non_negative_int(
+        source.get("CRYPTO_WATCH_INTERVAL_SECONDS", "60"), "CRYPTO_WATCH_INTERVAL_SECONDS"
+    )
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -128,6 +140,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         crypto_usdt_rate_rub=crypto_usdt_rate_rub,
         crypto_wallets=crypto_wallets,
         crypto_rate_provider=crypto_rate_provider_raw,
+        crypto_trongrid_api_key=crypto_trongrid_api_key,
+        crypto_etherscan_api_key=crypto_etherscan_api_key,
+        crypto_min_confirmations=crypto_min_confirmations,
+        crypto_watch_interval_seconds=crypto_watch_interval_seconds,
     )
 
 

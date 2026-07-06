@@ -63,10 +63,18 @@ class CommercialSubscription:
     updated_at: datetime
     expires_at: datetime | None = None
     payment_id: str | None = None
+    pay_coin_id: str | None = None
+    pay_amount: str | None = None
+    pay_address: str | None = None
+    paid_tx: str | None = None
+    payer: str | None = None
 
     def is_active(self, now: datetime | None = None) -> bool:
         current = now or datetime.now(timezone.utc)
         return self.status == "active" and self.expires_at is not None and self.expires_at > current
+
+    def has_payment_intent(self) -> bool:
+        return bool(self.pay_coin_id and self.pay_amount and self.pay_address)
 
 
 @dataclass(frozen=True)

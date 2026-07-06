@@ -115,6 +115,8 @@ class InMemoryRepository:
         token: str,
         duration_days: int,
         payment_id: str | None = None,
+        paid_tx: str | None = None,
+        payer: str | None = None,
     ) -> CommercialSubscription | None:
         subscription = self.commercial_subscriptions_by_token.get(token)
         if subscription is None:
@@ -126,10 +128,38 @@ class InMemoryRepository:
             status="active",
             expires_at=base + timedelta(days=duration_days),
             payment_id=payment_id or subscription.payment_id,
+            paid_tx=paid_tx or subscription.paid_tx,
+            payer=payer or subscription.payer,
             updated_at=now,
         )
         self.commercial_subscriptions_by_token[token] = updated
         return updated
+
+    def set_payment_intent(
+        self,
+        token: str,
+        coin_id: str,
+        amount: str,
+        address: str,
+    ) -> CommercialSubscription | None:
+        subscription = self.commercial_subscriptions_by_token.get(token)
+        if subscription is None:
+            return None
+        updated = replace(
+            subscription,
+            pay_coin_id=coin_id,
+            pay_amount=amount,
+            pay_address=address,
+            updated_at=datetime.now(timezone.utc),
+        )
+        self.commercial_subscriptions_by_token[token] = updated
+        return updated
+
+    def list_commercial_subscriptions(self, status: str | None = None) -> list[CommercialSubscription]:
+        subscriptions = list(self.commercial_subscriptions_by_token.values())
+        if status is None:
+            return subscriptions
+        return [subscription for subscription in subscriptions if subscription.status == status]
 
     def list_nodes(self) -> list[VpnNode]:
         return list(self.nodes_by_id.values())

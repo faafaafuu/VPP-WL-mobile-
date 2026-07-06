@@ -61,6 +61,19 @@ services:
     command: ["python3", "-m", "app.cli.health_check"]
     restart: "no"
 
+  payment-watch:
+    image: vpn-router-backend:latest
+    profiles: ["jobs"]
+    env_file:
+      - ${VPN_ROUTER_ENV_FILE:-.env}
+    environment:
+      VPN_ROUTER_REPOSITORY: sqlite
+      VPN_ROUTER_SQLITE_PATH: data/vpn-router.db
+    volumes:
+      - backend-data:/app/backend/data
+    command: ["python3", "-m", "app.cli.payment_watch"]
+    restart: "no"
+
 volumes:
   backend-data:
   certbot-conf:

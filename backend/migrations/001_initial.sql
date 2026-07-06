@@ -19,7 +19,12 @@ CREATE TABLE IF NOT EXISTS commercial_subscriptions (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     expires_at TEXT,
-    payment_id TEXT
+    payment_id TEXT,
+    pay_coin_id TEXT,
+    pay_amount TEXT,
+    pay_address TEXT,
+    paid_tx TEXT,
+    payer TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_commercial_subscriptions_status_expires

@@ -16,6 +16,7 @@ from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
 from app.domain.qr_svg import qr_svg
 from app.domain.tariffs import Tariff, parse_tariffs, tariffs_by_id
+from app.domain.unique_amount import AmountCollisionError, unique_coin_amount
 from app.domain.v2ray_subscription import encoded_subscription, raw_subscription
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
@@ -142,6 +143,66 @@ class ApiService:
         if not coin_options:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "no configured crypto wallets"})
         return invoice_page(subscription, tariff, coin_options)
+
+    def select_invoice_coin(self, token: str, payload: dict[str, Any]) -> dict[str, Any]:
+        subscription = self._commercial_subscription(token)
+        if subscription.is_active():
+            return self.invoice_status(token)
+        coin_id = str(payload.get("coin_id", "")).strip()
+        coin = COINS_BY_ID.get(coin_id)
+        if coin is None:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "unknown coin_id"})
+        address = self.crypto_wallets.get(coin.wallet_key)
+        if not address:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "coin not configured"})
+        tariff = self.tariffs_by_id.get(subscription.tariff_id)
+        if tariff is None:
+            raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "tariff not found"})
+
+        # Reloading the page must not change the amount the user was told to send.
+        if subscription.pay_coin_id == coin_id and subscription.pay_amount and subscription.pay_address == address:
+            return self._payment_intent_response(subscription.token, coin, subscription.pay_amount, address)
+
+        base_amount = self.exchange_rate_service.coin_amount(tariff.price_rub, coin)
+        if base_amount is None:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "exchange rate unavailable"})
+        taken = {
+            other.pay_amount
+            for other in self.repository.list_commercial_subscriptions(status="pending")
+            if other.token != token
+            and other.pay_coin_id == coin_id
+            and other.pay_address == address
+            and other.pay_amount
+        }
+        try:
+            amount = unique_coin_amount(base_amount, coin, taken)
+        except AmountCollisionError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+        updated = self.repository.set_payment_intent(token, coin_id, amount, address)
+        if updated is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+        return self._payment_intent_response(token, coin, amount, address)
+
+    def invoice_status(self, token: str) -> dict[str, Any]:
+        subscription = self._commercial_subscription(token)
+        active = subscription.is_active()
+        return {
+            "status": "active" if active else subscription.status,
+            "paid": bool(subscription.paid_tx) or active,
+            "connect_url": f"/connect/{token}",
+            "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
+        }
+
+    def _payment_intent_response(self, token: str, coin: Coin, amount: str, address: str) -> dict[str, Any]:
+        return {
+            "status": "pending",
+            "coin_id": coin.id,
+            "label": coin.label,
+            "network_label": coin.network_label,
+            "amount": amount,
+            "address": address,
+            "qr_url": f"/invoice/{token}/qr/{coin.id}",
+        }
 
     def invoice_wallet_qr_svg(self, token: str, coin_id: str | None = None) -> str:
         self._commercial_subscription(token)

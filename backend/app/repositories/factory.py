@@ -55,7 +55,21 @@ class Repository(TypingProtocol):
         token: str,
         duration_days: int,
         payment_id: str | None = None,
+        paid_tx: str | None = None,
+        payer: str | None = None,
     ) -> CommercialSubscription | None:
+        ...
+
+    def set_payment_intent(
+        self,
+        token: str,
+        coin_id: str,
+        amount: str,
+        address: str,
+    ) -> CommercialSubscription | None:
+        ...
+
+    def list_commercial_subscriptions(self, status: str | None = None) -> list[CommercialSubscription]:
         ...
 
     def list_nodes(self) -> list[VpnNode]:
