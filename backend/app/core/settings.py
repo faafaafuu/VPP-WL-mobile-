@@ -53,6 +53,11 @@ class Settings:
     telegram_bot_username: str | None = None
     twenty_api_url: str | None = None
     twenty_api_key: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int = 465
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str | None = None
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -126,6 +131,13 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     telegram_bot_username = source.get("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@") or None
     twenty_api_url = source.get("TWENTY_API_URL", "").strip().rstrip("/") or None
     twenty_api_key = source.get("TWENTY_API_KEY", "").strip() or None
+    smtp_host = source.get("SMTP_HOST", "").strip() or None
+    smtp_port = _non_negative_int(source.get("SMTP_PORT", "465"), "SMTP_PORT")
+    smtp_user = source.get("SMTP_USER", "").strip() or None
+    smtp_password = source.get("SMTP_PASSWORD", "").strip() or None
+    smtp_from = source.get("SMTP_FROM", "").strip() or smtp_user
+    if smtp_host and not (smtp_user and smtp_password):
+        raise SettingsError("SMTP_USER and SMTP_PASSWORD are required when SMTP_HOST is set")
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -156,6 +168,11 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         telegram_bot_username=telegram_bot_username,
         twenty_api_url=twenty_api_url,
         twenty_api_key=twenty_api_key,
+        smtp_host=smtp_host,
+        smtp_port=smtp_port,
+        smtp_user=smtp_user,
+        smtp_password=smtp_password,
+        smtp_from=smtp_from,
     )
 
 

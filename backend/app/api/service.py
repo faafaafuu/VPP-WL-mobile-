@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hmac
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import ROUND_UP, Decimal
@@ -162,6 +163,16 @@ class ApiService:
         from app.services.telegram_bot import telegram_deep_link
 
         return telegram_deep_link(self.telegram_bot_username, token)
+
+    def set_invoice_contact(self, token: str, payload: dict[str, Any]) -> dict[str, Any]:
+        self._commercial_subscription(token)
+        email = str(payload.get("email", "")).strip().lower()
+        if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "invalid email"})
+        subscription = self.repository.set_customer_email(token, email)
+        if subscription is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+        return {"status": "saved", "email": email}
 
     def select_invoice_coin(self, token: str, payload: dict[str, Any]) -> dict[str, Any]:
         subscription = self._commercial_subscription(token)
@@ -333,7 +344,12 @@ class ApiService:
         matches = [
             subscription
             for subscription in self.repository.list_commercial_subscriptions()
-            if query in {_normalize_payment_ref(subscription.paid_tx), _normalize_payment_ref(subscription.payer)}
+            if query
+            in {
+                _normalize_payment_ref(subscription.paid_tx),
+                _normalize_payment_ref(subscription.payer),
+                (subscription.customer_email or "").strip().lower(),
+            }
         ]
         if not matches:
             raise ApiError(HTTPStatus.NOT_FOUND, {"error": "payment not found"})
@@ -761,6 +777,8 @@ def _admin_order(subscription: Any) -> dict[str, str]:
         "payment": payment,
         "paid_tx": subscription.paid_tx or "",
         "payer": subscription.payer or "",
+        "email": subscription.customer_email or "",
+        "tg": "✓" if subscription.tg_chat_id else "",
         "connect_url": f"/connect/{subscription.token}",
     }
 

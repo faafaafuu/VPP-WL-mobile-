@@ -75,6 +75,9 @@ class Repository(TypingProtocol):
     def bind_telegram(self, token: str, tg_chat_id: str) -> CommercialSubscription | None:
         ...
 
+    def set_customer_email(self, token: str, email: str) -> CommercialSubscription | None:
+        ...
+
     def list_commercial_subscriptions_by_telegram(self, tg_chat_id: str) -> list[CommercialSubscription]:
         ...
 

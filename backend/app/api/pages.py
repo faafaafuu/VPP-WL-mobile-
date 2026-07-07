@@ -184,6 +184,18 @@ def invoice_page(
         </div>
         <p class="hint dim2">// бот пришлёт ссылку сразу после подтверждения оплаты — и вы её никогда не потеряете</p>
         """
+    saved_email = subscription.customer_email or ""
+    contact_block = f"""
+        <div class="block">
+          <div class="dim">root@core:~$ ./vpn_router --bind email</div>
+          <div class="subhead">// нет доступа к Telegram? оставьте email —<br>// по нему вы всегда восстановите ссылку на <a href="/recover">/recover</a></div>
+          <input class="field" type="email" id="contactEmail" placeholder="you@example.com" value="{escape(saved_email)}" autocomplete="email">
+          <div class="actions">
+            <button class="btn" type="button" onclick="saveEmail()">сохранить email</button>
+          </div>
+          <p class="hint" id="emailHint" hidden></p>
+        </div>
+    """
     token = subscription.token
     order_ref = token[:12].upper()
     price_rub = _price(tariff.price_rub)
@@ -230,6 +242,7 @@ def invoice_page(
           <a class="btn" href="/connect/{escape(token)}">Проверить статус доступа</a>
         </div>
         {tg_block}
+        {contact_block}
         <p class="dim" style="margin-top:14px">// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу.<br>// потеряли? <a href="/recover">восстановить доступ по TxID</a></p>
         <script>
           const COINS = {coins_js};
@@ -304,6 +317,28 @@ def invoice_page(
             const qr = document.getElementById('addrQr' + idx);
             if (qr) qr.hidden = !qr.hidden;
           }}
+          async function saveEmail() {{
+            const input = document.getElementById('contactEmail');
+            const hint = document.getElementById('emailHint');
+            hint.hidden = false;
+            try {{
+              const resp = await fetch('/invoice/' + TOKEN + '/contact', {{
+                method: 'POST',
+                headers: {{'Content-Type': 'application/json'}},
+                body: JSON.stringify({{email: input.value}}),
+              }});
+              if (resp.ok) {{
+                hint.className = 'hint c-green';
+                hint.textContent = 'Email сохранён — по нему можно восстановить ссылку.';
+              }} else {{
+                hint.className = 'hint c-red';
+                hint.textContent = 'Проверьте адрес — похоже, в нём опечатка.';
+              }}
+            }} catch (e) {{
+              hint.className = 'hint c-red';
+              hint.textContent = 'Не удалось сохранить — попробуйте ещё раз.';
+            }}
+          }}
           selectCoin(0);
           startPolling();
         </script>
@@ -328,9 +363,9 @@ def recover_page(error: str | None = None, telegram_bot: str | None = None) -> s
         <div class="block block-green">
           <div class="dim">root@core:~$ ./vpn_router --recover</div>
           <h1 class="small">Восстановление доступа<span class="cursor"></span></h1>
-          <div class="subhead">// оплатили, но потеряли ссылку?<br>// введите хэш транзакции (TxID) или адрес кошелька, с которого платили</div>
+          <div class="subhead">// оплатили, но потеряли ссылку?<br>// введите email, указанный при оплате, хэш транзакции (TxID)<br>// или адрес кошелька, с которого платили</div>
           <form method="post" action="/recover">
-            <input class="field" type="text" name="query" placeholder="TxID или адрес отправителя" required minlength="8" autocomplete="off" spellcheck="false">
+            <input class="field" type="text" name="query" placeholder="email, TxID или адрес отправителя" required minlength="8" autocomplete="off" spellcheck="false">
             <button class="cta" type="submit">$ найти_заказ --run</button>
           </form>
           {error_html}
@@ -356,9 +391,11 @@ def admin_orders_page(orders: list[dict[str, str]]) -> str:
             f'<td>{escape(order["payment"])}</td>'
             f'<td class="tx">{escape(order["paid_tx"])}</td>'
             f'<td class="tx">{escape(order["payer"])}</td>'
+            f'<td>{escape(order["email"])}</td>'
+            f'<td>{escape(order["tg"])}</td>'
             "</tr>"
         )
-    body = "\n".join(rows) or '<tr><td colspan="8" class="dim">заказов пока нет</td></tr>'
+    body = "\n".join(rows) or '<tr><td colspan="10" class="dim">заказов пока нет</td></tr>'
     return _page(
         "Заказы",
         f"""
@@ -369,7 +406,7 @@ def admin_orders_page(orders: list[dict[str, str]]) -> str:
         </div>
         <div class="table-wrap">
           <table class="orders">
-            <tr><th>заказ</th><th>тариф</th><th>статус</th><th>создан</th><th>до</th><th>оплата</th><th>tx</th><th>плательщик</th></tr>
+            <tr><th>заказ</th><th>тариф</th><th>статус</th><th>создан</th><th>до</th><th>оплата</th><th>tx</th><th>плательщик</th><th>email</th><th>tg</th></tr>
             {body}
           </table>
         </div>

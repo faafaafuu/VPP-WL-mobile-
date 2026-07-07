@@ -169,6 +169,14 @@ class InMemoryRepository:
         self.commercial_subscriptions_by_token[token] = updated
         return updated
 
+    def set_customer_email(self, token: str, email: str) -> CommercialSubscription | None:
+        subscription = self.commercial_subscriptions_by_token.get(token)
+        if subscription is None:
+            return None
+        updated = replace(subscription, customer_email=email, updated_at=datetime.now(timezone.utc))
+        self.commercial_subscriptions_by_token[token] = updated
+        return updated
+
     def list_commercial_subscriptions_by_telegram(self, tg_chat_id: str) -> list[CommercialSubscription]:
         return [
             subscription

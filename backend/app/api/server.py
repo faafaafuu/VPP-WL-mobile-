@@ -242,6 +242,14 @@ class ApiHandler(BaseHTTPRequestHandler):
                 self._send_html(exc.status, API_SERVICE.recover_html(error=message))
             return
 
+        if path.startswith("/invoice/") and path.endswith("/contact"):
+            payload = self._read_form_or_json()
+            if payload is None:
+                return
+            token = path.removeprefix("/invoice/")[: -len("/contact")].strip("/")
+            self._send_service_response(lambda: API_SERVICE.set_invoice_contact(token, payload))
+            return
+
         if path.startswith("/invoice/") and path.endswith("/select"):
             payload = self._read_form_or_json()
             if payload is None:
@@ -488,6 +496,19 @@ def _build_activation_notifier() -> Any:
 
             Thread(target=poll_loop, name="telegram-bot", daemon=True).start()
             print(f"telegram-bot started @{username}")
+    if SETTINGS.smtp_host and SETTINGS.smtp_user and SETTINGS.smtp_password:
+        from app.services.email_sender import EmailSender
+
+        sender = EmailSender(
+            SETTINGS.smtp_host,
+            SETTINGS.smtp_port,
+            SETTINGS.smtp_user,
+            SETTINGS.smtp_password,
+            SETTINGS.smtp_from or SETTINGS.smtp_user,
+            SETTINGS.public_base_url,
+        )
+        notifiers.append(sender.on_activated)
+        print(f"email-sender enabled host={SETTINGS.smtp_host}")
     if SETTINGS.twenty_api_url and SETTINGS.twenty_api_key:
         from app.domain.tariffs import tariffs_by_id
 
