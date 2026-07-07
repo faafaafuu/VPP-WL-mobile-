@@ -58,6 +58,10 @@ class Settings:
     smtp_user: str | None = None
     smtp_password: str | None = None
     smtp_from: str | None = None
+    hysteria2_host: str | None = None
+    hysteria2_port: int = 36712
+    hysteria2_password: str | None = None
+    hysteria2_sni: str | None = None
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -138,6 +142,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     smtp_from = source.get("SMTP_FROM", "").strip() or smtp_user
     if smtp_host and not (smtp_user and smtp_password):
         raise SettingsError("SMTP_USER and SMTP_PASSWORD are required when SMTP_HOST is set")
+    hysteria2_host = source.get("HYSTERIA2_HOST", "").strip() or None
+    hysteria2_port = _non_negative_int(source.get("HYSTERIA2_PORT", "36712"), "HYSTERIA2_PORT")
+    hysteria2_password = source.get("HYSTERIA2_PASSWORD", "").strip() or None
+    hysteria2_sni = source.get("HYSTERIA2_SNI", "").strip() or hysteria2_host
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -173,6 +181,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         smtp_user=smtp_user,
         smtp_password=smtp_password,
         smtp_from=smtp_from,
+        hysteria2_host=hysteria2_host,
+        hysteria2_port=hysteria2_port,
+        hysteria2_password=hysteria2_password,
+        hysteria2_sni=hysteria2_sni,
     )
 
 

@@ -141,7 +141,7 @@ class SubscriptionLinkMvpTest(unittest.TestCase):
 
         raw = self.service.raw_v2ray_subscription(token)
 
-        self.assertTrue(raw.startswith("vless://00000000-0000-4000-8000-000000000001@"))
+        self.assertIn("vless://00000000-0000-4000-8000-000000000001@", raw)
         self.assertIn("\nvless://00000000-0000-4000-8000-000000000003@", raw)
 
     def test_expired_subscription_is_forbidden_on_subscription_endpoint(self) -> None:
@@ -204,3 +204,39 @@ class SubscriptionLinkMvpTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Hysteria2SubscriptionTest(unittest.TestCase):
+    def _service(self):
+        repo = InMemoryRepository()
+        return ApiService(
+            repo,
+            TokenService("test-secret-with-length"),
+            ConfigBuilder(),
+            admin_token="test-admin",
+            public_base_url="http://203.0.113.10:8080",
+            checkout_mode="mock",
+            hysteria2={"host": "vpn.example.com", "port": 36712, "password": "s3cret", "sni": "vpn.example.com"},
+        )
+
+    def test_subscription_includes_hysteria2_first(self) -> None:
+        svc = self._service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        raw = svc.raw_v2ray_subscription(token)
+
+        self.assertTrue(raw.startswith("hysteria2://s3cret@vpn.example.com:36712/"))
+        self.assertIn("sni=vpn.example.com", raw.splitlines()[0])
+        self.assertIn("vless://", raw)
+
+    def test_no_hysteria2_when_unconfigured(self) -> None:
+        repo = InMemoryRepository()
+        svc = ApiService(
+            repo, TokenService("test-secret-with-length"), ConfigBuilder(),
+            admin_token="test-admin", public_base_url="http://203.0.113.10:8080", checkout_mode="mock",
+        )
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        raw = svc.raw_v2ray_subscription(token)
+
+        self.assertNotIn("hysteria2://", raw)

@@ -1,0 +1,12 @@
+listen: :36712
+tls:
+  cert: /certs/live/mandanator.ru/fullchain.pem
+  key: /certs/live/mandanator.ru/privkey.pem
+auth:
+  type: password
+  password: REPLACE_WITH_STRONG_PASSWORD
+masquerade:
+  type: proxy
+  proxy:
+    url: https://www.samsung.com
+    rewriteHost: true

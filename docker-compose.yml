@@ -36,6 +36,16 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  hysteria2:
+    image: tobyxdd/hysteria:latest
+    command: ["server", "-c", "/etc/hysteria/config.yaml"]
+    ports:
+      - "36712:36712/udp"
+    volumes:
+      - certbot-conf:/certs:ro
+      - ./hysteria/config.yaml:/etc/hysteria/config.yaml:ro
+    restart: unless-stopped
+
   certbot:
     image: certbot/certbot:latest
     volumes:

@@ -19,7 +19,7 @@ from app.domain.node_selection import choose_preferred_nodes
 from app.domain.qr_svg import qr_svg
 from app.domain.tariffs import Tariff, parse_tariffs, tariffs_by_id
 from app.domain.unique_amount import AmountCollisionError, unique_coin_amount
-from app.domain.v2ray_subscription import encoded_subscription, raw_subscription
+from app.domain.v2ray_subscription import encoded_subscription, hysteria2_link, raw_subscription
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
 from app.services.exchange_rates import ExchangeRateService
@@ -51,6 +51,7 @@ class ApiService:
         exchange_rate_service: ExchangeRateService | None = None,
         telegram_bot_username: str | None = None,
         activation_notifier: Any = None,
+        hysteria2: dict[str, Any] | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -75,6 +76,7 @@ class ApiService:
         # both may be set after construction, once the bot username is known
         self.telegram_bot_username = telegram_bot_username
         self.activation_notifier = activation_notifier
+        self.hysteria2 = hysteria2 or {}
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -257,17 +259,30 @@ class ApiService:
     def subscription_url(self, token: str) -> str:
         return f"{self.public_base_url}/sub/{token}"
 
+    def _extra_subscription_links(self) -> list[str]:
+        hy = self.hysteria2
+        if hy.get("host") and hy.get("password"):
+            return [
+                hysteria2_link(
+                    host=hy["host"],
+                    port=int(hy.get("port", 36712)),
+                    password=hy["password"],
+                    sni=hy.get("sni") or hy["host"],
+                )
+            ]
+        return []
+
     def v2ray_subscription(self, token: str) -> str:
         self._require_active_commercial_subscription(token)
         try:
-            return encoded_subscription(self.repository.list_nodes())
+            return encoded_subscription(self.repository.list_nodes(), extra_links=self._extra_subscription_links())
         except ValueError as exc:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
 
     def raw_v2ray_subscription(self, token: str) -> str:
         self._require_active_commercial_subscription(token)
         try:
-            return raw_subscription(self.repository.list_nodes())
+            return raw_subscription(self.repository.list_nodes(), extra_links=self._extra_subscription_links())
         except ValueError as exc:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
 

@@ -57,6 +57,12 @@ API_SERVICE = ApiService(
     crypto_usdt_rate_rub=SETTINGS.crypto_usdt_rate_rub,
     crypto_wallets=SETTINGS.crypto_wallets,
     exchange_rate_service=EXCHANGE_RATE_SERVICE,
+    hysteria2={
+        "host": SETTINGS.hysteria2_host,
+        "port": SETTINGS.hysteria2_port,
+        "password": SETTINGS.hysteria2_password,
+        "sni": SETTINGS.hysteria2_sni,
+    },
 )
 
 

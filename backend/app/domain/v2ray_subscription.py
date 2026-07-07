@@ -27,15 +27,23 @@ def vless_links(nodes: list[VpnNode]) -> list[str]:
     return links
 
 
-def raw_subscription(nodes: list[VpnNode]) -> str:
-    links = vless_links(nodes)
+def hysteria2_link(host: str, port: int, password: str, sni: str, label: str = "⚡ VPN_ROUTER │ H2") -> str:
+    """UDP/QUIC node — bypasses RU TSPU traffic-shaping that stalls TCP+TLS Reality."""
+    return (
+        f"hysteria2://{quote(password, safe='')}@{host}:{port}"
+        f"/?sni={quote(sni, safe='')}&insecure=0#{quote(label)}"
+    )
+
+
+def raw_subscription(nodes: list[VpnNode], extra_links: list[str] | None = None) -> str:
+    links = list(extra_links or []) + vless_links(nodes)
     if not links:
-        raise ValueError("no active VLESS nodes available")
+        raise ValueError("no active nodes available")
     return "\n".join(links) + "\n"
 
 
-def encoded_subscription(nodes: list[VpnNode]) -> str:
-    raw = raw_subscription(nodes)
+def encoded_subscription(nodes: list[VpnNode], extra_links: list[str] | None = None) -> str:
+    raw = raw_subscription(nodes, extra_links=extra_links)
     return base64.b64encode(raw.encode("utf-8")).decode("ascii")
 
 
