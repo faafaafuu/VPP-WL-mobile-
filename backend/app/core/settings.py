@@ -49,6 +49,10 @@ class Settings:
     crypto_etherscan_api_key: str | None = None
     crypto_min_confirmations: int = 1
     crypto_watch_interval_seconds: int = 60
+    telegram_bot_token: str | None = None
+    telegram_bot_username: str | None = None
+    twenty_api_url: str | None = None
+    twenty_api_key: str | None = None
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -118,6 +122,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     crypto_watch_interval_seconds = _non_negative_int(
         source.get("CRYPTO_WATCH_INTERVAL_SECONDS", "60"), "CRYPTO_WATCH_INTERVAL_SECONDS"
     )
+    telegram_bot_token = source.get("TELEGRAM_BOT_TOKEN", "").strip() or None
+    telegram_bot_username = source.get("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@") or None
+    twenty_api_url = source.get("TWENTY_API_URL", "").strip().rstrip("/") or None
+    twenty_api_key = source.get("TWENTY_API_KEY", "").strip() or None
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -144,6 +152,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         crypto_etherscan_api_key=crypto_etherscan_api_key,
         crypto_min_confirmations=crypto_min_confirmations,
         crypto_watch_interval_seconds=crypto_watch_interval_seconds,
+        telegram_bot_token=telegram_bot_token,
+        telegram_bot_username=telegram_bot_username,
+        twenty_api_url=twenty_api_url,
+        twenty_api_key=twenty_api_key,
     )
 
 

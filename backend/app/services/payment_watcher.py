@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+from typing import Callable
 
 from app.domain.models import AdminAuditEvent, CommercialSubscription, new_id
 from app.domain.tariffs import Tariff
@@ -37,11 +38,13 @@ class PaymentWatcher:
         providers: dict[str, ChainProvider],
         tariffs_by_id: dict[str, Tariff],
         min_confirmations: int = 1,
+        on_activated: Callable[[CommercialSubscription], None] | None = None,
     ) -> None:
         self.repository = repository
         self.providers = providers
         self.tariffs_by_id = tariffs_by_id
         self.min_confirmations = min_confirmations
+        self.on_activated = on_activated
 
     def run_once(self) -> WatchSummary:
         pending = [
@@ -153,6 +156,11 @@ class PaymentWatcher:
                 },
             )
         )
+        if self.on_activated is not None:
+            try:
+                self.on_activated(activated)
+            except Exception:  # notification failures must not block activation
+                pass
         return True
 
 

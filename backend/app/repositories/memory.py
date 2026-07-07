@@ -161,6 +161,21 @@ class InMemoryRepository:
             return subscriptions
         return [subscription for subscription in subscriptions if subscription.status == status]
 
+    def bind_telegram(self, token: str, tg_chat_id: str) -> CommercialSubscription | None:
+        subscription = self.commercial_subscriptions_by_token.get(token)
+        if subscription is None:
+            return None
+        updated = replace(subscription, tg_chat_id=tg_chat_id, updated_at=datetime.now(timezone.utc))
+        self.commercial_subscriptions_by_token[token] = updated
+        return updated
+
+    def list_commercial_subscriptions_by_telegram(self, tg_chat_id: str) -> list[CommercialSubscription]:
+        return [
+            subscription
+            for subscription in self.commercial_subscriptions_by_token.values()
+            if subscription.tg_chat_id == tg_chat_id
+        ]
+
     def list_nodes(self) -> list[VpnNode]:
         return list(self.nodes_by_id.values())
 

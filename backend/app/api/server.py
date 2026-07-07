@@ -447,7 +447,70 @@ class ApiHandler(BaseHTTPRequestHandler):
             self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
 
-def _start_payment_watcher() -> None:
+def _build_activation_notifier() -> Any:
+    """Wire optional Telegram bot + Twenty CRM sync; returns a combined callback or None."""
+    notifiers = []
+    if SETTINGS.telegram_bot_token:
+        from threading import Thread
+
+        from app.services.telegram_bot import HttpTelegramTransport, TelegramBot, TelegramError
+
+        bot = TelegramBot(
+            HttpTelegramTransport(SETTINGS.telegram_bot_token),
+            REPOSITORY,
+            SETTINGS.public_base_url,
+        )
+        username = SETTINGS.telegram_bot_username
+        if not username:
+            try:
+                username = bot.get_username()
+            except TelegramError as exc:
+                print(f"telegram-bot getMe failed: {exc}")
+        if username:
+            API_SERVICE.telegram_bot_username = username
+            notifiers.append(bot.notify_activated)
+
+            def poll_loop() -> None:
+                from time import sleep
+
+                offset = 0
+                while True:
+                    try:
+                        for update in bot.get_updates(offset):
+                            offset = max(offset, int(update.get("update_id", 0)) + 1)
+                            try:
+                                bot.handle_update(update)
+                            except Exception as exc:  # one bad update must not stop the bot
+                                print(f"telegram-bot update error: {exc}")
+                    except Exception as exc:
+                        print(f"telegram-bot poll error: {exc}")
+                        sleep(5)
+
+            Thread(target=poll_loop, name="telegram-bot", daemon=True).start()
+            print(f"telegram-bot started @{username}")
+    if SETTINGS.twenty_api_url and SETTINGS.twenty_api_key:
+        from app.domain.tariffs import tariffs_by_id
+
+        from app.services.twenty_sync import TwentySync
+
+        sync = TwentySync(SETTINGS.twenty_api_url, SETTINGS.twenty_api_key, tariffs_by_id(SETTINGS.tariffs))
+        notifiers.append(sync.on_activated)
+        print(f"twenty-sync enabled url={SETTINGS.twenty_api_url}")
+    if not notifiers:
+        return None
+
+    def notify(subscription: Any) -> None:
+        for notifier in notifiers:
+            try:
+                notifier(subscription)
+            except Exception as exc:
+                print(f"activation-notifier error: {exc}")
+
+    API_SERVICE.activation_notifier = notify
+    return notify
+
+
+def _start_payment_watcher(on_activated: Any = None) -> None:
     if SETTINGS.checkout_mode != "crypto_manual" or SETTINGS.crypto_watch_interval_seconds <= 0:
         return
     from threading import Thread
@@ -465,6 +528,7 @@ def _start_payment_watcher() -> None:
         providers,
         tariffs_by_id(SETTINGS.tariffs),
         min_confirmations=SETTINGS.crypto_min_confirmations,
+        on_activated=on_activated,
     )
 
     def loop() -> None:
@@ -484,7 +548,8 @@ def _start_payment_watcher() -> None:
 def run(host: str = "127.0.0.1", port: int = 8080) -> None:
     httpd = ThreadingHTTPServer((host, port), ApiHandler)
     started_at = datetime.now(timezone.utc).isoformat()
-    _start_payment_watcher()
+    notifier = _build_activation_notifier()
+    _start_payment_watcher(on_activated=notifier)
     print(f"vpn-router backend listening on http://{host}:{port} started_at={started_at}")
     httpd.serve_forever()
 

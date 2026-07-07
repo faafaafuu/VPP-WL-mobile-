@@ -68,6 +68,7 @@ class CommercialSubscription:
     pay_address: str | None = None
     paid_tx: str | None = None
     payer: str | None = None
+    tg_chat_id: str | None = None
 
     def is_active(self, now: datetime | None = None) -> bool:
         current = now or datetime.now(timezone.utc)

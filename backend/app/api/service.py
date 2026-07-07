@@ -47,6 +47,8 @@ class ApiService:
         crypto_usdt_rate_rub: str = "90.00",
         crypto_wallets: dict[str, str] | None = None,
         exchange_rate_service: ExchangeRateService | None = None,
+        telegram_bot_username: str | None = None,
+        activation_notifier: Any = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -68,6 +70,9 @@ class ApiService:
             _wallets["trc20"] = crypto_usdt_trc20_address
         self.crypto_wallets = _wallets
         self.exchange_rate_service = exchange_rate_service or ExchangeRateService("fixed")
+        # both may be set after construction, once the bot username is known
+        self.telegram_bot_username = telegram_bot_username
+        self.activation_notifier = activation_notifier
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -131,7 +136,13 @@ class ApiService:
     def connect_html(self, token: str) -> str:
         subscription = self._commercial_subscription(token)
         invoice_url = f"/invoice/{subscription.token}" if self.checkout_mode == "crypto_manual" else None
-        return connect_page(subscription, self.subscription_url(token), self.tariffs, invoice_url=invoice_url)
+        return connect_page(
+            subscription,
+            self.subscription_url(token),
+            self.tariffs,
+            invoice_url=invoice_url,
+            telegram_link=self._telegram_link(token),
+        )
 
     def invoice_html(self, token: str) -> str:
         subscription = self._commercial_subscription(token)
@@ -143,7 +154,14 @@ class ApiService:
         coin_options = _build_coin_options(tariff.price_rub, self.crypto_wallets, self.exchange_rate_service)
         if not coin_options:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "no configured crypto wallets"})
-        return invoice_page(subscription, tariff, coin_options)
+        return invoice_page(subscription, tariff, coin_options, telegram_link=self._telegram_link(token))
+
+    def _telegram_link(self, token: str) -> str | None:
+        if not self.telegram_bot_username:
+            return None
+        from app.services.telegram_bot import telegram_deep_link
+
+        return telegram_deep_link(self.telegram_bot_username, token)
 
     def select_invoice_coin(self, token: str, payload: dict[str, Any]) -> dict[str, Any]:
         subscription = self._commercial_subscription(token)
@@ -287,6 +305,11 @@ class ApiService:
                 details=details,
             )
         )
+        if self.activation_notifier is not None:
+            try:
+                self.activation_notifier(subscription)
+            except Exception:  # notification failures must not block activation
+                pass
         return {
             "status": "activated",
             "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
@@ -301,7 +324,7 @@ class ApiService:
         return admin_orders_page([_admin_order(subscription) for subscription in self._orders_newest_first()])
 
     def recover_html(self, error: str | None = None) -> str:
-        return recover_page(error)
+        return recover_page(error, telegram_bot=self.telegram_bot_username)
 
     def recover(self, payload: dict[str, Any]) -> dict[str, Any]:
         query = _normalize_payment_ref(str(payload.get("query", "")))

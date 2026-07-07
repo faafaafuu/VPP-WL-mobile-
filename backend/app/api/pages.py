@@ -52,7 +52,15 @@ def connect_page(
     subscription_url: str,
     tariffs: tuple[Tariff, ...],
     invoice_url: str | None = None,
+    telegram_link: str | None = None,
 ) -> str:
+    tg_block = ""
+    if telegram_link:
+        tg_hint = "ссылка всегда будет под рукой + уведомление об оплате" if subscription.tg_chat_id is None else "заказ уже привязан к Telegram"
+        tg_block = f"""
+            <a class="btn" href="{escape(telegram_link)}" target="_blank" rel="noopener">✈ привязать Telegram</a>
+            <p class="hint dim2">// {escape(tg_hint)}</p>
+        """
     tariff_map = {t.id: t for t in tariffs}
     current_tariff = tariff_map.get(subscription.tariff_id)
     max_devices = current_tariff.max_devices if current_tariff else 3
@@ -72,6 +80,7 @@ def connect_page(
             <p class="mono-box" id="subUrl">{escape(subscription_url)}</p>
             <p class="hint c-green" id="connectHint" hidden>Если клиент не открылся, скопируйте ссылку или отсканируйте QR.</p>
             <div class="qr-wrap" id="qrWrap" hidden><img src="/sub/{escape(subscription.token)}/qr" alt="QR код подписки"></div>
+            {tg_block}
           </div>
         """
     elif subscription.status == "pending":
@@ -82,6 +91,7 @@ def connect_page(
             <h1 class="small c-yellow">Ожидание оплаты<span class="cursor"></span></h1>
             <div class="subhead">// заказ создан, оплата ещё не поступила<br>// после подтверждения сети доступ включится автоматически</div>
             <a class="cta" href="{escape(pay_href)}">$ оплатить --run</a>
+            {tg_block}
           </div>
         """
     else:
@@ -164,7 +174,16 @@ def invoice_page(
     subscription: CommercialSubscription,
     tariff: Tariff,
     coin_options: list[dict[str, str]],
+    telegram_link: str | None = None,
 ) -> str:
+    tg_block = ""
+    if telegram_link:
+        tg_block = f"""
+        <div class="actions">
+          <a class="btn" href="{escape(telegram_link)}" target="_blank" rel="noopener">✈ привязать Telegram</a>
+        </div>
+        <p class="hint dim2">// бот пришлёт ссылку сразу после подтверждения оплаты — и вы её никогда не потеряете</p>
+        """
     token = subscription.token
     order_ref = token[:12].upper()
     price_rub = _price(tariff.price_rub)
@@ -210,6 +229,7 @@ def invoice_page(
         <div class="actions">
           <a class="btn" href="/connect/{escape(token)}">Проверить статус доступа</a>
         </div>
+        {tg_block}
         <p class="dim" style="margin-top:14px">// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу.<br>// потеряли? <a href="/recover">восстановить доступ по TxID</a></p>
         <script>
           const COINS = {coins_js};
@@ -291,8 +311,17 @@ def invoice_page(
     )
 
 
-def recover_page(error: str | None = None) -> str:
+def recover_page(error: str | None = None, telegram_bot: str | None = None) -> str:
     error_html = f'<p class="hint c-red">{escape(error)}</p>' if error else ""
+    tg_block = ""
+    if telegram_bot:
+        tg_block = f"""
+        <div class="block block-green">
+          <div class="dim">root@core:~$ ./vpn_router --recover --via telegram</div>
+          <div class="subhead">// привязывали заказ к Telegram? бот помнит ваши ссылки</div>
+          <a class="btn" href="https://t.me/{escape(telegram_bot)}" target="_blank" rel="noopener">✈ открыть бота @{escape(telegram_bot)}</a>
+        </div>
+        """
     return _page(
         "Восстановление доступа",
         f"""
@@ -307,6 +336,7 @@ def recover_page(error: str | None = None) -> str:
           {error_html}
           <div class="subhead">// TxID (hash) можно найти в истории вашего кошелька или биржи<br>// не находится? напишите нам и приложите TxID</div>
         </div>
+        {tg_block}
         """,
     )
 

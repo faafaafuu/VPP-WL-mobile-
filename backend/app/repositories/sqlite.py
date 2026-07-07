@@ -244,6 +244,24 @@ class SqliteRepository:
         self.connection.commit()
         return self.get_commercial_subscription(token)
 
+    def bind_telegram(self, token: str, tg_chat_id: str) -> CommercialSubscription | None:
+        subscription = self.get_commercial_subscription(token)
+        if subscription is None:
+            return None
+        self.connection.execute(
+            "UPDATE commercial_subscriptions SET tg_chat_id = ?, updated_at = ? WHERE token = ?",
+            (tg_chat_id, _dt_to_text(datetime.now(timezone.utc)), token),
+        )
+        self.connection.commit()
+        return self.get_commercial_subscription(token)
+
+    def list_commercial_subscriptions_by_telegram(self, tg_chat_id: str) -> list[CommercialSubscription]:
+        rows = self.connection.execute(
+            f"SELECT {_COMMERCIAL_SUBSCRIPTION_COLUMNS} FROM commercial_subscriptions WHERE tg_chat_id = ?",
+            (tg_chat_id,),
+        ).fetchall()
+        return [_commercial_subscription_from_row(row) for row in rows]
+
     def list_commercial_subscriptions(self, status: str | None = None) -> list[CommercialSubscription]:
         if status is None:
             rows = self.connection.execute(
@@ -540,14 +558,14 @@ class SqliteRepository:
             row["name"]
             for row in self.connection.execute("PRAGMA table_info(commercial_subscriptions)").fetchall()
         }
-        for name in ("pay_coin_id", "pay_amount", "pay_address", "paid_tx", "payer"):
+        for name in ("pay_coin_id", "pay_amount", "pay_address", "paid_tx", "payer", "tg_chat_id"):
             if name not in existing_commercial:
                 self.connection.execute(f"ALTER TABLE commercial_subscriptions ADD COLUMN {name} TEXT")
 
 
 _COMMERCIAL_SUBSCRIPTION_COLUMNS = (
     "token, tariff_id, status, created_at, updated_at, expires_at, payment_id, "
-    "pay_coin_id, pay_amount, pay_address, paid_tx, payer"
+    "pay_coin_id, pay_amount, pay_address, paid_tx, payer, tg_chat_id"
 )
 
 
@@ -579,6 +597,7 @@ def _commercial_subscription_from_row(row: sqlite3.Row) -> CommercialSubscriptio
         pay_address=row["pay_address"],
         paid_tx=row["paid_tx"],
         payer=row["payer"],
+        tg_chat_id=row["tg_chat_id"],
     )
 
 
