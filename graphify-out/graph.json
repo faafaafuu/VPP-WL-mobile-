@@ -40,7 +40,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 35
+      "line": 39
     },
     {
       "id": "backend_app_api_pages_py_invoice_page",
@@ -48,7 +48,15 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 120
+      "line": 146
+    },
+    {
+      "id": "backend_app_api_pages_py__configs_block",
+      "label": "_configs_block()",
+      "source_file": "backend/app/api/pages.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 223
     },
     {
       "id": "backend_app_api_pages_py__coin_tab_buttons",
@@ -56,7 +64,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 195
+      "line": 240
     },
     {
       "id": "backend_app_api_pages_py__coin_block",
@@ -64,7 +72,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 207
+      "line": 251
     },
     {
       "id": "backend_app_api_pages_py__coins_js",
@@ -72,7 +80,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 230
+      "line": 272
     },
     {
       "id": "backend_app_api_pages_py_not_found_page",
@@ -80,7 +88,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 236
+      "line": 278
     },
     {
       "id": "backend_app_api_pages_py__tariff_card",
@@ -88,7 +96,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 252
+      "line": 294
     },
     {
       "id": "backend_app_api_pages_py__price",
@@ -96,7 +104,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 267
+      "line": 309
     },
     {
       "id": "backend_app_api_pages_py__page",
@@ -104,7 +112,7 @@
       "source_file": "backend/app/api/pages.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 273
+      "line": 315
     },
     {
       "id": "backend_app_api_rate_limit_py",
@@ -142,7 +150,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 58
+      "line": 59
     },
     {
       "id": "backend_app_api_server_py_run",
@@ -150,7 +158,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 400
+      "line": 421
     },
     {
       "id": "backend_app_api_server_py_do_options",
@@ -158,7 +166,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 61
+      "line": 62
     },
     {
       "id": "backend_app_api_server_py_do_get",
@@ -166,7 +174,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 68
+      "line": 69
     },
     {
       "id": "backend_app_api_server_py_do_delete",
@@ -174,7 +182,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 169
+      "line": 170
     },
     {
       "id": "backend_app_api_server_py_do_post",
@@ -182,7 +190,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 188
+      "line": 189
     },
     {
       "id": "backend_app_api_server_py_do_patch",
@@ -190,7 +198,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 258
+      "line": 267
     },
     {
       "id": "backend_app_api_server_py_log_message",
@@ -198,7 +206,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 275
+      "line": 296
     },
     {
       "id": "backend_app_api_server_py__require_user_id",
@@ -206,7 +214,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 278
+      "line": 299
     },
     {
       "id": "backend_app_api_server_py__is_rate_limited",
@@ -214,7 +222,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 286
+      "line": 307
     },
     {
       "id": "backend_app_api_server_py__read_json",
@@ -222,7 +230,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 298
+      "line": 319
     },
     {
       "id": "backend_app_api_server_py__read_form_or_json",
@@ -230,7 +238,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 311
+      "line": 332
     },
     {
       "id": "backend_app_api_server_py__send_service_response",
@@ -238,7 +246,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 320
+      "line": 341
     },
     {
       "id": "backend_app_api_server_py__send_text_response",
@@ -246,7 +254,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 326
+      "line": 347
     },
     {
       "id": "backend_app_api_server_py__send_json",
@@ -254,7 +262,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 332
+      "line": 353
     },
     {
       "id": "backend_app_api_server_py__send_text",
@@ -262,7 +270,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 343
+      "line": 364
     },
     {
       "id": "backend_app_api_server_py__send_html",
@@ -270,7 +278,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 354
+      "line": 375
     },
     {
       "id": "backend_app_api_server_py__send_redirect",
@@ -278,7 +286,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 365
+      "line": 386
     },
     {
       "id": "backend_app_api_server_py__send_cors_headers",
@@ -286,7 +294,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 374
+      "line": 395
     },
     {
       "id": "backend_app_api_server_py__send_security_headers",
@@ -294,7 +302,7 @@
       "source_file": "backend/app/api/server.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 392
+      "line": 413
     },
     {
       "id": "backend_app_api_service_py",
@@ -309,7 +317,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 28
+      "line": 29
     },
     {
       "id": "backend_app_api_service_py_apiservice",
@@ -317,7 +325,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 33
+      "line": 34
     },
     {
       "id": "backend_app_api_service_py__public_node",
@@ -325,7 +333,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 577
+      "line": 670
     },
     {
       "id": "backend_app_api_service_py__public_subscription",
@@ -333,7 +341,15 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 594
+      "line": 687
+    },
+    {
+      "id": "backend_app_api_service_py__opt_str",
+      "label": "_opt_str()",
+      "source_file": "backend/app/api/service.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 696
     },
     {
       "id": "backend_app_api_service_py__admin_node",
@@ -341,7 +357,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 603
+      "line": 703
     },
     {
       "id": "backend_app_api_service_py__admin_audit_event",
@@ -349,7 +365,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 615
+      "line": 723
     },
     {
       "id": "backend_app_api_service_py__admin_health_update_details",
@@ -357,7 +373,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 627
+      "line": 735
     },
     {
       "id": "backend_app_api_service_py__metric_escape",
@@ -365,7 +381,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 646
+      "line": 754
     },
     {
       "id": "backend_app_api_service_py__repository_backend_name",
@@ -373,7 +389,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 650
+      "line": 758
     },
     {
       "id": "backend_app_api_service_py__mask_token",
@@ -381,7 +397,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 659
+      "line": 767
     },
     {
       "id": "backend_app_api_service_py__rub_to_usdt",
@@ -389,7 +405,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 665
+      "line": 773
     },
     {
       "id": "backend_app_api_service_py__node_from_payload",
@@ -397,7 +413,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 672
+      "line": 780
     },
     {
       "id": "backend_app_api_service_py__build_coin_options",
@@ -405,7 +421,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 750
+      "line": 858
     },
     {
       "id": "backend_app_api_service_py___init__",
@@ -413,7 +429,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 34
+      "line": 35
     },
     {
       "id": "backend_app_api_service_py_auth_init",
@@ -421,7 +437,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 71
+      "line": 74
     },
     {
       "id": "backend_app_api_service_py_version",
@@ -429,7 +445,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 78
+      "line": 81
     },
     {
       "id": "backend_app_api_service_py_landing_html",
@@ -437,7 +453,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 97
+      "line": 100
     },
     {
       "id": "backend_app_api_service_py_checkout",
@@ -445,7 +461,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 100
+      "line": 103
     },
     {
       "id": "backend_app_api_service_py_connect_html",
@@ -453,7 +469,15 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 130
+      "line": 133
+    },
+    {
+      "id": "backend_app_api_service_py__public_configs",
+      "label": "_public_configs()",
+      "source_file": "backend/app/api/service.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 138
     },
     {
       "id": "backend_app_api_service_py_invoice_html",
@@ -461,7 +485,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 134
+      "line": 151
     },
     {
       "id": "backend_app_api_service_py_invoice_wallet_qr_svg",
@@ -469,7 +493,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 146
+      "line": 166
     },
     {
       "id": "backend_app_api_service_py__wallet_address_for_coin",
@@ -477,7 +501,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 153
+      "line": 173
     },
     {
       "id": "backend_app_api_service_py_subscription_url",
@@ -485,7 +509,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 165
+      "line": 185
     },
     {
       "id": "backend_app_api_service_py_v2ray_subscription",
@@ -493,7 +517,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 168
+      "line": 188
     },
     {
       "id": "backend_app_api_service_py_raw_v2ray_subscription",
@@ -501,7 +525,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 175
+      "line": 195
     },
     {
       "id": "backend_app_api_service_py_subscription_qr_svg",
@@ -509,7 +533,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 182
+      "line": 202
     },
     {
       "id": "backend_app_api_service_py_admin_activate_commercial_subscription",
@@ -517,7 +541,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 189
+      "line": 209
     },
     {
       "id": "backend_app_api_service_py_prometheus_metrics",
@@ -525,7 +549,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 221
+      "line": 241
     },
     {
       "id": "backend_app_api_service_py_auth_receipt",
@@ -533,7 +557,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 261
+      "line": 281
     },
     {
       "id": "backend_app_api_service_py_create_yookassa_payment",
@@ -541,7 +565,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 278
+      "line": 298
     },
     {
       "id": "backend_app_api_service_py_yookassa_webhook",
@@ -549,7 +573,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 295
+      "line": 315
     },
     {
       "id": "backend_app_api_service_py_nodes",
@@ -557,7 +581,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 341
+      "line": 361
     },
     {
       "id": "backend_app_api_service_py_me",
@@ -565,7 +589,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 345
+      "line": 365
     },
     {
       "id": "backend_app_api_service_py_export_me",
@@ -573,7 +597,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 353
+      "line": 373
     },
     {
       "id": "backend_app_api_service_py_delete_me",
@@ -581,7 +605,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 359
+      "line": 379
     },
     {
       "id": "backend_app_api_service_py_admin_nodes",
@@ -589,7 +613,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 364
+      "line": 384
     },
     {
       "id": "backend_app_api_service_py_admin_audit_events",
@@ -597,7 +621,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 368
+      "line": 388
     },
     {
       "id": "backend_app_api_service_py_admin_update_node_health",
@@ -605,7 +629,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 372
+      "line": 392
     },
     {
       "id": "backend_app_api_service_py_admin_upsert_node",
@@ -613,7 +637,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 409
+      "line": 429
     },
     {
       "id": "backend_app_api_service_py_admin_disable_node",
@@ -621,7 +645,23 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 426
+      "line": 446
+    },
+    {
+      "id": "backend_app_api_service_py_admin_import_vless",
+      "label": "admin_import_vless()",
+      "source_file": "backend/app/api/service.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 468
+    },
+    {
+      "id": "backend_app_api_service_py_admin_patch_node",
+      "label": "admin_patch_node()",
+      "source_file": "backend/app/api/service.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 502
     },
     {
       "id": "backend_app_api_service_py_config",
@@ -629,7 +669,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 448
+      "line": 541
     },
     {
       "id": "backend_app_api_service_py_user_id_from_authorization",
@@ -637,7 +677,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 459
+      "line": 552
     },
     {
       "id": "backend_app_api_service_py__commercial_subscription",
@@ -645,7 +685,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 470
+      "line": 563
     },
     {
       "id": "backend_app_api_service_py__require_active_commercial_subscription",
@@ -653,7 +693,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 476
+      "line": 569
     },
     {
       "id": "backend_app_api_service_py__tariff_from_payload",
@@ -661,7 +701,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 481
+      "line": 574
     },
     {
       "id": "backend_app_api_service_py__require_admin",
@@ -669,7 +709,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 488
+      "line": 581
     },
     {
       "id": "backend_app_api_service_py__health_score_from_payload",
@@ -677,7 +717,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 492
+      "line": 585
     },
     {
       "id": "backend_app_api_service_py__node_status_from_payload",
@@ -685,7 +725,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 501
+      "line": 594
     },
     {
       "id": "backend_app_api_service_py__latency_from_payload",
@@ -693,7 +733,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 510
+      "line": 603
     },
     {
       "id": "backend_app_api_service_py__success_rate_from_payload",
@@ -701,7 +741,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 522
+      "line": 615
     },
     {
       "id": "backend_app_api_service_py__health_from_payload",
@@ -709,7 +749,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 534
+      "line": 627
     },
     {
       "id": "backend_app_api_service_py__receipt_claim_from_payload",
@@ -717,7 +757,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 543
+      "line": 636
     },
     {
       "id": "backend_app_api_service_py__require_known_user",
@@ -725,7 +765,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 558
+      "line": 651
     },
     {
       "id": "backend_app_api_service_py__verify_yookassa_claim",
@@ -733,7 +773,7 @@
       "source_file": "backend/app/api/service.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 562
+      "line": 655
     },
     {
       "id": "backend_app_cli___init___py",
@@ -764,6 +804,37 @@
       "file_type": "code",
       "kind": "symbol",
       "line": 49
+    },
+    {
+      "id": "backend_app_cli_import_vless_py",
+      "label": "import_vless.py",
+      "source_file": "backend/app/cli/import_vless.py",
+      "file_type": "code",
+      "kind": "file"
+    },
+    {
+      "id": "backend_app_cli_import_vless_py_main",
+      "label": "main()",
+      "source_file": "backend/app/cli/import_vless.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 27
+    },
+    {
+      "id": "backend_app_cli_import_vless_py__load_entries",
+      "label": "_load_entries()",
+      "source_file": "backend/app/cli/import_vless.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 72
+    },
+    {
+      "id": "backend_app_cli_import_vless_py__list_nodes",
+      "label": "_list_nodes()",
+      "source_file": "backend/app/cli/import_vless.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 85
     },
     {
       "id": "backend_app_core___init___py",
@@ -801,7 +872,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 50
+      "line": 51
     },
     {
       "id": "backend_app_core_settings_py__required_secret",
@@ -809,7 +880,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 134
+      "line": 137
     },
     {
       "id": "backend_app_core_settings_py__optional_secret",
@@ -817,7 +888,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 145
+      "line": 148
     },
     {
       "id": "backend_app_core_settings_py__port",
@@ -825,7 +896,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 156
+      "line": 159
     },
     {
       "id": "backend_app_core_settings_py__csv",
@@ -833,7 +904,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 166
+      "line": 169
     },
     {
       "id": "backend_app_core_settings_py__optional_url",
@@ -841,7 +912,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 170
+      "line": 173
     },
     {
       "id": "backend_app_core_settings_py__required_url",
@@ -849,7 +920,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 181
+      "line": 184
     },
     {
       "id": "backend_app_core_settings_py__product_prices",
@@ -857,7 +928,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 190
+      "line": 193
     },
     {
       "id": "backend_app_core_settings_py__non_negative_int",
@@ -865,7 +936,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 210
+      "line": 213
     },
     {
       "id": "backend_app_core_settings_py__bool",
@@ -873,7 +944,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 220
+      "line": 223
     },
     {
       "id": "backend_app_core_settings_py__decimal_str",
@@ -881,7 +952,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 229
+      "line": 232
     },
     {
       "id": "backend_app_core_settings_py__parse_crypto_wallets",
@@ -889,7 +960,7 @@
       "source_file": "backend/app/core/settings.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 239
+      "line": 242
     },
     {
       "id": "backend_app_domain___init___py",
@@ -1219,7 +1290,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 87
+      "line": 93
     },
     {
       "id": "backend_app_domain_models_py_wireguardoptions",
@@ -1227,7 +1298,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 93
+      "line": 99
     },
     {
       "id": "backend_app_domain_models_py_hysteria2options",
@@ -1235,7 +1306,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 102
+      "line": 108
     },
     {
       "id": "backend_app_domain_models_py_vpnnode",
@@ -1243,7 +1314,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 108
+      "line": 114
     },
     {
       "id": "backend_app_domain_models_py_receiptclaim",
@@ -1251,7 +1322,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 137
+      "line": 143
     },
     {
       "id": "backend_app_domain_models_py_nodehealthevent",
@@ -1259,7 +1330,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 145
+      "line": 151
     },
     {
       "id": "backend_app_domain_models_py_adminauditevent",
@@ -1267,7 +1338,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 162
+      "line": 168
     },
     {
       "id": "backend_app_domain_models_py_new_id",
@@ -1275,7 +1346,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 172
+      "line": 178
     },
     {
       "id": "backend_app_domain_models_py_new_subscription_token",
@@ -1283,7 +1354,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 176
+      "line": 182
     },
     {
       "id": "backend_app_domain_models_py_is_active",
@@ -1307,7 +1378,7 @@
       "source_file": "backend/app/domain/models.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 127
+      "line": 133
     },
     {
       "id": "backend_app_domain_node_config_py",
@@ -1699,7 +1770,46 @@
       "source_file": "backend/app/domain/v2ray_subscription.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 69
+      "line": 74
+    },
+    {
+      "id": "backend_app_domain_v2ray_subscription_py__relabel",
+      "label": "_relabel()",
+      "source_file": "backend/app/domain/v2ray_subscription.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 80
+    },
+    {
+      "id": "backend_app_domain_vless_parser_py",
+      "label": "vless_parser.py",
+      "source_file": "backend/app/domain/vless_parser.py",
+      "file_type": "code",
+      "kind": "file"
+    },
+    {
+      "id": "backend_app_domain_vless_parser_py_vlessparseerror",
+      "label": "VlessParseError",
+      "source_file": "backend/app/domain/vless_parser.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 16
+    },
+    {
+      "id": "backend_app_domain_vless_parser_py_parse_vless_url",
+      "label": "parse_vless_url()",
+      "source_file": "backend/app/domain/vless_parser.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 20
+    },
+    {
+      "id": "backend_app_domain_vless_parser_py__slugify",
+      "label": "_slugify()",
+      "source_file": "backend/app/domain/vless_parser.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 93
     },
     {
       "id": "backend_app_repositories___init___py",
@@ -1920,7 +2030,7 @@
       "source_file": "backend/app/repositories/memory.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 303
+      "line": 304
     },
     {
       "id": "backend_app_repositories_memory_py___init__",
@@ -2127,7 +2237,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 504
+      "line": 508
     },
     {
       "id": "backend_app_repositories_sqlite_py__subscription_from_row",
@@ -2135,7 +2245,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 508
+      "line": 512
     },
     {
       "id": "backend_app_repositories_sqlite_py__commercial_subscription_from_row",
@@ -2143,7 +2253,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 518
+      "line": 522
     },
     {
       "id": "backend_app_repositories_sqlite_py__subscription_export",
@@ -2151,7 +2261,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 530
+      "line": 534
     },
     {
       "id": "backend_app_repositories_sqlite_py__node_from_row",
@@ -2159,7 +2269,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 540
+      "line": 544
     },
     {
       "id": "backend_app_repositories_sqlite_py__health_event_from_row",
@@ -2167,7 +2277,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 563
+      "line": 567
     },
     {
       "id": "backend_app_repositories_sqlite_py__admin_audit_event_from_row",
@@ -2175,7 +2285,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 581
+      "line": 585
     },
     {
       "id": "backend_app_repositories_sqlite_py__options_to_json",
@@ -2183,7 +2293,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 596
+      "line": 600
     },
     {
       "id": "backend_app_repositories_sqlite_py__options_from_json",
@@ -2191,7 +2301,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 636
+      "line": 643
     },
     {
       "id": "backend_app_repositories_sqlite_py__dt_to_text",
@@ -2199,7 +2309,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 668
+      "line": 678
     },
     {
       "id": "backend_app_repositories_sqlite_py__dt_from_text",
@@ -2207,7 +2317,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 672
+      "line": 682
     },
     {
       "id": "backend_app_repositories_sqlite_py___init__",
@@ -2415,7 +2525,7 @@
       "source_file": "backend/app/repositories/sqlite.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 449
+      "line": 453
     },
     {
       "id": "backend_app_security___init___py",
@@ -3313,7 +3423,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 170
+      "line": 173
     },
     {
       "id": "backend_tests_test_crypto_manual_py_cryptosettingstest",
@@ -3321,7 +3431,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 188
+      "line": 191
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_checkout_redirects_to_invoice",
@@ -3356,8 +3466,8 @@
       "line": 72
     },
     {
-      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_order_ref",
-      "label": "test_invoice_html_contains_order_ref()",
+      "id": "backend_tests_test_crypto_manual_py_test_invoice_html_has_no_memo_or_order_ref",
+      "label": "test_invoice_html_has_no_memo_or_order_ref()",
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
@@ -3369,7 +3479,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 90
+      "line": 93
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invoice_html_unknown_token_raises_404",
@@ -3377,7 +3487,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 98
+      "line": 101
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invoice_html_without_crypto_address_raises_503",
@@ -3385,7 +3495,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 106
+      "line": 109
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invoice_wallet_qr_svg_returns_svg",
@@ -3393,7 +3503,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 115
+      "line": 118
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_connect_page_shows_pending_state",
@@ -3401,7 +3511,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 123
+      "line": 126
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_admin_can_activate_after_crypto_payment",
@@ -3409,7 +3519,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 131
+      "line": 134
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_connect_page_shows_active_after_admin_activation",
@@ -3417,7 +3527,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 142
+      "line": 145
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_works_after_activation",
@@ -3425,7 +3535,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 151
+      "line": 154
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_v2ray_subscription_blocked_while_pending",
@@ -3433,7 +3543,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 160
+      "line": 163
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_basic_conversion_rounds_up",
@@ -3441,7 +3551,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 171
+      "line": 174
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_exact_division",
@@ -3449,7 +3559,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 176
+      "line": 179
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_rounds_up_not_down",
@@ -3457,7 +3567,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 181
+      "line": 184
     },
     {
       "id": "backend_tests_test_crypto_manual_py__base_env",
@@ -3465,7 +3575,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 189
+      "line": 192
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_crypto_manual_requires_wallet_address",
@@ -3473,7 +3583,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 196
+      "line": 199
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_crypto_manual_with_address_ok",
@@ -3481,7 +3591,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 206
+      "line": 209
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_custom_usdt_rate",
@@ -3489,7 +3599,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 220
+      "line": 223
     },
     {
       "id": "backend_tests_test_crypto_manual_py_test_invalid_usdt_rate_raises",
@@ -3497,7 +3607,7 @@
       "source_file": "backend/tests/test_crypto_manual.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 232
+      "line": 235
     },
     {
       "id": "backend_tests_test_env_ready_tool_py",
@@ -3567,7 +3677,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 169
+      "line": 195
     },
     {
       "id": "backend_tests_test_exchange_rates_py__svc",
@@ -3730,12 +3840,36 @@
       "line": 157
     },
     {
+      "id": "backend_tests_test_exchange_rates_py_test_eth_wallet_shows_usdt_on_erc20_and_bep20",
+      "label": "test_eth_wallet_shows_usdt_on_erc20_and_bep20()",
+      "source_file": "backend/tests/test_exchange_rates.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 168
+    },
+    {
+      "id": "backend_tests_test_exchange_rates_py_test_testnet_hidden_by_default",
+      "label": "test_testnet_hidden_by_default()",
+      "source_file": "backend/tests/test_exchange_rates.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 178
+    },
+    {
+      "id": "backend_tests_test_exchange_rates_py_test_testnet_shown_with_fixed_amount_when_enabled",
+      "label": "test_testnet_shown_with_fixed_amount_when_enabled()",
+      "source_file": "backend/tests/test_exchange_rates.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 185
+    },
+    {
       "id": "backend_tests_test_exchange_rates_py__base",
       "label": "_base()",
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 170
+      "line": 196
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_wallets_parsed_from_env",
@@ -3743,7 +3877,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 177
+      "line": 203
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_legacy_usdt_address_backfilled_into_wallets",
@@ -3751,7 +3885,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 195
+      "line": 221
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_rate_provider_default_is_coingecko",
@@ -3759,7 +3893,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 204
+      "line": 230
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_rate_provider_fixed",
@@ -3767,7 +3901,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 211
+      "line": 237
     },
     {
       "id": "backend_tests_test_exchange_rates_py_test_invalid_rate_provider_raises",
@@ -3775,7 +3909,7 @@
       "source_file": "backend/tests/test_exchange_rates.py",
       "file_type": "code",
       "kind": "symbol",
-      "line": 220
+      "line": 246
     },
     {
       "id": "backend_tests_test_expo_scaffold_py",
@@ -5203,6 +5337,213 @@
       "line": 23
     },
     {
+      "id": "backend_tests_test_vless_import_py",
+      "label": "test_vless_import.py",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "file"
+    },
+    {
+      "id": "backend_tests_test_vless_import_py__service",
+      "label": "_service()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 23
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_vlessparsertest",
+      "label": "VlessParserTest",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 33
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_subscriptionservesrawurltest",
+      "label": "SubscriptionServesRawUrlTest",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 69
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_adminimportvlesstest",
+      "label": "AdminImportVlessTest",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 89
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_adminpatchnodetest",
+      "label": "AdminPatchNodeTest",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 136
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_sqliteroundtriptest",
+      "label": "SqliteRoundTripTest",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 179
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_parses_core_fields",
+      "label": "test_parses_core_fields()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 34
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_label_falls_back_to_fragment",
+      "label": "test_label_falls_back_to_fragment()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 51
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_rejects_non_vless",
+      "label": "test_rejects_non_vless()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 56
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_rejects_missing_uuid",
+      "label": "test_rejects_missing_uuid()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 60
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_disabled_flag_sets_status",
+      "label": "test_disabled_flag_sets_status()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 64
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_raw_url_served_verbatim_with_relabel",
+      "label": "test_raw_url_served_verbatim_with_relabel()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 70
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_xhttp_transport_preserved",
+      "label": "test_xhttp_transport_preserved()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 78
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_import_creates_node",
+      "label": "test_import_creates_node()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 90
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_import_requires_admin",
+      "label": "test_import_requires_admin()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 102
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_import_rejects_empty_url",
+      "label": "test_import_rejects_empty_url()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 108
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_import_rejects_garbage_url",
+      "label": "test_import_rejects_garbage_url()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 114
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_imported_node_appears_in_subscription_after_activation",
+      "label": "test_imported_node_appears_in_subscription_after_activation()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 120
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_audit_event_recorded",
+      "label": "test_audit_event_recorded()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 129
+    },
+    {
+      "id": "backend_tests_test_vless_import_py__service_with_node",
+      "label": "_service_with_node()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 137
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_disable_then_enable",
+      "label": "test_disable_then_enable()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 142
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_change_priority_and_label",
+      "label": "test_change_priority_and_label()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 152
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_disabled_node_excluded_from_subscription",
+      "label": "test_disabled_node_excluded_from_subscription()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 161
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_patch_unknown_node_404",
+      "label": "test_patch_unknown_node_404()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 172
+    },
+    {
+      "id": "backend_tests_test_vless_import_py_test_raw_url_persists",
+      "label": "test_raw_url_persists()",
+      "source_file": "backend/tests/test_vless_import.py",
+      "file_type": "code",
+      "kind": "symbol",
+      "line": 180
+    },
+    {
       "id": "backend_tests_test_yookassa_payments_py",
       "label": "test_yookassa_payments.py",
       "source_file": "backend/tests/test_yookassa_payments.py",
@@ -5314,6 +5655,12 @@
     {
       "source": "backend_app_api_pages_py",
       "target": "backend_app_api_pages_py_invoice_page",
+      "relation": "contains",
+      "source_file": "backend/app/api/pages.py"
+    },
+    {
+      "source": "backend_app_api_pages_py",
+      "target": "backend_app_api_pages_py__configs_block",
       "relation": "contains",
       "source_file": "backend/app/api/pages.py"
     },
@@ -5589,6 +5936,12 @@
     },
     {
       "source": "backend_app_api_service_py",
+      "target": "backend_app_api_service_py__opt_str",
+      "relation": "contains",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
       "target": "backend_app_api_service_py__admin_node",
       "relation": "contains",
       "source_file": "backend/app/api/service.py"
@@ -5674,6 +6027,12 @@
     {
       "source": "backend_app_api_service_py",
       "target": "backend_app_api_service_py_connect_html",
+      "relation": "contains",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
+      "target": "backend_app_api_service_py__public_configs",
       "relation": "contains",
       "source_file": "backend/app/api/service.py"
     },
@@ -5800,6 +6159,18 @@
     {
       "source": "backend_app_api_service_py",
       "target": "backend_app_api_service_py_admin_disable_node",
+      "relation": "contains",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
+      "target": "backend_app_api_service_py_admin_import_vless",
+      "relation": "contains",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
+      "target": "backend_app_api_service_py_admin_patch_node",
       "relation": "contains",
       "source_file": "backend/app/api/service.py"
     },
@@ -5949,6 +6320,12 @@
     },
     {
       "source": "backend_app_api_service_py",
+      "target": "backend_app_domain_vless_parser_py",
+      "relation": "imports",
+      "source_file": "backend/app/api/service.py"
+    },
+    {
+      "source": "backend_app_api_service_py",
       "target": "backend_app_repositories_factory_py",
       "relation": "imports",
       "source_file": "backend/app/api/service.py"
@@ -6000,6 +6377,36 @@
       "target": "backend_app_services_health_worker_py",
       "relation": "imports",
       "source_file": "backend/app/cli/health_check.py"
+    },
+    {
+      "source": "backend_app_cli_import_vless_py",
+      "target": "backend_app_cli_import_vless_py_main",
+      "relation": "contains",
+      "source_file": "backend/app/cli/import_vless.py"
+    },
+    {
+      "source": "backend_app_cli_import_vless_py",
+      "target": "backend_app_cli_import_vless_py__load_entries",
+      "relation": "contains",
+      "source_file": "backend/app/cli/import_vless.py"
+    },
+    {
+      "source": "backend_app_cli_import_vless_py",
+      "target": "backend_app_cli_import_vless_py__list_nodes",
+      "relation": "contains",
+      "source_file": "backend/app/cli/import_vless.py"
+    },
+    {
+      "source": "backend_app_cli_import_vless_py",
+      "target": "backend_app_domain_vless_parser_py",
+      "relation": "imports",
+      "source_file": "backend/app/cli/import_vless.py"
+    },
+    {
+      "source": "backend_app_cli_import_vless_py",
+      "target": "backend_app_repositories_factory_py",
+      "relation": "imports",
+      "source_file": "backend/app/cli/import_vless.py"
     },
     {
       "source": "backend_app_core_settings_py",
@@ -6693,9 +7100,39 @@
     },
     {
       "source": "backend_app_domain_v2ray_subscription_py",
+      "target": "backend_app_domain_v2ray_subscription_py__relabel",
+      "relation": "contains",
+      "source_file": "backend/app/domain/v2ray_subscription.py"
+    },
+    {
+      "source": "backend_app_domain_v2ray_subscription_py",
       "target": "backend_app_domain_models_py",
       "relation": "imports",
       "source_file": "backend/app/domain/v2ray_subscription.py"
+    },
+    {
+      "source": "backend_app_domain_vless_parser_py",
+      "target": "backend_app_domain_vless_parser_py_vlessparseerror",
+      "relation": "contains",
+      "source_file": "backend/app/domain/vless_parser.py"
+    },
+    {
+      "source": "backend_app_domain_vless_parser_py",
+      "target": "backend_app_domain_vless_parser_py_parse_vless_url",
+      "relation": "contains",
+      "source_file": "backend/app/domain/vless_parser.py"
+    },
+    {
+      "source": "backend_app_domain_vless_parser_py",
+      "target": "backend_app_domain_vless_parser_py__slugify",
+      "relation": "contains",
+      "source_file": "backend/app/domain/vless_parser.py"
+    },
+    {
+      "source": "backend_app_domain_vless_parser_py",
+      "target": "backend_app_domain_models_py",
+      "relation": "imports",
+      "source_file": "backend/app/domain/vless_parser.py"
     },
     {
       "source": "backend_app_repositories_factory_py",
@@ -8013,7 +8450,7 @@
     },
     {
       "source": "backend_tests_test_crypto_manual_py",
-      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_contains_order_ref",
+      "target": "backend_tests_test_crypto_manual_py_test_invoice_html_has_no_memo_or_order_ref",
       "relation": "contains",
       "source_file": "backend/tests/test_crypto_manual.py"
     },
@@ -8308,6 +8745,24 @@
     {
       "source": "backend_tests_test_exchange_rates_py",
       "target": "backend_tests_test_exchange_rates_py_test_amount_is_correct",
+      "relation": "contains",
+      "source_file": "backend/tests/test_exchange_rates.py"
+    },
+    {
+      "source": "backend_tests_test_exchange_rates_py",
+      "target": "backend_tests_test_exchange_rates_py_test_eth_wallet_shows_usdt_on_erc20_and_bep20",
+      "relation": "contains",
+      "source_file": "backend/tests/test_exchange_rates.py"
+    },
+    {
+      "source": "backend_tests_test_exchange_rates_py",
+      "target": "backend_tests_test_exchange_rates_py_test_testnet_hidden_by_default",
+      "relation": "contains",
+      "source_file": "backend/tests/test_exchange_rates.py"
+    },
+    {
+      "source": "backend_tests_test_exchange_rates_py",
+      "target": "backend_tests_test_exchange_rates_py_test_testnet_shown_with_fixed_amount_when_enabled",
       "relation": "contains",
       "source_file": "backend/tests/test_exchange_rates.py"
     },
@@ -9480,6 +9935,204 @@
       "target": "backend_app_security_tokens_py",
       "relation": "imports",
       "source_file": "backend/tests/test_tokens.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py__service",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_vlessparsertest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_subscriptionservesrawurltest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_adminimportvlesstest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_adminpatchnodetest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_sqliteroundtriptest",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_parses_core_fields",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_label_falls_back_to_fragment",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_rejects_non_vless",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_rejects_missing_uuid",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_disabled_flag_sets_status",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_raw_url_served_verbatim_with_relabel",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_xhttp_transport_preserved",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_import_creates_node",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_import_requires_admin",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_import_rejects_empty_url",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_import_rejects_garbage_url",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_imported_node_appears_in_subscription_after_activation",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_audit_event_recorded",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py__service_with_node",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_disable_then_enable",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_change_priority_and_label",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_disabled_node_excluded_from_subscription",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_patch_unknown_node_404",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_tests_test_vless_import_py_test_raw_url_persists",
+      "relation": "contains",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_api_service_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_domain_config_builder_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_domain_models_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_domain_v2ray_subscription_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_domain_vless_parser_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_repositories_memory_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_repositories_sqlite_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
+    },
+    {
+      "source": "backend_tests_test_vless_import_py",
+      "target": "backend_app_security_tokens_py",
+      "relation": "imports",
+      "source_file": "backend/tests/test_vless_import.py"
     },
     {
       "source": "backend_tests_test_yookassa_payments_py",

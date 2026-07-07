@@ -63,6 +63,14 @@ else
     ok "Generated VPN_ROUTER_TOKEN_SECRET and VPN_ROUTER_ADMIN_TOKEN"
 fi
 
+# ── sanitize .env: comment out any remaining placeholder values ───────────────
+# Settings validation rejects "replace-with-*" values; comment them out so the
+# API treats optional services (YooKassa, etc.) as unconfigured rather than crashing.
+if grep -qE '^[^#].*=replace-with-' .env 2>/dev/null; then
+    warn "Found placeholder values in .env — commenting them out (configure manually when needed)"
+    sed -i 's|^\([^#][^=]*=replace-with-[^[:space:]]*\)|# \1|g' .env
+fi
+
 # ── set PUBLIC_BASE_URL ──────────────────────────────────────────────────────
 if [[ -n "$SSL_DOMAIN" ]]; then
     BASE_URL="https://${SSL_DOMAIN}"
@@ -77,6 +85,77 @@ if grep -q "SERVER_IP\|example\.com" .env 2>/dev/null; then
     sed -i "s|PUBLIC_BASE_URL=.*|PUBLIC_BASE_URL=${BASE_URL}|g" .env
     ok "Set PUBLIC_BASE_URL=${BASE_URL}"
 fi
+
+# ── stop and remove all existing project containers ───────────────────────────
+info "Stopping existing containers..."
+docker compose down --remove-orphans 2>/dev/null || true
+# Also clean up containers from old project name (directory rename, etc.)
+old_containers=$(docker ps -a --format "{{.Names}}" 2>/dev/null \
+    | grep -E "^(vpp-wl-mobile--|vpn-router-)" || true)
+if [[ -n "$old_containers" ]]; then
+    warn "Removing stale containers: $(echo "$old_containers" | tr '\n' ' ')"
+    echo "$old_containers" | xargs docker rm -f 2>/dev/null || true
+fi
+ok "Cleaned up old containers"
+
+# ── check for processes holding ports 80/443 ──────────────────────────────────
+_listeners_on_port() {
+    local port="$1"
+    if command -v ss >/dev/null 2>&1; then
+        ss -tlnp 2>/dev/null | awk 'NR>1 && /LISTEN/' | grep -E ":${port}([^0-9]|$)" || true
+    elif command -v netstat >/dev/null 2>&1; then
+        netstat -tlnp 2>/dev/null | grep "LISTEN" | grep -E ":${port}([^0-9]|$)" || true
+    else
+        lsof -iTCP:"${port}" -sTCP:LISTEN -n -P 2>/dev/null || true
+    fi
+}
+
+_free_port() {
+    local port="$1"
+    local listening
+    listening=$(_listeners_on_port "$port")
+    [[ -z "$listening" ]] && return 0   # port is free
+
+    # Case 1: held by docker-proxy → a container still publishes this port
+    if echo "$listening" | grep -q docker-proxy; then
+        local containers
+        containers=$(docker ps -a --format '{{.ID}} {{.Ports}}' 2>/dev/null \
+            | grep -E ":${port}->" | awk '{print $1}' || true)
+        if [[ -n "$containers" ]]; then
+            warn "Removing containers publishing port ${port}..."
+            echo "$containers" | xargs docker rm -f 2>/dev/null || true
+            sleep 1
+        fi
+        # Re-check: if docker-proxy still lingers, it's orphaned → restart daemon
+        listening=$(_listeners_on_port "$port")
+        if echo "$listening" | grep -q docker-proxy; then
+            warn "Orphaned docker-proxy on port ${port} — restarting Docker daemon..."
+            systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
+            sleep 3
+        fi
+        listening=$(_listeners_on_port "$port")
+        [[ -z "$listening" ]] && return 0
+    fi
+
+    # Case 2: held by a system web server → stop it
+    for svc in nginx apache2 apache httpd caddy; do
+        if systemctl is-active --quiet "$svc" 2>/dev/null; then
+            systemctl stop "$svc" && systemctl disable "$svc" \
+                && ok "Stopped system service: ${svc}" \
+                || die "Could not stop ${svc}. Run: systemctl stop ${svc}"
+            return 0
+        fi
+    done
+
+    listening=$(_listeners_on_port "$port")
+    [[ -z "$listening" ]] && return 0
+    die "Port ${port} is held by an unknown process:\n  ${listening}\nFree it and re-run setup.sh."
+}
+
+info "Checking ports 80 and 443..."
+_free_port 80
+_free_port 443
+ok "Ports 80 and 443 are free"
 
 # ── nginx: HTTP mode (default) ───────────────────────────────────────────────
 if [[ -z "$SSL_DOMAIN" ]]; then

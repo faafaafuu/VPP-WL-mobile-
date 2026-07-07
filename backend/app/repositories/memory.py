@@ -206,7 +206,8 @@ class InMemoryRepository:
         return len(self.admin_audit_events)
 
     def _seed_nodes(self, nodes: list[VpnNode] | None = None) -> None:
-        if nodes:
+        if nodes is not None:
+            # Explicit list (even empty) means "use exactly these" — no demo seeds.
             self.nodes_by_id = {node.id: node for node in nodes}
             return
         nodes = [

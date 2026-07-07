@@ -81,6 +81,12 @@ class VlessOptions:
     short_id: str | None = None
     fingerprint: str = "chrome"
     label: str | None = None
+    # Raw vless:// URL when imported from a panel (3x-ui). When present, the
+    # subscription serves this URL verbatim (only the #label fragment is replaced),
+    # so every transport (reality, xhttp, grpc, tls) works without re-derivation.
+    raw_url: str | None = None
+    source: str = "manual"          # manual | 3x-ui | future-api
+    source_panel: str | None = None  # local-3x-ui | future-germany-1 | ...
 
 
 @dataclass(frozen=True)
