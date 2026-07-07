@@ -1,0 +1,12 @@
+[Unit]
+Description=Allow inbound 443 for VPN + site (bypass leftover mtproxy throttle)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vpn-allow-443.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
