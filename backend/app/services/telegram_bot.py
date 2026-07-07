@@ -71,11 +71,21 @@ class TelegramBot:
         )
         return list(result or [])
 
-    def send(self, chat_id: str, text: str) -> None:
-        self.transport.call(
-            "sendMessage",
-            {"chat_id": chat_id, "text": text, "disable_web_page_preview": True},
-        )
+    def send(
+        self,
+        chat_id: str,
+        text: str,
+        keyboard: list[list[dict[str, Any]]] | None = None,
+    ) -> None:
+        params: dict[str, Any] = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True,
+        }
+        if keyboard:
+            params["reply_markup"] = {"inline_keyboard": keyboard}
+        self.transport.call("sendMessage", params)
 
     def handle_update(self, update: dict[str, Any]) -> None:
         message = update.get("message") or {}
@@ -97,7 +107,11 @@ class TelegramBot:
         try:
             self.send(
                 subscription.tg_chat_id,
-                "✅ Оплата подтверждена! VPN активен.\n\n" + self._links_block(subscription),
+                "✅ <b>Оплата подтверждена — VPN активен"
+                + (f" до {subscription.expires_at.strftime('%d.%m.%Y')}" if subscription.expires_at else "")
+                + "!</b>\n\nНажмите кнопку — ссылка скопируется. Вставьте её в v2rayN / v2rayNG / Hiddify "
+                "как подписку (subscription).",
+                keyboard=self._active_keyboard(subscription),
             )
             return True
         except TelegramError:
@@ -111,18 +125,25 @@ class TelegramBot:
         if subscription.is_active():
             self.send(
                 chat_id,
-                "🔗 Заказ привязан к этому чату. VPN активен.\n\n" + self._links_block(subscription),
+                "🔗 <b>Заказ привязан — VPN активен!</b>\n\n"
+                "Нажмите кнопку — ссылка скопируется. Вставьте её в v2rayN / v2rayNG / Hiddify.",
+                keyboard=self._active_keyboard(subscription),
             )
         elif subscription.status == "pending":
             self.send(
                 chat_id,
-                "🔗 Заказ привязан к этому чату.\n"
+                "🔗 <b>Заказ привязан к этому чату.</b>\n"
                 "⏳ Ожидаем оплату — как только сеть подтвердит перевод, пришлю ссылку сюда.",
+                keyboard=[
+                    [{"text": "💳 Перейти к оплате", "url": self._invoice_url(subscription)}],
+                    [{"text": "📄 Страница заказа", "url": self._connect_url(subscription)}],
+                ],
             )
         else:
             self.send(
                 chat_id,
-                "🔗 Заказ привязан, но подписка истекла. Продлить: " + self._connect_url(subscription),
+                "🔗 Заказ привязан, но подписка истекла.",
+                keyboard=[[{"text": "🔄 Продлить доступ", "url": self._connect_url(subscription)}]],
             )
 
     def _send_bound_orders(self, chat_id: str) -> None:
@@ -134,28 +155,45 @@ class TelegramBot:
                 f"Оформите доступ на {self.public_base_url} и нажмите «привязать Telegram» на странице заказа.",
             )
             return
-        blocks = []
         for subscription in sorted(subscriptions, key=lambda item: item.created_at, reverse=True):
+            ref = subscription.token[:12].upper()
             if subscription.is_active():
-                state = "✅ активен до " + subscription.expires_at.strftime("%d.%m.%Y")
+                expires = subscription.expires_at.strftime("%d.%m.%Y")
+                self.send(
+                    chat_id,
+                    f"✅ Заказ <code>{ref}</code> — активен до {expires}.",
+                    keyboard=self._active_keyboard(subscription),
+                )
             elif subscription.status == "pending":
-                state = "⏳ ждёт оплату"
+                self.send(
+                    chat_id,
+                    f"⏳ Заказ <code>{ref}</code> — ждёт оплату.",
+                    keyboard=[
+                        [{"text": "💳 Перейти к оплате", "url": self._invoice_url(subscription)}],
+                        [{"text": "📄 Страница заказа", "url": self._connect_url(subscription)}],
+                    ],
+                )
             else:
-                state = "❌ истёк"
-            blocks.append(f"Заказ {subscription.token[:12].upper()} — {state}\n{self._links_block(subscription)}")
-        self.send(chat_id, "\n\n".join(blocks))
+                self.send(
+                    chat_id,
+                    f"❌ Заказ <code>{ref}</code> — подписка истекла.",
+                    keyboard=[[{"text": "🔄 Продлить доступ", "url": self._connect_url(subscription)}]],
+                )
 
-    def _links_block(self, subscription: CommercialSubscription) -> str:
-        return (
-            f"Ссылка подписки (вставьте в v2rayN / v2rayNG / Hiddify):\n{self._sub_url(subscription)}\n\n"
-            f"Страница заказа:\n{self._connect_url(subscription)}"
-        )
+    def _active_keyboard(self, subscription: CommercialSubscription) -> list[list[dict[str, Any]]]:
+        return [
+            [{"text": "📋 Скопировать ссылку подписки", "copy_text": {"text": self._sub_url(subscription)}}],
+            [{"text": "📄 Страница заказа · QR · инструкция", "url": self._connect_url(subscription)}],
+        ]
 
     def _sub_url(self, subscription: CommercialSubscription) -> str:
         return f"{self.public_base_url}/sub/{subscription.token}"
 
     def _connect_url(self, subscription: CommercialSubscription) -> str:
         return f"{self.public_base_url}/connect/{subscription.token}"
+
+    def _invoice_url(self, subscription: CommercialSubscription) -> str:
+        return f"{self.public_base_url}/invoice/{subscription.token}"
 
 
 def telegram_deep_link(bot_username: str, token: str) -> str:

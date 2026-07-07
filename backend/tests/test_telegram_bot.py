@@ -20,6 +20,16 @@ class FakeTransport:
     def sent_texts(self) -> list[str]:
         return [params["text"] for method, params in self.calls if method == "sendMessage"]
 
+    def sent_keyboards(self) -> list[list[list[dict[str, Any]]]]:
+        return [
+            params.get("reply_markup", {}).get("inline_keyboard", [])
+            for method, params in self.calls
+            if method == "sendMessage"
+        ]
+
+    def keyboard_buttons(self, index: int = 0) -> list[dict[str, Any]]:
+        return [button for row in self.sent_keyboards()[index] for button in row]
+
 
 def _bot() -> tuple[TelegramBot, FakeTransport, InMemoryRepository]:
     transport = FakeTransport()
@@ -33,7 +43,7 @@ def _update(chat_id: str, text: str) -> dict[str, Any]:
 
 
 class TelegramBotTest(unittest.TestCase):
-    def test_start_with_token_binds_pending_order(self) -> None:
+    def test_start_with_token_binds_pending_order_with_pay_button(self) -> None:
         bot, transport, repository = _bot()
         repository.create_commercial_subscription("order-token-1", "vpn.1m")
 
@@ -42,17 +52,24 @@ class TelegramBotTest(unittest.TestCase):
         subscription = repository.get_commercial_subscription("order-token-1")
         self.assertEqual(subscription.tg_chat_id, "777")
         self.assertIn("Ожидаем оплату", transport.sent_texts()[0])
+        buttons = transport.keyboard_buttons()
+        urls = [button.get("url") for button in buttons]
+        self.assertIn("http://84.247.166.53/invoice/order-token-1", urls)
+        self.assertIn("http://84.247.166.53/connect/order-token-1", urls)
 
-    def test_start_with_token_on_active_order_sends_links(self) -> None:
+    def test_start_with_token_on_active_order_sends_copy_button(self) -> None:
         bot, transport, repository = _bot()
         repository.create_commercial_subscription("order-token-2", "vpn.1m")
         repository.activate_commercial_subscription("order-token-2", 30)
 
         bot.handle_update(_update("777", "/start order-token-2"))
 
-        text = transport.sent_texts()[0]
-        self.assertIn("http://84.247.166.53/sub/order-token-2", text)
-        self.assertIn("http://84.247.166.53/connect/order-token-2", text)
+        buttons = transport.keyboard_buttons()
+        copy_targets = [button["copy_text"]["text"] for button in buttons if "copy_text" in button]
+        urls = [button.get("url") for button in buttons]
+        self.assertIn("http://84.247.166.53/sub/order-token-2", copy_targets)
+        self.assertIn("http://84.247.166.53/connect/order-token-2", urls)
+        self.assertNotIn("/sub/order-token-2", transport.sent_texts()[0])
 
     def test_start_with_unknown_token_replies_not_found(self) -> None:
         bot, transport, _ = _bot()
@@ -71,7 +88,8 @@ class TelegramBotTest(unittest.TestCase):
 
         text = transport.sent_texts()[0]
         self.assertIn("ORDER-TOKEN-", text)
-        self.assertIn("/sub/order-token-3", text)
+        copy_targets = [b["copy_text"]["text"] for b in transport.keyboard_buttons() if "copy_text" in b]
+        self.assertIn("http://84.247.166.53/sub/order-token-3", copy_targets)
 
     def test_plain_message_without_bindings_sends_instructions(self) -> None:
         bot, transport, _ = _bot()
@@ -89,7 +107,8 @@ class TelegramBotTest(unittest.TestCase):
         self.assertTrue(bot.notify_activated(subscription))
         text = transport.sent_texts()[0]
         self.assertIn("Оплата подтверждена", text)
-        self.assertIn("/sub/order-token-4", text)
+        copy_targets = [b["copy_text"]["text"] for b in transport.keyboard_buttons() if "copy_text" in b]
+        self.assertIn("http://84.247.166.53/sub/order-token-4", copy_targets)
 
     def test_notify_activated_without_binding_is_noop(self) -> None:
         bot, transport, repository = _bot()

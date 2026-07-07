@@ -111,7 +111,11 @@ class ApiHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/sub/"):
             token = path.removeprefix("/sub/").strip("/")
-            self._send_text_response(lambda: API_SERVICE.v2ray_subscription(token), "text/plain")
+            try:
+                body = API_SERVICE.v2ray_subscription(token)
+                self._send_text(HTTPStatus.OK, body, "text/plain", extra_headers=API_SERVICE.subscription_headers(token))
+            except ApiError as exc:
+                self._send_text(exc.status, str(exc.payload.get("error", "error")), "text/plain")
             return
         if path.startswith("/invoice/") and path.endswith("/status"):
             token = path.removeprefix("/invoice/")[: -len("/status")].strip("/")
@@ -398,12 +402,20 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _send_text(self, status: HTTPStatus, payload: str, content_type: str) -> None:
+    def _send_text(
+        self,
+        status: HTTPStatus,
+        payload: str,
+        content_type: str,
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
         body = payload.encode("utf-8")
         self.send_response(status.value)
         self.send_header("Content-Type", f"{content_type}; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        for name, value in (extra_headers or {}).items():
+            self.send_header(name, value)
         self._send_cors_headers()
         self._send_security_headers()
         self.end_headers()

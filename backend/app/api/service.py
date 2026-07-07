@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hmac
 import re
 from dataclasses import dataclass
@@ -269,6 +270,20 @@ class ApiService:
             return raw_subscription(self.repository.list_nodes())
         except ValueError as exc:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+
+    def subscription_headers(self, token: str) -> dict[str, str]:
+        """Branding headers understood by v2rayN / v2rayNG / Hiddify."""
+        title = base64.b64encode("⚡ VPN_ROUTER".encode("utf-8")).decode("ascii")
+        headers = {
+            "profile-title": f"base64:{title}",
+            "profile-update-interval": "12",
+            "profile-web-page-url": f"{self.public_base_url}/connect/{token}",
+        }
+        subscription = self.repository.get_commercial_subscription(token)
+        if subscription and subscription.expires_at:
+            expire = int(subscription.expires_at.timestamp())
+            headers["subscription-userinfo"] = f"upload=0; download=0; total=0; expire={expire}"
+        return headers
 
     def subscription_qr_svg(self, token: str) -> str:
         self._require_active_commercial_subscription(token)

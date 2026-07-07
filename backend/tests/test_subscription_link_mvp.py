@@ -189,6 +189,18 @@ class SubscriptionLinkMvpTest(unittest.TestCase):
 
         self.assertEqual(self.service.subscription_url(token), "http://203.0.113.10:8080/sub/token-1")
 
+    def test_subscription_headers_carry_branding_and_expiry(self) -> None:
+        import base64
+
+        token = self.service.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        headers = self.service.subscription_headers(token)
+
+        title = base64.b64decode(headers["profile-title"].removeprefix("base64:")).decode("utf-8")
+        self.assertEqual(title, "\u26a1 VPN_ROUTER")
+        self.assertEqual(headers["profile-web-page-url"], f"http://203.0.113.10:8080/connect/{token}")
+        self.assertIn("expire=", headers["subscription-userinfo"])
+
 
 if __name__ == "__main__":
     unittest.main()
