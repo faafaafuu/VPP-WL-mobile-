@@ -80,6 +80,17 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path == "/health":
             self._send_json(HTTPStatus.OK, {"status": "ok"})
             return
+        if path == "/recover":
+            self._send_html(HTTPStatus.OK, API_SERVICE.recover_html())
+            return
+        if path == "/admin/orders":
+            query = parse_qs(urlparse(self.path).query)
+            admin_token = (query.get("token") or [""])[0]
+            try:
+                self._send_html(HTTPStatus.OK, API_SERVICE.admin_orders_html(admin_token))
+            except ApiError as exc:
+                self._send_json(exc.status, exc.payload)
+            return
         if path.startswith("/connect/"):
             token = path.removeprefix("/connect/").strip("/")
             try:
@@ -172,6 +183,10 @@ class ApiHandler(BaseHTTPRequestHandler):
             admin_token = self.headers.get("X-Admin-Token", "")
             self._send_service_response(lambda: API_SERVICE.admin_audit_events(admin_token))
             return
+        if path == "/api/admin/orders":
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(lambda: API_SERVICE.admin_orders(admin_token))
+            return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
@@ -207,6 +222,24 @@ class ApiHandler(BaseHTTPRequestHandler):
                 self._send_redirect(str(response["redirect_url"]))
             except ApiError as exc:
                 self._send_json(exc.status, exc.payload)
+            return
+
+        if path == "/recover":
+            payload = self._read_form_or_json()
+            if payload is None:
+                return
+            try:
+                response = API_SERVICE.recover(payload)
+                self._send_redirect(str(response["redirect_url"]))
+            except ApiError as exc:
+                if exc.status == HTTPStatus.NOT_FOUND:
+                    message = "Платёж не найден. Проверьте TxID или адрес отправителя."
+                elif exc.status == HTTPStatus.BAD_REQUEST:
+                    message = "Слишком короткий запрос — вставьте полный TxID или адрес."
+                else:
+                    self._send_json(exc.status, exc.payload)
+                    return
+                self._send_html(exc.status, API_SERVICE.recover_html(error=message))
             return
 
         if path.startswith("/invoice/") and path.endswith("/select"):

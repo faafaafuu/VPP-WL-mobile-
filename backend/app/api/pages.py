@@ -42,6 +42,7 @@ def landing_page(tariffs: tuple[Tariff, ...]) -> str:
           {rows}
         </div>
         {steps}
+        <div class="dim" style="padding-bottom:6px">// уже оплатили, но потеряли ссылку? <a href="/recover">восстановить доступ</a></div>
         """,
     )
 
@@ -62,7 +63,7 @@ def connect_page(
           <div class="block block-green">
             <div class="dim">root@core:~$ ./vpn_router --status</div>
             <h1 class="small">Ваш VPN активен<span class="cursor"></span></h1>
-            <div class="subhead">// действует до {escape(expires)}<br>// до {max_devices} устройств — установите ссылку на каждом</div>
+            <div class="subhead">// действует до {escape(expires)}<br>// до {max_devices} устройств — установите ссылку на каждом<br>// сохраните адрес этой страницы — потеряли? <a href="/recover">восстановить по TxID</a></div>
             <div class="actions">
               <button class="cta" type="button" onclick="connectClient()">$ подключить --run</button>
               <button class="btn" type="button" onclick="copySub()">Скопировать ссылку</button>
@@ -209,6 +210,7 @@ def invoice_page(
         <div class="actions">
           <a class="btn" href="/connect/{escape(token)}">Проверить статус доступа</a>
         </div>
+        <p class="dim" style="margin-top:14px">// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу.<br>// потеряли? <a href="/recover">восстановить доступ по TxID</a></p>
         <script>
           const COINS = {coins_js};
           const TOKEN = {token!r};
@@ -285,6 +287,62 @@ def invoice_page(
           selectCoin(0);
           startPolling();
         </script>
+        """,
+    )
+
+
+def recover_page(error: str | None = None) -> str:
+    error_html = f'<p class="hint c-red">{escape(error)}</p>' if error else ""
+    return _page(
+        "Восстановление доступа",
+        f"""
+        <div class="block block-green">
+          <div class="dim">root@core:~$ ./vpn_router --recover</div>
+          <h1 class="small">Восстановление доступа<span class="cursor"></span></h1>
+          <div class="subhead">// оплатили, но потеряли ссылку?<br>// введите хэш транзакции (TxID) или адрес кошелька, с которого платили</div>
+          <form method="post" action="/recover">
+            <input class="field" type="text" name="query" placeholder="TxID или адрес отправителя" required minlength="8" autocomplete="off" spellcheck="false">
+            <button class="cta" type="submit">$ найти_заказ --run</button>
+          </form>
+          {error_html}
+          <div class="subhead">// TxID (hash) можно найти в истории вашего кошелька или биржи<br>// не находится? напишите нам и приложите TxID</div>
+        </div>
+        """,
+    )
+
+
+def admin_orders_page(orders: list[dict[str, str]]) -> str:
+    status_colors = {"active": "c-green", "pending": "c-yellow"}
+    rows = []
+    for order in orders:
+        cls = status_colors.get(order["status"], "c-red")
+        rows.append(
+            "<tr>"
+            f'<td><a href="{escape(order["connect_url"])}"><code>{escape(order["order_ref"])}</code></a></td>'
+            f'<td>{escape(order["tariff_id"])}</td>'
+            f'<td class="{cls}">{escape(order["status"])}</td>'
+            f'<td>{escape(order["created_at"])}</td>'
+            f'<td>{escape(order["expires_at"])}</td>'
+            f'<td>{escape(order["payment"])}</td>'
+            f'<td class="tx">{escape(order["paid_tx"])}</td>'
+            f'<td class="tx">{escape(order["payer"])}</td>'
+            "</tr>"
+        )
+    body = "\n".join(rows) or '<tr><td colspan="8" class="dim">заказов пока нет</td></tr>'
+    return _page(
+        "Заказы",
+        f"""
+        <div class="block block-green">
+          <div class="dim">root@core:~$ ./vpn_router --orders</div>
+          <h1 class="small">Заказы<span class="cursor"></span></h1>
+          <div class="subhead">// все заказы, новые сверху · pending = ждёт оплату · active = оплачен</div>
+        </div>
+        <div class="table-wrap">
+          <table class="orders">
+            <tr><th>заказ</th><th>тариф</th><th>статус</th><th>создан</th><th>до</th><th>оплата</th><th>tx</th><th>плательщик</th></tr>
+            {body}
+          </table>
+        </div>
         """,
     )
 
@@ -486,6 +544,17 @@ def _page(title: str, body: str) -> str:
     .crypto-amount {{ font-size: 24px; font-weight: 800; margin: 0 0 12px; color: var(--white); cursor: pointer; }}
     .crypto-label {{ margin: 0 0 4px; color: var(--green-mute); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }}
     .crypto-addr {{ margin: 0; font-size: 12px; word-break: break-all; color: var(--cyan); }}
+    .field {{
+      width: 100%; margin-top: 20px; padding: 12px 14px; min-height: 44px;
+      background: rgba(0,0,0,.35); border: 1px solid var(--green-line); color: var(--green);
+      font: inherit; font-size: 13px;
+    }}
+    .field:focus {{ outline: none; border-color: var(--green); }}
+    .table-wrap {{ overflow-x: auto; border: 1px solid var(--green-line); }}
+    .orders {{ width: 100%; border-collapse: collapse; font-size: 11px; }}
+    .orders th, .orders td {{ border: 1px solid var(--green-line); padding: 6px 8px; text-align: left; white-space: nowrap; }}
+    .orders th {{ color: var(--green-mute); font-weight: 700; }}
+    .orders .tx {{ max-width: 140px; overflow: hidden; text-overflow: ellipsis; }}
     @media (max-width: 480px) {{
       body {{ padding: 0 0 32px; }}
       .term {{ border-left: 0; border-right: 0; }}

@@ -7,7 +7,7 @@ from decimal import ROUND_UP, Decimal
 from http import HTTPStatus
 from typing import Any
 
-from app.api.pages import connect_page, invoice_page, landing_page
+from app.api.pages import admin_orders_page, connect_page, invoice_page, landing_page, recover_page
 from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
@@ -291,6 +291,38 @@ class ApiService:
             "status": "activated",
             "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
         }
+
+    def admin_orders(self, admin_token: str) -> dict[str, Any]:
+        self._require_admin(admin_token)
+        return {"orders": [_admin_order(subscription) for subscription in self._orders_newest_first()]}
+
+    def admin_orders_html(self, admin_token: str) -> str:
+        self._require_admin(admin_token)
+        return admin_orders_page([_admin_order(subscription) for subscription in self._orders_newest_first()])
+
+    def recover_html(self, error: str | None = None) -> str:
+        return recover_page(error)
+
+    def recover(self, payload: dict[str, Any]) -> dict[str, Any]:
+        query = _normalize_payment_ref(str(payload.get("query", "")))
+        if len(query) < 8:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "query too short"})
+        matches = [
+            subscription
+            for subscription in self.repository.list_commercial_subscriptions()
+            if query in {_normalize_payment_ref(subscription.paid_tx), _normalize_payment_ref(subscription.payer)}
+        ]
+        if not matches:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "payment not found"})
+        latest = max(matches, key=lambda subscription: subscription.created_at)
+        return {"redirect_url": f"/connect/{latest.token}", "token": latest.token}
+
+    def _orders_newest_first(self) -> list[Any]:
+        return sorted(
+            self.repository.list_commercial_subscriptions(),
+            key=lambda subscription: subscription.created_at,
+            reverse=True,
+        )
 
     def prometheus_metrics(self) -> str:
         nodes = self.repository.list_nodes()
@@ -684,6 +716,35 @@ def _admin_node(node: Any) -> dict[str, Any]:
         "last_check_at": node.last_check_at.isoformat() if node.last_check_at else None,
         "usable": node.is_usable(),
     }
+
+
+def _admin_order(subscription: Any) -> dict[str, str]:
+    if subscription.is_active():
+        status = "active"
+    elif subscription.status == "pending":
+        status = "pending"
+    else:
+        status = "expired"
+    payment = ""
+    if subscription.pay_amount and subscription.pay_coin_id:
+        payment = f"{subscription.pay_amount} {subscription.pay_coin_id}"
+    return {
+        "token": subscription.token,
+        "order_ref": subscription.token[:12].upper(),
+        "tariff_id": subscription.tariff_id,
+        "status": status,
+        "created_at": subscription.created_at.strftime("%d.%m.%Y %H:%M"),
+        "expires_at": subscription.expires_at.strftime("%d.%m.%Y") if subscription.expires_at else "—",
+        "payment": payment,
+        "paid_tx": subscription.paid_tx or "",
+        "payer": subscription.payer or "",
+        "connect_url": f"/connect/{subscription.token}",
+    }
+
+
+def _normalize_payment_ref(value: str | None) -> str:
+    normalized = (value or "").strip().lower()
+    return normalized.removeprefix("0x")
 
 
 def _admin_audit_event(event: AdminAuditEvent) -> dict[str, Any]:
