@@ -350,7 +350,12 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path == "/health":
             return False
 
-        client_ip = self.client_address[0] if self.client_address else "unknown"
+        # Behind nginx every request arrives from the proxy's IP — use the
+        # real client address it forwards, or all users share one bucket.
+        client_ip = (
+            self.headers.get("X-Real-IP", "").strip()
+            or (self.client_address[0] if self.client_address else "unknown")
+        )
         if RATE_LIMITER.allow(client_ip):
             return False
 
