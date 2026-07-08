@@ -62,6 +62,8 @@ class Settings:
     hysteria2_port: int = 36712
     hysteria2_password: str | None = None
     hysteria2_sni: str | None = None
+    hysteria2_insecure: bool = False
+    hysteria2_obfs_password: str | None = None
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -146,6 +148,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     hysteria2_port = _non_negative_int(source.get("HYSTERIA2_PORT", "36712"), "HYSTERIA2_PORT")
     hysteria2_password = source.get("HYSTERIA2_PASSWORD", "").strip() or None
     hysteria2_sni = source.get("HYSTERIA2_SNI", "").strip() or hysteria2_host
+    hysteria2_insecure = _bool(source.get("HYSTERIA2_INSECURE", "false"), "HYSTERIA2_INSECURE")
+    hysteria2_obfs_password = source.get("HYSTERIA2_OBFS_PASSWORD", "").strip() or None
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -185,6 +189,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         hysteria2_port=hysteria2_port,
         hysteria2_password=hysteria2_password,
         hysteria2_sni=hysteria2_sni,
+        hysteria2_insecure=hysteria2_insecure,
+        hysteria2_obfs_password=hysteria2_obfs_password,
     )
 
 

@@ -2,6 +2,13 @@ listen: :36712
 tls:
   cert: /certs/live/mandanator.ru/fullchain.pem
   key: /certs/live/mandanator.ru/privkey.pem
+# Salamander obfs scrambles every UDP packet into random bytes: DPI sees no
+# QUIC/TLS/SNI fingerprint at all. Required to beat RU TSPU shaping (like AmneziaWG).
+# The same password must be set client-side (obfs.salamander.password).
+obfs:
+  type: salamander
+  salamander:
+    password: REPLACE_WITH_OBFS_PASSWORD
 auth:
   type: password
   password: REPLACE_WITH_STRONG_PASSWORD

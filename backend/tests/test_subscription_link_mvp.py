@@ -229,6 +229,31 @@ class Hysteria2SubscriptionTest(unittest.TestCase):
         self.assertIn("sni=vpn.example.com", raw.splitlines()[0])
         self.assertIn("vless://", raw)
 
+    def test_hysteria2_includes_salamander_obfs(self) -> None:
+        repo = InMemoryRepository()
+        svc = ApiService(
+            repo, TokenService("test-secret-with-length"), ConfigBuilder(),
+            admin_token="test-admin", public_base_url="http://203.0.113.10:8080", checkout_mode="mock",
+            hysteria2={
+                "host": "vpn.example.com", "port": 36712, "password": "s3cret",
+                "sni": "vpn.example.com", "obfs_password": "obfsp4ss",
+            },
+        )
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        first = svc.raw_v2ray_subscription(token).splitlines()[0]
+
+        self.assertIn("obfs=salamander", first)
+        self.assertIn("obfs-password=obfsp4ss", first)
+
+    def test_no_obfs_when_password_absent(self) -> None:
+        svc = self._service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        first = svc.raw_v2ray_subscription(token).splitlines()[0]
+
+        self.assertNotIn("obfs=", first)
+
     def test_no_hysteria2_when_unconfigured(self) -> None:
         repo = InMemoryRepository()
         svc = ApiService(

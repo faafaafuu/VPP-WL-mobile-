@@ -268,6 +268,8 @@ class ApiService:
                     port=int(hy.get("port", 36712)),
                     password=hy["password"],
                     sni=hy.get("sni") or hy["host"],
+                    insecure=bool(hy.get("insecure")),
+                    obfs_password=hy.get("obfs_password"),
                 )
             ]
         return []

@@ -62,6 +62,8 @@ API_SERVICE = ApiService(
         "port": SETTINGS.hysteria2_port,
         "password": SETTINGS.hysteria2_password,
         "sni": SETTINGS.hysteria2_sni,
+        "insecure": SETTINGS.hysteria2_insecure,
+        "obfs_password": SETTINGS.hysteria2_obfs_password,
     },
 )
 

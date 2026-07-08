@@ -27,12 +27,24 @@ def vless_links(nodes: list[VpnNode]) -> list[str]:
     return links
 
 
-def hysteria2_link(host: str, port: int, password: str, sni: str, label: str = "⚡ VPN_ROUTER │ H2") -> str:
-    """UDP/QUIC node — bypasses RU TSPU traffic-shaping that stalls TCP+TLS Reality."""
-    return (
-        f"hysteria2://{quote(password, safe='')}@{host}:{port}"
-        f"/?sni={quote(sni, safe='')}&insecure=0#{quote(label)}"
-    )
+def hysteria2_link(
+    host: str,
+    port: int,
+    password: str,
+    sni: str,
+    insecure: bool = False,
+    obfs_password: str | None = None,
+    label: str = "⚡ VPN_ROUTER │ H2",
+) -> str:
+    """UDP/QUIC node — bypasses RU TSPU traffic-shaping that stalls TCP+TLS Reality.
+
+    Salamander obfs (obfs_password) scrambles every packet into random bytes so
+    DPI sees no QUIC/TLS/SNI fingerprint at all — the strongest camouflage here.
+    """
+    query = f"sni={quote(sni, safe='')}&insecure={'1' if insecure else '0'}"
+    if obfs_password:
+        query += f"&obfs=salamander&obfs-password={quote(obfs_password, safe='')}"
+    return f"hysteria2://{quote(password, safe='')}@{host}:{port}/?{query}#{quote(label)}"
 
 
 def raw_subscription(nodes: list[VpnNode], extra_links: list[str] | None = None) -> str:
