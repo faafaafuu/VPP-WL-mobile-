@@ -145,7 +145,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     if smtp_host and not (smtp_user and smtp_password):
         raise SettingsError("SMTP_USER and SMTP_PASSWORD are required when SMTP_HOST is set")
     hysteria2_host = source.get("HYSTERIA2_HOST", "").strip() or None
-    hysteria2_port = _non_negative_int(source.get("HYSTERIA2_PORT", "36712"), "HYSTERIA2_PORT")
+    hysteria2_port = _port(source.get("HYSTERIA2_PORT", "36712"), "HYSTERIA2_PORT")
     hysteria2_password = source.get("HYSTERIA2_PASSWORD", "").strip() or None
     hysteria2_sni = source.get("HYSTERIA2_SNI", "").strip() or hysteria2_host
     hysteria2_insecure = _bool(source.get("HYSTERIA2_INSECURE", "false"), "HYSTERIA2_INSECURE")
@@ -216,13 +216,13 @@ def _optional_secret(source: Mapping[str, str], key: str, min_length: int) -> st
     return value
 
 
-def _port(raw_value: str) -> int:
+def _port(raw_value: str, key: str = "VPN_ROUTER_PORT") -> int:
     try:
         port = int(raw_value)
     except ValueError as exc:
-        raise SettingsError("VPN_ROUTER_PORT must be an integer") from exc
+        raise SettingsError(f"{key} must be an integer") from exc
     if not 1 <= port <= 65535:
-        raise SettingsError("VPN_ROUTER_PORT must be between 1 and 65535")
+        raise SettingsError(f"{key} must be between 1 and 65535")
     return port
 
 

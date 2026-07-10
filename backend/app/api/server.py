@@ -4,9 +4,14 @@ import json
 import os
 from datetime import datetime, timezone
 from http import HTTPStatus
+from http.cookies import CookieError, SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
+
+# Reject request bodies larger than this before reading them into memory, so a
+# forged Content-Length on an unauthenticated POST can't exhaust RAM.
+_MAX_BODY_BYTES = 64 * 1024
 
 from app.api.pages import not_found_page
 from app.api.rate_limit import RateLimiter
@@ -92,8 +97,14 @@ class ApiHandler(BaseHTTPRequestHandler):
             self._send_html(HTTPStatus.OK, API_SERVICE.recover_html())
             return
         if path == "/admin/orders":
-            query = parse_qs(urlparse(self.path).query)
-            admin_token = (query.get("token") or [""])[0]
+            query_token = (parse_qs(urlparse(self.path).query).get("token") or [""])[0]
+            if query_token:
+                # Move the token out of the URL (nginx access logs, browser
+                # history, Referer) into an HttpOnly cookie, then reload the
+                # bare page which reads the cookie.
+                self._send_admin_cookie_redirect(query_token)
+                return
+            admin_token = self._cookie_value("admin_token")
             try:
                 self._send_html(HTTPStatus.OK, API_SERVICE.admin_orders_html(admin_token))
             except ApiError as exc:
@@ -370,8 +381,20 @@ class ApiHandler(BaseHTTPRequestHandler):
         self._send_json(HTTPStatus.TOO_MANY_REQUESTS, {"error": "rate limit exceeded"})
         return True
 
+    def _content_length(self) -> int | None:
+        try:
+            length = int(self.headers.get("Content-Length", "0") or "0")
+        except ValueError:
+            length = -1
+        if length < 0 or length > _MAX_BODY_BYTES:
+            self._send_json(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, {"error": "request body too large"})
+            return None
+        return length
+
     def _read_json(self) -> dict[str, Any] | None:
-        content_length = int(self.headers.get("Content-Length", "0") or "0")
+        content_length = self._content_length()
+        if content_length is None:
+            return None
         raw_body = self.rfile.read(content_length)
         try:
             payload = json.loads(raw_body.decode("utf-8") or "{}")
@@ -387,10 +410,39 @@ class ApiHandler(BaseHTTPRequestHandler):
         content_type = self.headers.get("Content-Type", "")
         if "application/json" in content_type:
             return self._read_json()
-        content_length = int(self.headers.get("Content-Length", "0") or "0")
+        content_length = self._content_length()
+        if content_length is None:
+            return None
         raw_body = self.rfile.read(content_length).decode("utf-8")
         parsed = parse_qs(raw_body, keep_blank_values=True)
         return {key: values[-1] if values else "" for key, values in parsed.items()}
+
+    def _cookie_value(self, name: str) -> str:
+        raw = self.headers.get("Cookie", "")
+        if not raw:
+            return ""
+        jar: SimpleCookie = SimpleCookie()
+        try:
+            jar.load(raw)
+        except CookieError:
+            return ""
+        morsel = jar.get(name)
+        return unquote(morsel.value) if morsel else ""
+
+    def _send_admin_cookie_redirect(self, token: str) -> None:
+        cookie = (
+            f"admin_token={quote(token, safe='')}; Path=/admin/orders; "
+            "HttpOnly; SameSite=Strict; Max-Age=86400"
+        )
+        if SETTINGS.hsts_enabled:
+            cookie += "; Secure"
+        self.send_response(HTTPStatus.SEE_OTHER.value)
+        self.send_header("Location", "/admin/orders")
+        self.send_header("Set-Cookie", cookie)
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", "no-store")
+        self._send_security_headers()
+        self.end_headers()
 
     def _send_service_response(self, action: Any) -> None:
         try:

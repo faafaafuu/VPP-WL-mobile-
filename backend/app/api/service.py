@@ -373,13 +373,18 @@ class ApiService:
         query = _normalize_payment_ref(str(payload.get("query", "")))
         if len(query) < 8:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "query too short"})
+        # Recover only by the buyer's own credentials: the transaction hash they
+        # sent (their proof of payment) or the email they gave. The sender
+        # address (payer) is deliberately excluded — an address is reused across
+        # a wallet's transactions and is trivially enumerable by anyone scanning
+        # incoming transfers to the shared receiving wallet, which would let a
+        # third party recover another buyer's link.
         matches = [
             subscription
             for subscription in self.repository.list_commercial_subscriptions()
             if query
             in {
                 _normalize_payment_ref(subscription.paid_tx),
-                _normalize_payment_ref(subscription.payer),
                 (subscription.customer_email or "").strip().lower(),
             }
         ]

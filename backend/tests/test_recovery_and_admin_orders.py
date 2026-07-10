@@ -50,20 +50,31 @@ class RecoverTest(unittest.TestCase):
 
         self.assertEqual(result["token"], token)
 
-    def test_recover_by_payer_address(self) -> None:
+    def test_recover_by_payer_address_is_rejected(self) -> None:
+        # The sender address is public and enumerable on-chain, so it must not
+        # be usable to recover another buyer's subscription link.
         svc = _service()
-        token = _paid_order(svc, payer="TSenderWalletAddr123456")
+        _paid_order(svc, payer="TSenderWalletAddr123456")
 
-        result = svc.recover({"query": "TSenderWalletAddr123456"})
+        with self.assertRaises(ApiError) as ctx:
+            svc.recover({"query": "TSenderWalletAddr123456"})
 
-        self.assertEqual(result["token"], token)
+        self.assertEqual(ctx.exception.status, HTTPStatus.NOT_FOUND)
 
-    def test_recover_returns_latest_order_for_repeat_payer(self) -> None:
+    def test_recover_returns_latest_order_for_repeat_email(self) -> None:
         svc = _service()
-        _paid_order(svc, paid_tx="0xfirst111111111", payer="0xSamePayer0000001")
-        second = _paid_order(svc, paid_tx="0xsecond22222222", payer="0xSamePayer0000001")
+        first = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(first, {"email": "repeat@example.com"})
+        svc.admin_activate_commercial_subscription(
+            _ADMIN, first, {"duration_days": 30, "paid_tx": "0xfirst111111111", "payment_id": "crypto:eth"}
+        )
+        second = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(second, {"email": "repeat@example.com"})
+        svc.admin_activate_commercial_subscription(
+            _ADMIN, second, {"duration_days": 30, "paid_tx": "0xsecond22222222", "payment_id": "crypto:eth"}
+        )
 
-        result = svc.recover({"query": "0xSamePayer0000001"})
+        result = svc.recover({"query": "repeat@example.com"})
 
         self.assertEqual(result["token"], second)
 
