@@ -341,6 +341,7 @@ class ApiService:
         expiry_ms = int(subscription.expires_at.timestamp() * 1000) if subscription.expires_at else 0
         tariff = self.tariffs_by_id.get(subscription.tariff_id)
         limit_ip = tariff.max_devices if tariff else 3
+        total_gb = tariff.traffic_gb if tariff else 0
 
         if subscription.xui_uuid:
             try:
@@ -349,6 +350,7 @@ class ApiService:
                     subscription.xui_email or f"sub-{token[:12]}",
                     expiry_time_ms=expiry_ms,
                     limit_ip=limit_ip,
+                    total_gb=total_gb,
                 )
             except XuiClientError:
                 pass
@@ -357,7 +359,9 @@ class ApiService:
         client_uuid = str(uuid_module.uuid4())
         email = f"sub-{token[:12]}"
         try:
-            self.xui_client.add_client(client_uuid, email, expiry_time_ms=expiry_ms, limit_ip=limit_ip)
+            self.xui_client.add_client(
+                client_uuid, email, expiry_time_ms=expiry_ms, limit_ip=limit_ip, total_gb=total_gb
+            )
         except XuiClientError:
             return
         self.repository.set_subscription_xui_client(token, client_uuid, email)

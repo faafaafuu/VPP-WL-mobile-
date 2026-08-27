@@ -24,10 +24,14 @@ class XuiPanelConfig:
 
 
 class XuiClient(Protocol):
-    def add_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def add_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         ...
 
-    def update_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def update_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         ...
 
     def delete_client(self, email: str) -> None:
@@ -35,10 +39,14 @@ class XuiClient(Protocol):
 
 
 class DisabledXuiClient:
-    def add_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def add_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         raise XuiClientError("3x-ui panel is not configured")
 
-    def update_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def update_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         raise XuiClientError("3x-ui panel is not configured")
 
     def delete_client(self, email: str) -> None:
@@ -59,28 +67,32 @@ class HttpXuiClient:
         self.config = config
         self._opener = request.build_opener(request.HTTPSHandler(context=self._ssl_context()))
 
-    def add_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def add_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         self._request_json(
             "POST",
             "/panel/api/clients/add",
             {
-                "client": self._client_fields(client_uuid, email, expiry_time_ms, limit_ip),
+                "client": self._client_fields(client_uuid, email, expiry_time_ms, limit_ip, total_gb),
                 "inboundIds": [self.config.inbound_id],
             },
         )
 
-    def update_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def update_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         self._request_json(
             "POST",
             f"/panel/api/clients/update/{email}",
-            {**self._client_fields(client_uuid, email, expiry_time_ms, limit_ip), "limitHwid": 0},
+            {**self._client_fields(client_uuid, email, expiry_time_ms, limit_ip, total_gb), "limitHwid": 0},
         )
 
     def delete_client(self, email: str) -> None:
         self._request_json("POST", f"/panel/api/clients/del/{email}", {})
 
     @staticmethod
-    def _client_fields(client_uuid: str, email: str, expiry_time_ms: int, limit_ip: int) -> dict:
+    def _client_fields(client_uuid: str, email: str, expiry_time_ms: int, limit_ip: int, total_gb: int) -> dict:
         return {
             "id": client_uuid,
             "email": email,
@@ -88,6 +100,10 @@ class HttpXuiClient:
             "expiryTime": expiry_time_ms,
             "flow": "xtls-rprx-vision",
             "limitIp": limit_ip,
+            # 3x-ui's "totalGB" field is actually a byte count despite the name
+            # (its own admin UI multiplies the GB the operator types by 1024^3
+            # before sending) — callers pass GB, we convert here.
+            "totalGB": total_gb * 1024 ** 3,
             "security": "",
         }
 

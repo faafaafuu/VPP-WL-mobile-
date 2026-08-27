@@ -67,6 +67,8 @@ def connect_page(
     tariff_map = {t.id: t for t in tariffs}
     current_tariff = tariff_map.get(subscription.tariff_id)
     max_devices = current_tariff.max_devices if current_tariff else 3
+    traffic_gb = current_tariff.traffic_gb if current_tariff else 0
+    traffic_note = f"{traffic_gb} ГБ трафика" if traffic_gb else "трафик без ограничений"
     renew_base_monthly = _base_monthly_price(tariffs)
     renew_rows = "\n".join(_tariff_row(i, tariff, renew_base_monthly) for i, tariff in enumerate(tariffs))
     if subscription.is_active():
@@ -75,7 +77,7 @@ def connect_page(
           <div class="block block-green">
             <div class="dim">root@core:~$ ./vpn_router --status</div>
             <h1 class="small">Ваш VPN активен<span class="cursor"></span></h1>
-            <div class="subhead">// действует до {escape(expires)}<br>// до {max_devices} устройств — установите ссылку на каждом<br>// сохраните адрес этой страницы — потеряли? <a href="/recover">восстановить по email</a></div>
+            <div class="subhead">// действует до {escape(expires)}<br>// до {max_devices} устройств, {escape(traffic_note)}<br>// сохраните адрес этой страницы — потеряли? <a href="/recover">восстановить по email</a></div>
             <div class="actions">
               <button class="cta" type="button" onclick="connectClient()">$ подключить --run</button>
               <button class="btn" type="button" onclick="copySub()">Скопировать ссылку</button>
@@ -542,6 +544,8 @@ def _tariff_row(idx: int, tariff: Tariff, base_monthly: Decimal | None = None) -
     badge = f' <span class="badge">// {escape(tariff.badge)}</span>' if tariff.badge else ""
     price = Decimal(tariff.price_rub)
     per_month = f"{escape(_price(f'{(price / months):.2f}'))}/мес"
+    traffic_note = f"{tariff.traffic_gb} ГБ" if tariff.traffic_gb else "безлимит"
+    per_month += f" · {tariff.max_devices} устр. · {escape(traffic_note)}"
 
     price_block = f'<span class="price">{escape(_price(tariff.price_rub))}</span>'
     if base_monthly is not None and months > 1:

@@ -13,19 +13,23 @@ from app.services.xui_client import XuiClientError
 class FakeXuiClient:
     def __init__(self, fail: bool = False) -> None:
         self.fail = fail
-        self.added: list[tuple[str, str, int, int]] = []
-        self.updated: list[tuple[str, str, int, int]] = []
+        self.added: list[tuple[str, str, int, int, int]] = []
+        self.updated: list[tuple[str, str, int, int, int]] = []
         self.deleted: list[str] = []
 
-    def add_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def add_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         if self.fail:
             raise XuiClientError("panel unreachable")
-        self.added.append((client_uuid, email, expiry_time_ms, limit_ip))
+        self.added.append((client_uuid, email, expiry_time_ms, limit_ip, total_gb))
 
-    def update_client(self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0) -> None:
+    def update_client(
+        self, client_uuid: str, email: str, expiry_time_ms: int = 0, limit_ip: int = 0, total_gb: int = 0
+    ) -> None:
         if self.fail:
             raise XuiClientError("panel unreachable")
-        self.updated.append((client_uuid, email, expiry_time_ms, limit_ip))
+        self.updated.append((client_uuid, email, expiry_time_ms, limit_ip, total_gb))
 
     def delete_client(self, email: str) -> None:
         if self.fail:
@@ -81,11 +85,12 @@ class XuiProvisioningTest(unittest.TestCase):
         token = service.checkout({"tariff_id": "vpn.1m"})["token"]
 
         self.assertEqual(len(self.xui_client.added), 1)
-        client_uuid, email, _expiry, limit_ip = self.xui_client.added[0]
+        client_uuid, email, _expiry, limit_ip, total_gb = self.xui_client.added[0]
         subscription = self.repository.commercial_subscriptions_by_token[token]
         self.assertEqual(subscription.xui_uuid, client_uuid)
         self.assertEqual(subscription.xui_email, email)
         self.assertEqual(limit_ip, 3)  # vpn.1m default max_devices
+        self.assertEqual(total_gb, 150)  # vpn.1m default traffic_gb
 
         raw = service.raw_v2ray_subscription(token)
         self.assertIn(f"vless://{client_uuid}@203.0.113.50:443", raw)
