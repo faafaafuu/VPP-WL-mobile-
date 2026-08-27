@@ -115,22 +115,22 @@ def connect_page(
           <details open>
             <summary>iPhone / Hiddify / Streisand / Shadowrocket</summary>
             <ol>
-              <li>Установите клиент: <a href="https://hiddify.com/" target="_blank" rel="noopener">Hiddify</a>, <a href="https://github.com/StreisandEffect/streisand" target="_blank" rel="noopener">Streisand</a> или <a href="https://apps.apple.com/us/search?term=Shadowrocket" target="_blank" rel="noopener">Shadowrocket</a>.</li>
+              <li>Установите клиент — через App Store, последнюю версию ставит сам стор: <a href="https://apps.apple.com/us/search?term=Hiddify" target="_blank" rel="noopener">Hiddify</a>, <a href="https://apps.apple.com/us/search?term=Streisand" target="_blank" rel="noopener">Streisand</a> или <a href="https://apps.apple.com/us/search?term=Shadowrocket" target="_blank" rel="noopener">Shadowrocket</a>.</li>
               <li>Нажмите “Подключить”.</li>
               <li>Если не открылось, отсканируйте QR или вставьте ссылку.</li>
             </ol>
           </details>
           <details>
             <summary>Android / Hiddify</summary>
-            <ol><li>Установите <a href="https://hiddify.com/" target="_blank" rel="noopener">Hiddify</a>.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
+            <ol><li>Установите <a href="https://github.com/hiddify/hiddify-app/releases/latest/download/Hiddify-Android-universal.apk">Hiddify (.apk, сразу скачается последняя версия)</a>.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
           </details>
           <details>
             <summary>Android / v2rayNG</summary>
-            <ol><li>Установите <a href="https://github.com/2dust/v2rayNG/releases" target="_blank" rel="noopener">v2rayNG</a>.</li><li>Нажмите “Скопировать ссылку”.</li><li>Добавьте subscription URL.</li></ol>
+            <ol><li>Установите <a href="https://github.com/2dust/v2rayNG/releases/latest" target="_blank" rel="noopener">v2rayNG</a> (страница релизов — версии в именах файлов, стабильной прямой ссылки GitHub не даёт; выберите .apk под архитектуру телефона).</li><li>Нажмите “Скопировать ссылку”.</li><li>Добавьте subscription URL.</li></ol>
           </details>
           <details>
             <summary>Windows / v2rayN</summary>
-            <ol><li>Установите <a href="https://github.com/2dust/v2rayN/releases" target="_blank" rel="noopener">v2rayN</a>.</li><li>Нажмите “Скопировать ссылку”.</li><li>Subscriptions → Add subscription.</li><li>Вставьте ссылку и нажмите Update subscription.</li></ol>
+            <ol><li>Установите <a href="https://github.com/2dust/v2rayN/releases/latest/download/v2rayN-windows-64.zip">v2rayN (.zip, сразу скачается последняя версия)</a>.</li><li>Нажмите “Скопировать ссылку”.</li><li>Subscriptions → Add subscription.</li><li>Вставьте ссылку и нажмите Update subscription.</li></ol>
           </details>
         </div>
         <div class="tariffs">
