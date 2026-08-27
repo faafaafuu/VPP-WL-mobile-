@@ -177,6 +177,22 @@ class InMemoryRepository:
         self.commercial_subscriptions_by_token[token] = updated
         return updated
 
+    def set_subscription_xui_client(self, token: str, xui_uuid: str, xui_email: str) -> CommercialSubscription | None:
+        subscription = self.commercial_subscriptions_by_token.get(token)
+        if subscription is None:
+            return None
+        updated = replace(subscription, xui_uuid=xui_uuid, xui_email=xui_email, updated_at=datetime.now(timezone.utc))
+        self.commercial_subscriptions_by_token[token] = updated
+        return updated
+
+    def clear_subscription_xui_client(self, token: str) -> CommercialSubscription | None:
+        subscription = self.commercial_subscriptions_by_token.get(token)
+        if subscription is None:
+            return None
+        updated = replace(subscription, xui_uuid=None, xui_email=None, updated_at=datetime.now(timezone.utc))
+        self.commercial_subscriptions_by_token[token] = updated
+        return updated
+
     def list_commercial_subscriptions_by_telegram(self, tg_chat_id: str) -> list[CommercialSubscription]:
         return [
             subscription

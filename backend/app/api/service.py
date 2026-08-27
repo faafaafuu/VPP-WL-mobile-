@@ -3,13 +3,22 @@ from __future__ import annotations
 import base64
 import hmac
 import re
-from dataclasses import dataclass
+import uuid as uuid_module
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from decimal import ROUND_UP, Decimal
 from http import HTTPStatus
 from typing import Any
 
-from app.api.pages import admin_orders_page, connect_page, invoice_page, landing_page, recover_page
+from app.api.pages import (
+    admin_orders_page,
+    connect_page,
+    invoice_page,
+    landing_page,
+    privacy_page,
+    recover_page,
+    terms_page,
+)
 from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
@@ -24,6 +33,7 @@ from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
 from app.services.exchange_rates import ExchangeRateService
 from app.services.receipt_verifier import MvpReceiptVerifier, ReceiptVerifier
+from app.services.xui_client import DisabledXuiClient, XuiClient, XuiClientError
 from app.services.yookassa import DisabledYooKassaProvider, YooKassaError, YooKassaProvider
 
 
@@ -52,6 +62,9 @@ class ApiService:
         telegram_bot_username: str | None = None,
         activation_notifier: Any = None,
         hysteria2: dict[str, Any] | None = None,
+        xui_client: XuiClient | None = None,
+        xui_node_template: VpnNode | None = None,
+        support_email: str | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -77,6 +90,9 @@ class ApiService:
         self.telegram_bot_username = telegram_bot_username
         self.activation_notifier = activation_notifier
         self.hysteria2 = hysteria2 or {}
+        self.xui_client = xui_client or DisabledXuiClient()
+        self.xui_node_template = xui_node_template
+        self.support_email = support_email
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -107,6 +123,12 @@ class ApiService:
     def landing_html(self) -> str:
         return landing_page(self.tariffs)
 
+    def terms_html(self) -> str:
+        return terms_page(self.support_email)
+
+    def privacy_html(self) -> str:
+        return privacy_page(self.support_email)
+
     def checkout(self, payload: dict[str, Any]) -> dict[str, Any]:
         tariff = self._tariff_from_payload(payload)
         token = new_subscription_token()
@@ -117,6 +139,7 @@ class ApiService:
             subscription = self.repository.activate_commercial_subscription(token, tariff.duration_days)
             if subscription is None:
                 raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "subscription create failed"})
+            self._provision_xui_client(token)
             return {"redirect_url": connect_url, "token": token, "mode": "mock"}
 
         if self.checkout_mode == "crypto_manual":
@@ -277,16 +300,77 @@ class ApiService:
     def v2ray_subscription(self, token: str) -> str:
         self._require_active_commercial_subscription(token)
         try:
-            return encoded_subscription(self.repository.list_nodes(), extra_links=self._extra_subscription_links())
+            return encoded_subscription(self._subscription_nodes(token), extra_links=self._extra_subscription_links())
         except ValueError as exc:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
 
     def raw_v2ray_subscription(self, token: str) -> str:
         self._require_active_commercial_subscription(token)
         try:
-            return raw_subscription(self.repository.list_nodes(), extra_links=self._extra_subscription_links())
+            return raw_subscription(self._subscription_nodes(token), extra_links=self._extra_subscription_links())
         except ValueError as exc:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+
+    def _subscription_nodes(self, token: str) -> list[VpnNode]:
+        """Shared-UUID nodes plus, when a 3x-ui client was provisioned for this
+        subscription, a per-user node built from the xui template + that client's
+        own uuid — so this one subscriber's link is individually revocable."""
+        nodes = list(self.repository.list_nodes())
+        subscription = self.repository.get_commercial_subscription(token)
+        if subscription and subscription.xui_uuid and self.xui_node_template is not None:
+            per_user_options = replace(self.xui_node_template.options, uuid=subscription.xui_uuid)
+            per_user_node = replace(
+                self.xui_node_template,
+                id=f"xui_{token[:12]}",
+                tag=f"vless-xui-{token[:8]}",
+                options=per_user_options,
+            )
+            nodes = [per_user_node] + nodes
+        return nodes
+
+    def _provision_xui_client(self, token: str) -> None:
+        """Best-effort: create (or, on renewal, resync the expiry/device-limit of)
+        this subscription's own 3x-ui client, so it stays individually revocable
+        instead of sharing the static node credential. Never raises — a panel
+        outage must not block payment activation."""
+        if self.xui_node_template is None or isinstance(self.xui_client, DisabledXuiClient):
+            return
+        subscription = self.repository.get_commercial_subscription(token)
+        if subscription is None:
+            return
+        expiry_ms = int(subscription.expires_at.timestamp() * 1000) if subscription.expires_at else 0
+        tariff = self.tariffs_by_id.get(subscription.tariff_id)
+        limit_ip = tariff.max_devices if tariff else 3
+
+        if subscription.xui_uuid:
+            try:
+                self.xui_client.update_client(
+                    subscription.xui_uuid,
+                    subscription.xui_email or f"sub-{token[:12]}",
+                    expiry_time_ms=expiry_ms,
+                    limit_ip=limit_ip,
+                )
+            except XuiClientError:
+                pass
+            return
+
+        client_uuid = str(uuid_module.uuid4())
+        email = f"sub-{token[:12]}"
+        try:
+            self.xui_client.add_client(client_uuid, email, expiry_time_ms=expiry_ms, limit_ip=limit_ip)
+        except XuiClientError:
+            return
+        self.repository.set_subscription_xui_client(token, client_uuid, email)
+
+    def _revoke_xui_client(self, token: str) -> None:
+        subscription = self.repository.get_commercial_subscription(token)
+        if subscription is None or not subscription.xui_uuid or not subscription.xui_email:
+            return
+        try:
+            self.xui_client.delete_client(subscription.xui_email)
+        except XuiClientError:
+            pass
+        self.repository.clear_subscription_xui_client(token)
 
     def subscription_headers(self, token: str) -> dict[str, str]:
         """Branding headers understood by v2rayN / v2rayNG / Hiddify."""
@@ -334,6 +418,7 @@ class ApiService:
         )
         if subscription is None:
             raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+        self._provision_xui_client(token)
         details: dict[str, Any] = {"duration_days": duration_days}
         if paid_tx:
             details["paid_tx"] = paid_tx
@@ -501,6 +586,7 @@ class ApiService:
             activated = self.repository.activate_commercial_subscription(device_id, tariff.duration_days, payment_id)
             if activated is None:
                 raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+            self._provision_xui_client(device_id)
             return {
                 "status": "activated",
                 "connect_url": f"{self.public_base_url}/connect/{device_id}",

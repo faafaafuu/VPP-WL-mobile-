@@ -266,6 +266,28 @@ class SqliteRepository:
         self.connection.commit()
         return self.get_commercial_subscription(token)
 
+    def set_subscription_xui_client(self, token: str, xui_uuid: str, xui_email: str) -> CommercialSubscription | None:
+        subscription = self.get_commercial_subscription(token)
+        if subscription is None:
+            return None
+        self.connection.execute(
+            "UPDATE commercial_subscriptions SET xui_uuid = ?, xui_email = ?, updated_at = ? WHERE token = ?",
+            (xui_uuid, xui_email, _dt_to_text(datetime.now(timezone.utc)), token),
+        )
+        self.connection.commit()
+        return self.get_commercial_subscription(token)
+
+    def clear_subscription_xui_client(self, token: str) -> CommercialSubscription | None:
+        subscription = self.get_commercial_subscription(token)
+        if subscription is None:
+            return None
+        self.connection.execute(
+            "UPDATE commercial_subscriptions SET xui_uuid = NULL, xui_email = NULL, updated_at = ? WHERE token = ?",
+            (_dt_to_text(datetime.now(timezone.utc)), token),
+        )
+        self.connection.commit()
+        return self.get_commercial_subscription(token)
+
     def list_commercial_subscriptions_by_telegram(self, tg_chat_id: str) -> list[CommercialSubscription]:
         rows = self.connection.execute(
             f"SELECT {_COMMERCIAL_SUBSCRIPTION_COLUMNS} FROM commercial_subscriptions WHERE tg_chat_id = ?",
@@ -569,14 +591,24 @@ class SqliteRepository:
             row["name"]
             for row in self.connection.execute("PRAGMA table_info(commercial_subscriptions)").fetchall()
         }
-        for name in ("pay_coin_id", "pay_amount", "pay_address", "paid_tx", "payer", "tg_chat_id", "customer_email"):
+        for name in (
+            "pay_coin_id",
+            "pay_amount",
+            "pay_address",
+            "paid_tx",
+            "payer",
+            "tg_chat_id",
+            "customer_email",
+            "xui_uuid",
+            "xui_email",
+        ):
             if name not in existing_commercial:
                 self.connection.execute(f"ALTER TABLE commercial_subscriptions ADD COLUMN {name} TEXT")
 
 
 _COMMERCIAL_SUBSCRIPTION_COLUMNS = (
     "token, tariff_id, status, created_at, updated_at, expires_at, payment_id, "
-    "pay_coin_id, pay_amount, pay_address, paid_tx, payer, tg_chat_id, customer_email"
+    "pay_coin_id, pay_amount, pay_address, paid_tx, payer, tg_chat_id, customer_email, xui_uuid, xui_email"
 )
 
 
@@ -610,6 +642,8 @@ def _commercial_subscription_from_row(row: sqlite3.Row) -> CommercialSubscriptio
         payer=row["payer"],
         tg_chat_id=row["tg_chat_id"],
         customer_email=row["customer_email"],
+        xui_uuid=row["xui_uuid"],
+        xui_email=row["xui_email"],
     )
 
 

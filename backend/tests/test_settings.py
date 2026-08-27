@@ -118,6 +118,51 @@ class SettingsTest(unittest.TestCase):
                 }
             )
 
+    def test_loads_xui_panel_and_node_template(self) -> None:
+        settings = load_settings(
+            {
+                "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                "VPN_ROUTER_XUI_BASE_URL": "https://panel.example:2053",
+                "VPN_ROUTER_XUI_API_TOKEN": "panel-api-token",
+                "VPN_ROUTER_XUI_INBOUND_ID": "1",
+                "VPN_ROUTER_XUI_HOST": "203.0.113.50",
+                "VPN_ROUTER_XUI_PUBLIC_KEY": "pbk-test",
+                "VPN_ROUTER_XUI_SHORT_ID": "sid-test",
+                "VPN_ROUTER_XUI_SNI": "example.test",
+            }
+        )
+
+        self.assertEqual(settings.xui_base_url, "https://panel.example:2053")
+        self.assertEqual(settings.xui_inbound_id, 1)
+        self.assertIsNotNone(settings.xui_node_template)
+        assert settings.xui_node_template is not None
+        self.assertEqual(settings.xui_node_template.host, "203.0.113.50")
+        self.assertEqual(settings.xui_node_template.options.public_key, "pbk-test")
+
+    def test_rejects_partial_xui_panel_config(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                    "VPN_ROUTER_XUI_BASE_URL": "https://panel.example:2053",
+                    "VPN_ROUTER_XUI_API_TOKEN": "panel-api-token",
+                }
+            )
+
+    def test_rejects_xui_base_url_without_node_template(self) -> None:
+        with self.assertRaises(SettingsError):
+            load_settings(
+                {
+                    "VPN_ROUTER_TOKEN_SECRET": "token-secret-with-enough-length",
+                    "VPN_ROUTER_ADMIN_TOKEN": "admin-token-with-enough-length",
+                    "VPN_ROUTER_XUI_BASE_URL": "https://panel.example:2053",
+                    "VPN_ROUTER_XUI_API_TOKEN": "panel-api-token",
+                    "VPN_ROUTER_XUI_INBOUND_ID": "1",
+                }
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

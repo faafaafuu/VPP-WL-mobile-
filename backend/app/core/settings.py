@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import Mapping
 
-from app.domain.node_config import NodeConfigError, parse_nodes_from_env
+from app.domain.node_config import NodeConfigError, parse_nodes_from_env, parse_xui_node_template_from_env
 from app.domain.models import VpnNode
 from app.domain.tariffs import Tariff, parse_tariffs
 
@@ -64,6 +64,11 @@ class Settings:
     hysteria2_sni: str | None = None
     hysteria2_insecure: bool = False
     hysteria2_obfs_password: str | None = None
+    xui_base_url: str | None = None
+    xui_api_token: str | None = None
+    xui_inbound_id: int | None = None
+    xui_verify_tls: bool = True
+    xui_node_template: VpnNode | None = None
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -150,6 +155,29 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     hysteria2_sni = source.get("HYSTERIA2_SNI", "").strip() or hysteria2_host
     hysteria2_insecure = _bool(source.get("HYSTERIA2_INSECURE", "false"), "HYSTERIA2_INSECURE")
     hysteria2_obfs_password = source.get("HYSTERIA2_OBFS_PASSWORD", "").strip() or None
+    xui_base_url = source.get("VPN_ROUTER_XUI_BASE_URL", "").strip().rstrip("/") or None
+    xui_api_token = source.get("VPN_ROUTER_XUI_API_TOKEN", "").strip() or None
+    xui_inbound_id_raw = source.get("VPN_ROUTER_XUI_INBOUND_ID", "").strip()
+    xui_inbound_id = None
+    if xui_inbound_id_raw:
+        try:
+            xui_inbound_id = int(xui_inbound_id_raw)
+        except ValueError as exc:
+            raise SettingsError("VPN_ROUTER_XUI_INBOUND_ID must be an integer") from exc
+    xui_fields_present = [xui_base_url, xui_api_token, xui_inbound_id]
+    if any(xui_fields_present) and not all(xui_fields_present):
+        raise SettingsError(
+            "VPN_ROUTER_XUI_BASE_URL, VPN_ROUTER_XUI_API_TOKEN and VPN_ROUTER_XUI_INBOUND_ID must all be set together"
+        )
+    xui_verify_tls = _bool(source.get("VPN_ROUTER_XUI_VERIFY_TLS", "true"), "VPN_ROUTER_XUI_VERIFY_TLS")
+    try:
+        xui_node_template = parse_xui_node_template_from_env(source)
+    except NodeConfigError as exc:
+        raise SettingsError(str(exc)) from exc
+    if xui_base_url and xui_node_template is None:
+        raise SettingsError(
+            "VPN_ROUTER_XUI_HOST (and its SNI/PUBLIC_KEY/SHORT_ID) is required when VPN_ROUTER_XUI_BASE_URL is set"
+        )
     return Settings(
         token_secret=token_secret,
         admin_token=admin_token,
@@ -191,6 +219,11 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         hysteria2_sni=hysteria2_sni,
         hysteria2_insecure=hysteria2_insecure,
         hysteria2_obfs_password=hysteria2_obfs_password,
+        xui_base_url=xui_base_url,
+        xui_api_token=xui_api_token,
+        xui_inbound_id=xui_inbound_id,
+        xui_verify_tls=xui_verify_tls,
+        xui_node_template=xui_node_template,
     )
 
 

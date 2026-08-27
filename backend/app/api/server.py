@@ -22,6 +22,7 @@ from app.repositories.factory import create_repository
 from app.security.tokens import TokenService
 from app.services.exchange_rates import get_exchange_rate_service
 from app.services.receipt_verifier import MvpReceiptVerifier
+from app.services.xui_client import DisabledXuiClient, HttpXuiClient, XuiPanelConfig
 from app.services.yookassa import DisabledYooKassaProvider, HttpYooKassaProvider, YooKassaConfig
 
 
@@ -41,6 +42,18 @@ YOOKASSA_PROVIDER = (
     )
     if SETTINGS.yookassa_shop_id and SETTINGS.yookassa_secret_key and SETTINGS.yookassa_return_url
     else DisabledYooKassaProvider()
+)
+XUI_CLIENT = (
+    HttpXuiClient(
+        XuiPanelConfig(
+            base_url=SETTINGS.xui_base_url or "",
+            api_token=SETTINGS.xui_api_token or "",
+            inbound_id=SETTINGS.xui_inbound_id or 0,
+            verify_tls=SETTINGS.xui_verify_tls,
+        )
+    )
+    if SETTINGS.xui_base_url and SETTINGS.xui_api_token and SETTINGS.xui_inbound_id
+    else DisabledXuiClient()
 )
 EXCHANGE_RATE_SERVICE = get_exchange_rate_service(SETTINGS.crypto_rate_provider)
 if SETTINGS.crypto_rate_provider == "fixed":
@@ -70,6 +83,9 @@ API_SERVICE = ApiService(
         "insecure": SETTINGS.hysteria2_insecure,
         "obfs_password": SETTINGS.hysteria2_obfs_password,
     },
+    xui_client=XUI_CLIENT,
+    xui_node_template=SETTINGS.xui_node_template,
+    support_email=SETTINGS.smtp_from or SETTINGS.smtp_user,
 )
 
 
@@ -95,6 +111,12 @@ class ApiHandler(BaseHTTPRequestHandler):
             return
         if path == "/recover":
             self._send_html(HTTPStatus.OK, API_SERVICE.recover_html())
+            return
+        if path == "/terms":
+            self._send_html(HTTPStatus.OK, API_SERVICE.terms_html())
+            return
+        if path == "/privacy":
+            self._send_html(HTTPStatus.OK, API_SERVICE.privacy_html())
             return
         if path == "/admin/orders":
             query_token = (parse_qs(urlparse(self.path).query).get("token") or [""])[0]

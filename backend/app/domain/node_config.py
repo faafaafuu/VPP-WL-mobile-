@@ -94,3 +94,60 @@ def parse_nodes_from_env(env: Mapping[str, str]) -> list[VpnNode]:
         )
 
     return nodes
+
+
+def parse_xui_node_template_from_env(env: Mapping[str, str]) -> VpnNode | None:
+    """Connection template (host/reality params, empty uuid) for the single
+    3x-ui-managed node, from VPN_ROUTER_XUI_* env vars. Returns None if unset.
+    Per-subscription links fill in the uuid that was provisioned via the panel API.
+    """
+    host = env.get("VPN_ROUTER_XUI_HOST", "").strip()
+    if not host:
+        return None
+
+    port_raw = env.get("VPN_ROUTER_XUI_PORT", "443").strip()
+    try:
+        port = int(port_raw)
+    except ValueError as exc:
+        raise NodeConfigError(f"VPN_ROUTER_XUI_PORT must be an integer, got {port_raw!r}") from exc
+
+    public_key = env.get("VPN_ROUTER_XUI_PUBLIC_KEY", "").strip()
+    if not public_key:
+        raise NodeConfigError("VPN_ROUTER_XUI_PUBLIC_KEY is required when VPN_ROUTER_XUI_HOST is set")
+
+    short_id = env.get("VPN_ROUTER_XUI_SHORT_ID", "").strip()
+    if not short_id:
+        raise NodeConfigError("VPN_ROUTER_XUI_SHORT_ID is required when VPN_ROUTER_XUI_HOST is set")
+
+    sni = env.get("VPN_ROUTER_XUI_SNI", "").strip()
+    if not sni:
+        raise NodeConfigError("VPN_ROUTER_XUI_SNI is required when VPN_ROUTER_XUI_HOST is set")
+
+    flow = env.get("VPN_ROUTER_XUI_FLOW", "xtls-rprx-vision").strip() or None
+    fingerprint = env.get("VPN_ROUTER_XUI_FINGERPRINT", "chrome").strip() or "chrome"
+    label = env.get("VPN_ROUTER_XUI_LABEL", "VPN Router").strip() or "VPN Router"
+    region = env.get("VPN_ROUTER_XUI_REGION", "unknown").strip() or "unknown"
+    country_code = env.get("VPN_ROUTER_XUI_COUNTRY_CODE", "XX").strip() or "XX"
+
+    return VpnNode(
+        id="node_xui_managed",
+        tag="vless-xui-managed",
+        region=region,
+        provider="3x-ui",
+        country_code=country_code,
+        host=host,
+        port=port,
+        protocol=Protocol.VLESS,
+        status=NodeStatus.ACTIVE,
+        health=NodeHealth.HEALTHY,
+        priority=0,
+        options=VlessOptions(
+            uuid="",
+            server_name=sni,
+            public_key=public_key,
+            short_id=short_id,
+            flow=flow,
+            fingerprint=fingerprint,
+            label=label,
+        ),
+    )
