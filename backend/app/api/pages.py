@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from html import escape
+from urllib.parse import quote
 
 from app.domain.models import CommercialSubscription
 from app.domain.tariffs import Tariff
@@ -229,10 +230,18 @@ def invoice_page(
     coin_blocks = "\n".join(_coin_block(i, opt, token) for i, opt in enumerate(coin_options))
     card_row = ""
     if tariff.id == "vpn.1m":
-        card_row = """
+        freekassa_url = (
+            "https://widgets.freekassa.net?type=payment-button&currency=RUB"
+            "&destination=" + quote("Оплата услуги доступа согласно выбранному тарифу", safe="")
+            + "&theme=dark&default_amount=200&button_text=" + quote("Оплатить", safe="")
+            + "&button_size=36px&shopId=75677&s=63a0733bfe0e55968296cd13605db891"
+        )
+        card_row = f"""
           <div class="coin-group">
             <div class="coin-group-label"><span class="coin-dot" style="background:#f5b301"></span>Карта РФ</div>
-            <iframe class="freekassa-btn" src="https://widgets.freekassa.net?type=payment-button&currency=RUB&destination=Оплата услуги доступа согласно выбранному тарифу&theme=dark&default_amount=200&button_text=Оплатить&button_size=36px&shopId=75677&s=63a0733bfe0e55968296cd13605db891" width="140" height="36" frameborder="0"></iframe>
+            <div class="coin-group-chips">
+              <a class="coin-tab" href="{escape(freekassa_url)}" target="_blank" rel="noopener">Оплатить картой</a>
+            </div>
           </div>
         """
     return _page(
@@ -853,8 +862,7 @@ def _page(title: str, body: str) -> str:
     .legal-text a {{ color: var(--cyan); }}
     .footer-links {{ margin-top: 18px; font-size: 11px; color: var(--green-mute); }}
     .footer-links a {{ color: var(--green-mute); text-decoration: underline; }}
-    iframe.freekassa-btn {{ border: 0; vertical-align: middle; }}
-    .payment-badge {{ margin-top: 14px; opacity: .85; transition: opacity .15s; }}
+    .payment-badge {{ display: none; margin-top: 14px; opacity: .85; transition: opacity .15s; }}
     .payment-badge:hover {{ opacity: 1; }}
     .payment-badge img {{ display: block; max-width: 100%; height: auto; border: 1px solid var(--green-line); }}
     @media (max-width: 480px) {{
