@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import json
+import math
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
-from typing import Any, Protocol
+from decimal import Decimal
+from typing import Any, Callable, Protocol
 
-from app.domain.models import CommercialSubscription
+from app.domain.models import CommercialSubscription, new_subscription_token
 from app.domain.tariffs import Tariff
 from app.repositories.factory import Repository
 
@@ -45,26 +47,13 @@ class HttpTelegramTransport:
         return payload.get("result")
 
 
-_COMMANDS = [
-    {"command": "status", "description": "Мои заказы и срок действия VPN"},
-    {"command": "help", "description": "Как пользоваться ботом"},
-]
-
-_HELP_TEXT = (
-    "🤖 <b>VPN Router — бот</b>\n\n"
-    "Здесь можно посмотреть статус оплаченного доступа и быстро получить ссылку подключения.\n\n"
-    "• Купить доступ и привязать заказ к этому чату — со страницы заказа на сайте, кнопка «привязать Telegram».\n"
-    "• /status — список ваших заказов: активен ли, сколько дней осталось, лимиты.\n"
-    "• Авторизация не нужна для покупки — она нужна только чтобы потом посмотреть статус здесь."
-)
-
-
 class TelegramBot:
     """Binds orders to Telegram chats and hands out subscription links.
 
     /start <order-token> — bind the order to this chat and reply with its state.
     /status (or any other message) — list the orders already bound to this chat.
     /help — usage instructions.
+    /buy — pick a tariff and pay with Telegram Stars, if configured.
     """
 
     def __init__(
@@ -73,11 +62,15 @@ class TelegramBot:
         repository: Repository,
         public_base_url: str,
         tariffs_by_id: dict[str, Tariff] | None = None,
+        stars_rate_rub: str | None = None,
+        activate_callback: Callable[[str, int, str], None] | None = None,
     ) -> None:
         self.transport = transport
         self.repository = repository
         self.public_base_url = public_base_url.rstrip("/")
         self.tariffs_by_id = tariffs_by_id or {}
+        self.stars_rate_rub = stars_rate_rub
+        self.activate_callback = activate_callback
 
     def get_username(self) -> str:
         me = self.transport.call("getMe", {})
@@ -85,12 +78,33 @@ class TelegramBot:
 
     def set_commands(self) -> None:
         """Registers the / command menu Telegram shows next to the message box."""
-        self.transport.call("setMyCommands", {"commands": _COMMANDS})
+        commands = [
+            {"command": "status", "description": "Мои заказы и срок действия VPN"},
+            {"command": "help", "description": "Как пользоваться ботом"},
+        ]
+        if self.stars_rate_rub is not None:
+            commands.insert(0, {"command": "buy", "description": "Купить VPN звёздами Telegram"})
+        self.transport.call("setMyCommands", {"commands": commands})
+
+    def _help_text(self) -> str:
+        buy_line = "\n• /buy — купить доступ прямо здесь, звёздами Telegram." if self.stars_rate_rub is not None else ""
+        return (
+            "🤖 <b>VPN Router — бот</b>\n\n"
+            "Здесь можно посмотреть статус оплаченного доступа и быстро получить ссылку подключения."
+            f"{buy_line}\n\n"
+            "• Купить доступ и привязать заказ к этому чату — со страницы заказа на сайте, кнопка «привязать Telegram».\n"
+            "• /status — список ваших заказов: активен ли, сколько дней осталось, лимиты.\n"
+            "• Авторизация не нужна для покупки — она нужна только чтобы потом посмотреть статус здесь."
+        )
 
     def get_updates(self, offset: int, poll_timeout: int = 25) -> list[dict[str, Any]]:
         result = self.transport.call(
             "getUpdates",
-            {"offset": offset, "timeout": poll_timeout, "allowed_updates": ["message"]},
+            {
+                "offset": offset,
+                "timeout": poll_timeout,
+                "allowed_updates": ["message", "callback_query", "pre_checkout_query"],
+            },
         )
         return list(result or [])
 
@@ -111,7 +125,16 @@ class TelegramBot:
         self.transport.call("sendMessage", params)
 
     def handle_update(self, update: dict[str, Any]) -> None:
+        if "callback_query" in update:
+            self._handle_callback_query(update["callback_query"])
+            return
+        if "pre_checkout_query" in update:
+            self._handle_pre_checkout_query(update["pre_checkout_query"])
+            return
         message = update.get("message") or {}
+        if message.get("successful_payment"):
+            self._handle_successful_payment(message)
+            return
         chat_id = str((message.get("chat") or {}).get("id", "")).strip()
         text = str(message.get("text") or "").strip()
         if not chat_id or not text:
@@ -123,9 +146,80 @@ class TelegramBot:
                 self._bind(chat_id, token)
                 return
         if text.startswith("/help"):
-            self.send(chat_id, _HELP_TEXT)
+            self.send(chat_id, self._help_text())
+            return
+        if text.startswith("/buy"):
+            self._send_buy_menu(chat_id)
             return
         self._send_bound_orders(chat_id)
+
+    # --- Telegram Stars checkout -------------------------------------------
+
+    def _stars_price(self, tariff: Tariff) -> int:
+        assert self.stars_rate_rub is not None
+        rate = Decimal(self.stars_rate_rub)
+        return max(1, math.ceil(Decimal(tariff.price_rub) / rate))
+
+    def _send_buy_menu(self, chat_id: str) -> None:
+        if self.stars_rate_rub is None:
+            self.send(chat_id, "Оплата звёздами пока не подключена. Купить доступ можно на сайте.")
+            return
+        buttons = [
+            [{"text": f"{tariff.title} — {self._stars_price(tariff)} ⭐", "callback_data": f"buy:{tariff.id}"}]
+            for tariff in self.tariffs_by_id.values()
+        ]
+        self.send(chat_id, "⭐ <b>Выберите тариф</b>", keyboard=buttons)
+
+    def _handle_callback_query(self, query: dict[str, Any]) -> None:
+        query_id = str(query.get("id") or "")
+        try:
+            self.transport.call("answerCallbackQuery", {"callback_query_id": query_id})
+        except TelegramError:
+            pass
+        data = str(query.get("data") or "")
+        chat_id = str(((query.get("message") or {}).get("chat") or {}).get("id", "")).strip()
+        if not data.startswith("buy:") or not chat_id or self.stars_rate_rub is None:
+            return
+        tariff = self.tariffs_by_id.get(data.removeprefix("buy:"))
+        if tariff is None:
+            return
+        token = new_subscription_token()
+        self.repository.create_commercial_subscription(token, tariff.id)
+        self.repository.bind_telegram(token, chat_id)
+        try:
+            self.transport.call(
+                "sendInvoice",
+                {
+                    "chat_id": chat_id,
+                    "title": f"VPN — {tariff.title}",
+                    "description": self._limits_text(tariff),
+                    "payload": token,
+                    "currency": "XTR",
+                    "prices": [{"label": tariff.title, "amount": self._stars_price(tariff)}],
+                },
+            )
+        except TelegramError:
+            self.send(chat_id, "Не удалось выставить счёт. Попробуйте ещё раз или оплатите на сайте.")
+
+    def _handle_pre_checkout_query(self, query: dict[str, Any]) -> None:
+        query_id = str(query.get("id") or "")
+        try:
+            self.transport.call("answerPreCheckoutQuery", {"pre_checkout_query_id": query_id, "ok": True})
+        except TelegramError:
+            pass
+
+    def _handle_successful_payment(self, message: dict[str, Any]) -> None:
+        payment = message.get("successful_payment") or {}
+        token = str(payment.get("invoice_payload") or "")
+        charge_id = str(payment.get("telegram_payment_charge_id") or "")
+        if not token or self.activate_callback is None:
+            return
+        subscription = self.repository.get_commercial_subscription(token)
+        if subscription is None:
+            return
+        tariff = self.tariffs_by_id.get(subscription.tariff_id)
+        duration_days = tariff.duration_days if tariff else 30
+        self.activate_callback(token, duration_days, f"telegram_stars:{charge_id}")
 
     def notify_activated(self, subscription: CommercialSubscription) -> bool:
         if not subscription.tg_chat_id:
@@ -226,8 +320,10 @@ class TelegramBot:
 
     def _limits_line(self, subscription: CommercialSubscription) -> str:
         tariff = self.tariffs_by_id.get(subscription.tariff_id)
-        if tariff is None:
-            return ""
+        return self._limits_text(tariff) if tariff else ""
+
+    @staticmethod
+    def _limits_text(tariff: Tariff) -> str:
         traffic = f"{tariff.traffic_gb} ГБ" if tariff.traffic_gb else "безлимит"
         return f"До {tariff.max_devices} устройств · {traffic} трафика"
 

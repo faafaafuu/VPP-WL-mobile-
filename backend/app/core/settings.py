@@ -69,6 +69,7 @@ class Settings:
     xui_inbound_id: int | None = None
     xui_verify_tls: bool = True
     xui_node_template: VpnNode | None = None
+    telegram_stars_rate_rub: str | None = None  # RUB value of 1 Telegram Star; unset = Stars checkout disabled
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -140,6 +141,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     )
     telegram_bot_token = source.get("TELEGRAM_BOT_TOKEN", "").strip() or None
     telegram_bot_username = source.get("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@") or None
+    telegram_stars_rate_rub_raw = source.get("TELEGRAM_STARS_RATE_RUB", "").strip()
+    telegram_stars_rate_rub = _decimal_str(telegram_stars_rate_rub_raw, "TELEGRAM_STARS_RATE_RUB") if telegram_stars_rate_rub_raw else None
     twenty_api_url = source.get("TWENTY_API_URL", "").strip().rstrip("/") or None
     twenty_api_key = source.get("TWENTY_API_KEY", "").strip() or None
     smtp_host = source.get("SMTP_HOST", "").strip() or None
@@ -224,6 +227,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         xui_inbound_id=xui_inbound_id,
         xui_verify_tls=xui_verify_tls,
         xui_node_template=xui_node_template,
+        telegram_stars_rate_rub=telegram_stars_rate_rub,
     )
 
 

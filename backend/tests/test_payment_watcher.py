@@ -165,17 +165,20 @@ class UniqueAmountTest(unittest.TestCase):
         amount = unique_coin_amount("2.00", _USDT, set())
 
         self.assertGreater(Decimal(amount), Decimal("2.00"))
-        self.assertLessEqual(Decimal(amount), Decimal("2.99"))
+        # 2-decimal coins cap the tail at 20 units (max $0.20) — 99 units
+        # ($0.99) was a ~40% swing on a $2 order every time the buyer switched
+        # network, which read as "the price keeps jumping around".
+        self.assertLessEqual(Decimal(amount), Decimal("2.20"))
 
     def test_amount_avoids_taken_values(self) -> None:
-        taken = {f"2.{tail:02d}" for tail in range(1, 99)}
+        taken = {f"2.{tail:02d}" for tail in range(1, 20)}
 
         amount = unique_coin_amount("2.00", _USDT, taken)
 
         self.assertNotIn(amount, taken)
 
     def test_exhausted_space_raises(self) -> None:
-        taken = {f"2.{tail:02d}" for tail in range(1, 100)}
+        taken = {f"2.{tail:02d}" for tail in range(1, 21)}
 
         with self.assertRaises(AmountCollisionError):
             unique_coin_amount("2.00", _USDT, taken)

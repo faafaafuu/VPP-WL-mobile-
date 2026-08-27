@@ -155,6 +155,87 @@ class TelegramBotTest(unittest.TestCase):
         self.assertIn("setMyCommands", methods)
 
 
+class TelegramStarsTest(unittest.TestCase):
+    def _stars_bot(self) -> tuple[TelegramBot, FakeTransport, InMemoryRepository, list[tuple[str, int, str]]]:
+        from app.domain.tariffs import parse_tariffs, tariffs_by_id
+
+        transport = FakeTransport()
+        repository = InMemoryRepository()
+        activations: list[tuple[str, int, str]] = []
+        bot = TelegramBot(
+            transport,
+            repository,
+            "http://84.247.166.53",
+            tariffs_by_id(parse_tariffs(None)),
+            stars_rate_rub="1.50",
+            activate_callback=lambda token, days, payment_id: activations.append((token, days, payment_id)),
+        )
+        return bot, transport, repository, activations
+
+    def test_buy_without_stars_configured_says_unavailable(self) -> None:
+        bot, transport, _ = _bot()  # no stars_rate_rub
+
+        bot.handle_update(_update("555", "/buy"))
+
+        self.assertIn("не подключена", transport.sent_texts()[0])
+
+    def test_buy_lists_tariffs_with_star_prices(self) -> None:
+        bot, transport, _repository, _activations = self._stars_bot()
+
+        bot.handle_update(_update("555", "/buy"))
+
+        buttons = transport.keyboard_buttons()
+        callback_data = [b.get("callback_data") for b in buttons]
+        self.assertIn("buy:vpn.1m", callback_data)
+        # 200 RUB / 1.50 RUB per star = 134 stars (rounded up)
+        vpn_1m_button = next(b for b in buttons if b.get("callback_data") == "buy:vpn.1m")
+        self.assertIn("134", vpn_1m_button["text"])
+
+    def test_selecting_tariff_creates_order_and_sends_stars_invoice(self) -> None:
+        bot, transport, repository, _activations = self._stars_bot()
+
+        bot.handle_update(
+            {"update_id": 1, "callback_query": {"id": "cbq1", "data": "buy:vpn.1m", "message": {"chat": {"id": "777"}}}}
+        )
+
+        invoice_calls = [params for method, params in transport.calls if method == "sendInvoice"]
+        self.assertEqual(len(invoice_calls), 1)
+        params = invoice_calls[0]
+        self.assertEqual(params["currency"], "XTR")
+        self.assertEqual(params["prices"], [{"label": "1 месяц", "amount": 134}])
+        token = params["payload"]
+        subscription = repository.get_commercial_subscription(token)
+        self.assertIsNotNone(subscription)
+        self.assertEqual(subscription.tg_chat_id, "777")
+
+    def test_pre_checkout_query_is_approved(self) -> None:
+        bot, transport, _repository, _activations = self._stars_bot()
+
+        bot.handle_update({"update_id": 1, "pre_checkout_query": {"id": "pcq1"}})
+
+        approvals = [params for method, params in transport.calls if method == "answerPreCheckoutQuery"]
+        self.assertEqual(approvals, [{"pre_checkout_query_id": "pcq1", "ok": True}])
+
+    def test_successful_payment_activates_via_callback(self) -> None:
+        bot, transport, repository, activations = self._stars_bot()
+        repository.create_commercial_subscription("stars-token-1", "vpn.3m")
+
+        bot.handle_update(
+            {
+                "update_id": 1,
+                "message": {
+                    "chat": {"id": "777"},
+                    "successful_payment": {
+                        "invoice_payload": "stars-token-1",
+                        "telegram_payment_charge_id": "charge-abc",
+                    },
+                },
+            }
+        )
+
+        self.assertEqual(activations, [("stars-token-1", 90, "telegram_stars:charge-abc")])
+
+
 class TelegramPagesTest(unittest.TestCase):
     def _service(self) -> Any:
         from app.api.service import ApiService

@@ -42,9 +42,9 @@ class InvoiceSelectTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "pending")
         self.assertEqual(result["address"], _WALLET)
-        # vpn.1m = 200 RUB / 100 RUB per USDT = 2.00 base + micro tail
+        # vpn.1m = 200 RUB / 100 RUB per USDT = 2.00 base + micro tail (capped at +0.20)
         self.assertGreater(Decimal(result["amount"]), Decimal("2.00"))
-        self.assertLess(Decimal(result["amount"]), Decimal("3.00"))
+        self.assertLessEqual(Decimal(result["amount"]), Decimal("2.20"))
 
     def test_select_persists_payment_intent(self) -> None:
         svc = _service()

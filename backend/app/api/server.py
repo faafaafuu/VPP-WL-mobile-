@@ -567,6 +567,10 @@ def _build_activation_notifier() -> Any:
             REPOSITORY,
             SETTINGS.public_base_url,
             tariffs_by_id={t.id: t for t in SETTINGS.tariffs},
+            stars_rate_rub=SETTINGS.telegram_stars_rate_rub,
+            activate_callback=lambda token, days, payment_id: API_SERVICE.admin_activate_commercial_subscription(
+                SETTINGS.admin_token, token, {"duration_days": days, "payment_id": payment_id}
+            ),
         )
         username = SETTINGS.telegram_bot_username
         if not username:
