@@ -99,6 +99,10 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
 
+    def do_HEAD(self) -> None:
+        # Same routing as GET; the _send_* helpers skip the body for HEAD.
+        self.do_GET()
+
     def do_GET(self) -> None:
         if self._is_rate_limited():
             return
@@ -487,7 +491,8 @@ class ApiHandler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self._send_security_headers()
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _send_text(
         self,
@@ -506,7 +511,8 @@ class ApiHandler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self._send_security_headers()
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _send_html(self, status: HTTPStatus, payload: str) -> None:
         body = payload.encode("utf-8")
@@ -517,7 +523,8 @@ class ApiHandler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self._send_security_headers()
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _send_redirect(self, location: str) -> None:
         self.send_response(HTTPStatus.SEE_OTHER.value)
