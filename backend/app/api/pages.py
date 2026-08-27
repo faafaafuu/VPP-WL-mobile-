@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from html import escape
 
 from app.domain.models import CommercialSubscription
@@ -15,7 +16,8 @@ _ACCENTS = (
 
 
 def landing_page(tariffs: tuple[Tariff, ...]) -> str:
-    rows = "\n".join(_tariff_row(i, tariff) for i, tariff in enumerate(tariffs))
+    base_monthly = _base_monthly_price(tariffs)
+    rows = "\n".join(_tariff_row(i, tariff, base_monthly) for i, tariff in enumerate(tariffs))
     steps = """
       <div class="steps">
         <span class="c-cyan">01.</span> оплата криптовалютой<br>
@@ -65,7 +67,8 @@ def connect_page(
     tariff_map = {t.id: t for t in tariffs}
     current_tariff = tariff_map.get(subscription.tariff_id)
     max_devices = current_tariff.max_devices if current_tariff else 3
-    renew_rows = "\n".join(_tariff_row(i, tariff) for i, tariff in enumerate(tariffs))
+    renew_base_monthly = _base_monthly_price(tariffs)
+    renew_rows = "\n".join(_tariff_row(i, tariff, renew_base_monthly) for i, tariff in enumerate(tariffs))
     if subscription.is_active():
         expires = subscription.expires_at.strftime("%d.%m.%Y") if subscription.expires_at else ""
         status = f"""
@@ -522,16 +525,43 @@ def not_found_page() -> str:
     )
 
 
-def _tariff_row(idx: int, tariff: Tariff) -> str:
+def _base_monthly_price(tariffs: tuple[Tariff, ...]) -> Decimal | None:
+    """Per-month price of the shortest tariff — the reference "no discount"
+    rate every other tariff's savings badge is computed against."""
+    if not tariffs:
+        return None
+    shortest = min(tariffs, key=lambda t: t.duration_days)
+    months = max(shortest.duration_days // 30, 1)
+    return Decimal(shortest.price_rub) / months
+
+
+def _tariff_row(idx: int, tariff: Tariff, base_monthly: Decimal | None = None) -> str:
     accent, border, background = _ACCENTS[idx % len(_ACCENTS)]
     months = max(tariff.duration_days // 30, 1)
     badge = f' <span class="badge">// {escape(tariff.badge)}</span>' if tariff.badge else ""
+    price = Decimal(tariff.price_rub)
+    per_month = f"{escape(_price(f'{(price / months):.2f}'))}/мес"
+
+    price_block = f'<span class="price">{escape(_price(tariff.price_rub))}</span>'
+    if base_monthly is not None and months > 1:
+        full_price = base_monthly * months
+        if full_price > price:
+            discount_pct = round((1 - price / full_price) * 100)
+            price_block = (
+                f'<span class="price-old">{escape(_price(f"{full_price:.2f}"))}</span>'
+                f'<span class="price">{escape(_price(tariff.price_rub))}</span>'
+                f'<span class="discount-tag">-{discount_pct}%</span>'
+            )
+
     return f"""
       <form method="post" action="/checkout" class="tariff-form">
         <input type="hidden" name="tariff_id" value="{escape(tariff.id)}">
         <button class="tariff" type="submit" style="border-color:{border};background:{background}">
-          <span style="color:{accent}">[{months:02d}] {escape(tariff.title)}{badge}</span>
-          <span class="price">{escape(_price(tariff.price_rub))}</span>
+          <span class="tariff-info">
+            <span style="color:{accent}">[{months:02d}] {escape(tariff.title)}{badge}</span>
+            <span class="tariff-permo">{per_month}</span>
+          </span>
+          <span class="tariff-price-block">{price_block}</span>
         </button>
       </form>
     """
@@ -700,7 +730,15 @@ def _page(title: str, body: str) -> str:
     }}
     .tariff:hover {{ filter: brightness(1.3); }}
     .badge {{ opacity: .7; }}
+    .tariff-info {{ display: flex; flex-direction: column; gap: 3px; }}
+    .tariff-permo {{ font-size: 11px; color: var(--green-dim2); }}
+    .tariff-price-block {{ display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }}
     .price {{ color: var(--white); font-weight: 700; white-space: nowrap; }}
+    .price-old {{ color: var(--green-mute); text-decoration: line-through; font-size: 11px; font-weight: 400; }}
+    .discount-tag {{
+      background: var(--red); color: var(--white); font-weight: 800; font-size: 10px;
+      padding: 2px 6px; border-radius: 3px; letter-spacing: .02em;
+    }}
     .steps {{ padding: 0 0 26px; font-size: 12px; line-height: 2; color: var(--green-dim2); }}
     .status-bar {{
       padding: 10px 22px 18px; border-top: 1px dashed rgba(0,255,65,.25);
