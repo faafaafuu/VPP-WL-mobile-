@@ -16,9 +16,10 @@ class Tariff:
 
 
 DEFAULT_TARIFFS: tuple[Tariff, ...] = (
-    Tariff(id="vpn.1m", title="1 месяц",    duration_days=30,  price_rub="200.00", max_devices=3),
-    Tariff(id="vpn.3m", title="3 месяца",   duration_days=90,  price_rub="500.00", badge="выгоднее",    max_devices=3),
-    Tariff(id="vpn.6m", title="6 месяцев",  duration_days=180, price_rub="900.00", badge="лучший выбор", max_devices=3),
+    Tariff(id="vpn.1m",  title="1 месяц",    duration_days=30,  price_rub="200.00",  max_devices=3),
+    Tariff(id="vpn.3m",  title="3 месяца",   duration_days=90,  price_rub="500.00",  badge="выгоднее",     max_devices=3),
+    Tariff(id="vpn.6m",  title="6 месяцев",  duration_days=180, price_rub="900.00",  badge="лучший выбор", max_devices=3),
+    Tariff(id="vpn.12m", title="12 месяцев", duration_days=365, price_rub="1500.00", badge="макс. выгода", max_devices=3),
 )
 
 

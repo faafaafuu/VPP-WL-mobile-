@@ -34,19 +34,34 @@ def _paid_order(svc: ApiService, paid_tx: str = "0xAbCdEf1234567890", payer: str
 
 
 class RecoverTest(unittest.TestCase):
-    def test_recover_by_tx_hash(self) -> None:
+    def test_recover_by_tx_hash_is_rejected(self) -> None:
+        # The tx hash is just as public on-chain as the sender address (both
+        # show up in the receiving wallet's transaction history to anyone), so
+        # it must not be usable to recover another buyer's subscription link
+        # either — only the email the buyer chose to give us proves it's them.
+        svc = _service()
+        _paid_order(svc)
+
+        with self.assertRaises(ApiError) as ctx:
+            svc.recover({"query": "0xAbCdEf1234567890"})
+
+        self.assertEqual(ctx.exception.status, HTTPStatus.NOT_FOUND)
+
+    def test_recover_by_email_works(self) -> None:
         svc = _service()
         token = _paid_order(svc)
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
 
-        result = svc.recover({"query": "0xAbCdEf1234567890"})
+        result = svc.recover({"query": "buyer@example.com"})
 
         self.assertEqual(result["redirect_url"], f"/connect/{token}")
 
-    def test_recover_is_case_insensitive_and_ignores_0x_prefix(self) -> None:
+    def test_recover_email_lookup_is_case_insensitive(self) -> None:
         svc = _service()
-        token = _paid_order(svc, paid_tx="0xABCDEF1234567890")
+        token = _paid_order(svc)
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
 
-        result = svc.recover({"query": "abcdef1234567890"})
+        result = svc.recover({"query": "Buyer@Example.com"})
 
         self.assertEqual(result["token"], token)
 

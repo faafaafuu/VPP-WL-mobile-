@@ -72,7 +72,7 @@ def connect_page(
           <div class="block block-green">
             <div class="dim">root@core:~$ ./vpn_router --status</div>
             <h1 class="small">Ваш VPN активен<span class="cursor"></span></h1>
-            <div class="subhead">// действует до {escape(expires)}<br>// до {max_devices} устройств — установите ссылку на каждом<br>// сохраните адрес этой страницы — потеряли? <a href="/recover">восстановить по TxID</a></div>
+            <div class="subhead">// действует до {escape(expires)}<br>// до {max_devices} устройств — установите ссылку на каждом<br>// сохраните адрес этой страницы — потеряли? <a href="/recover">восстановить по email</a></div>
             <div class="actions">
               <button class="cta" type="button" onclick="connectClient()">$ подключить --run</button>
               <button class="btn" type="button" onclick="copySub()">Скопировать ссылку</button>
@@ -111,19 +111,23 @@ def connect_page(
         <div class="guides">
           <details open>
             <summary>iPhone / Hiddify / Streisand / Shadowrocket</summary>
-            <ol><li>Установите клиент из App Store.</li><li>Нажмите “Подключить”.</li><li>Если не открылось, отсканируйте QR или вставьте ссылку.</li></ol>
+            <ol>
+              <li>Установите клиент: <a href="https://hiddify.com/" target="_blank" rel="noopener">Hiddify</a>, <a href="https://github.com/StreisandEffect/streisand" target="_blank" rel="noopener">Streisand</a> или <a href="https://apps.apple.com/us/search?term=Shadowrocket" target="_blank" rel="noopener">Shadowrocket</a>.</li>
+              <li>Нажмите “Подключить”.</li>
+              <li>Если не открылось, отсканируйте QR или вставьте ссылку.</li>
+            </ol>
           </details>
           <details>
             <summary>Android / Hiddify</summary>
-            <ol><li>Установите Hiddify.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
+            <ol><li>Установите <a href="https://hiddify.com/" target="_blank" rel="noopener">Hiddify</a>.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
           </details>
           <details>
             <summary>Android / v2rayNG</summary>
-            <ol><li>Установите v2rayNG.</li><li>Нажмите “Скопировать ссылку”.</li><li>Добавьте subscription URL.</li></ol>
+            <ol><li>Установите <a href="https://github.com/2dust/v2rayNG/releases" target="_blank" rel="noopener">v2rayNG</a>.</li><li>Нажмите “Скопировать ссылку”.</li><li>Добавьте subscription URL.</li></ol>
           </details>
           <details>
             <summary>Windows / v2rayN</summary>
-            <ol><li>Установите v2rayN.</li><li>Нажмите “Скопировать ссылку”.</li><li>Subscriptions → Add subscription.</li><li>Вставьте ссылку и нажмите Update subscription.</li></ol>
+            <ol><li>Установите <a href="https://github.com/2dust/v2rayN/releases" target="_blank" rel="noopener">v2rayN</a>.</li><li>Нажмите “Скопировать ссылку”.</li><li>Subscriptions → Add subscription.</li><li>Вставьте ссылку и нажмите Update subscription.</li></ol>
           </details>
         </div>
         <div class="tariffs">
@@ -245,7 +249,7 @@ def invoice_page(
         </div>
         {tg_block}
         {contact_block}
-        <p class="dim" style="margin-top:14px">// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу.<br>// потеряли? <a href="/recover">восстановить доступ по TxID</a></p>
+        <p class="dim" style="margin-top:14px">// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу.<br>// потеряли? <a href="/recover">восстановить доступ по email</a></p>
         <script>
           const COINS = {coins_js};
           const TOKEN = {token!r};
@@ -365,13 +369,13 @@ def recover_page(error: str | None = None, telegram_bot: str | None = None) -> s
         <div class="block block-green">
           <div class="dim">root@core:~$ ./vpn_router --recover</div>
           <h1 class="small">Восстановление доступа<span class="cursor"></span></h1>
-          <div class="subhead">// оплатили, но потеряли ссылку?<br>// введите email, указанный при оплате, хэш транзакции (TxID)<br>// или адрес кошелька, с которого платили</div>
+          <div class="subhead">// оплатили, но потеряли ссылку?<br>// введите email, указанный при оплате<br>// (TxID и адрес кошелька для этого не подходят — они видны в блокчейне всем, не только вам)</div>
           <form method="post" action="/recover">
-            <input class="field" type="text" name="query" placeholder="email, TxID или адрес отправителя" required minlength="8" autocomplete="off" spellcheck="false">
+            <input class="field" type="email" name="query" placeholder="email, указанный при оплате" required minlength="8" autocomplete="email" spellcheck="false">
             <button class="cta" type="submit">$ найти_заказ --run</button>
           </form>
           {error_html}
-          <div class="subhead">// TxID (hash) можно найти в истории вашего кошелька или биржи<br>// не находится? напишите нам и приложите TxID</div>
+          <div class="subhead">// не указывали email при оплате? напишите нам и приложите TxID — мы сверим вручную</div>
         </div>
         {tg_block}
         """,

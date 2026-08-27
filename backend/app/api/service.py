@@ -455,23 +455,22 @@ class ApiService:
         return recover_page(error, telegram_bot=self.telegram_bot_username)
 
     def recover(self, payload: dict[str, Any]) -> dict[str, Any]:
-        query = _normalize_payment_ref(str(payload.get("query", "")))
+        query = str(payload.get("query", "")).strip().lower()
         if len(query) < 8:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "query too short"})
-        # Recover only by the buyer's own credentials: the transaction hash they
-        # sent (their proof of payment) or the email they gave. The sender
-        # address (payer) is deliberately excluded — an address is reused across
-        # a wallet's transactions and is trivially enumerable by anyone scanning
-        # incoming transfers to the shared receiving wallet, which would let a
-        # third party recover another buyer's link.
+        # Recover only by something exclusively known to the buyer: the email
+        # they chose to give us. Both the sender address AND the transaction
+        # hash are deliberately excluded — for a shared receiving wallet, every
+        # incoming transfer's TxID and sender address are equally visible to
+        # anyone browsing that wallet on a public block explorer, so accepting
+        # either as "proof of payment" would let a third party who has never
+        # paid us anything recover another buyer's link just by reading our
+        # wallet's public transaction history. TxID lookup stays available to
+        # admins (who separately verify identity) via admin_orders.
         matches = [
             subscription
             for subscription in self.repository.list_commercial_subscriptions()
-            if query
-            in {
-                _normalize_payment_ref(subscription.paid_tx),
-                (subscription.customer_email or "").strip().lower(),
-            }
+            if query and query == (subscription.customer_email or "").strip().lower()
         ]
         if not matches:
             raise ApiError(HTTPStatus.NOT_FOUND, {"error": "payment not found"})
@@ -904,11 +903,6 @@ def _admin_order(subscription: Any) -> dict[str, str]:
         "tg": "✓" if subscription.tg_chat_id else "",
         "connect_url": f"/connect/{subscription.token}",
     }
-
-
-def _normalize_payment_ref(value: str | None) -> str:
-    normalized = (value or "").strip().lower()
-    return normalized.removeprefix("0x")
 
 
 def _admin_audit_event(event: AdminAuditEvent) -> dict[str, Any]:
