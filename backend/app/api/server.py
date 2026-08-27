@@ -566,6 +566,7 @@ def _build_activation_notifier() -> Any:
             HttpTelegramTransport(SETTINGS.telegram_bot_token),
             REPOSITORY,
             SETTINGS.public_base_url,
+            tariffs_by_id={t.id: t for t in SETTINGS.tariffs},
         )
         username = SETTINGS.telegram_bot_username
         if not username:
@@ -576,6 +577,10 @@ def _build_activation_notifier() -> Any:
         if username:
             API_SERVICE.telegram_bot_username = username
             notifiers.append(bot.notify_activated)
+            try:
+                bot.set_commands()
+            except TelegramError as exc:
+                print(f"telegram-bot setMyCommands failed: {exc}")
 
             def poll_loop() -> None:
                 from time import sleep

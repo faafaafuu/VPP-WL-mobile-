@@ -32,9 +32,11 @@ class FakeTransport:
 
 
 def _bot() -> tuple[TelegramBot, FakeTransport, InMemoryRepository]:
+    from app.domain.tariffs import parse_tariffs, tariffs_by_id
+
     transport = FakeTransport()
     repository = InMemoryRepository()
-    bot = TelegramBot(transport, repository, "http://84.247.166.53")
+    bot = TelegramBot(transport, repository, "http://84.247.166.53", tariffs_by_id(parse_tariffs(None)))
     return bot, transport, repository
 
 
@@ -122,6 +124,35 @@ class TelegramBotTest(unittest.TestCase):
         link = telegram_deep_link("TestVpnBot", "abc+def")
 
         self.assertEqual(link, "https://t.me/TestVpnBot?start=abc%2Bdef")
+
+    def test_status_shows_tariff_days_left_and_limits(self) -> None:
+        bot, transport, repository = _bot()
+        repository.create_commercial_subscription("order-token-6", "vpn.1m")
+        repository.activate_commercial_subscription("order-token-6", 30)
+        repository.bind_telegram("order-token-6", "888")
+
+        bot.handle_update(_update("888", "/status"))
+
+        text = transport.sent_texts()[0]
+        self.assertIn("1 месяц", text)
+        self.assertIn("До 3 устройств", text)
+        self.assertIn("150 ГБ", text)
+        self.assertTrue("29 дней" in text or "30 дней" in text)  # sub-second test runtime can round down by one
+
+    def test_help_command_sends_usage_text(self) -> None:
+        bot, transport, _ = _bot()
+
+        bot.handle_update(_update("555", "/help"))
+
+        self.assertIn("Авторизация не нужна для покупки", transport.sent_texts()[0])
+
+    def test_set_commands_calls_set_my_commands(self) -> None:
+        bot, transport, _ = _bot()
+
+        bot.set_commands()
+
+        methods = [method for method, _params in transport.calls]
+        self.assertIn("setMyCommands", methods)
 
 
 class TelegramPagesTest(unittest.TestCase):

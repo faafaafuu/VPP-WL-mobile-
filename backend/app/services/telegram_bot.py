@@ -4,9 +4,11 @@ import json
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 from typing import Any, Protocol
 
 from app.domain.models import CommercialSubscription
+from app.domain.tariffs import Tariff
 from app.repositories.factory import Repository
 
 
@@ -43,11 +45,26 @@ class HttpTelegramTransport:
         return payload.get("result")
 
 
+_COMMANDS = [
+    {"command": "status", "description": "Мои заказы и срок действия VPN"},
+    {"command": "help", "description": "Как пользоваться ботом"},
+]
+
+_HELP_TEXT = (
+    "🤖 <b>VPN Router — бот</b>\n\n"
+    "Здесь можно посмотреть статус оплаченного доступа и быстро получить ссылку подключения.\n\n"
+    "• Купить доступ и привязать заказ к этому чату — со страницы заказа на сайте, кнопка «привязать Telegram».\n"
+    "• /status — список ваших заказов: активен ли, сколько дней осталось, лимиты.\n"
+    "• Авторизация не нужна для покупки — она нужна только чтобы потом посмотреть статус здесь."
+)
+
+
 class TelegramBot:
     """Binds orders to Telegram chats and hands out subscription links.
 
     /start <order-token> — bind the order to this chat and reply with its state.
-    Any other message — list the orders already bound to this chat.
+    /status (or any other message) — list the orders already bound to this chat.
+    /help — usage instructions.
     """
 
     def __init__(
@@ -55,14 +72,20 @@ class TelegramBot:
         transport: TelegramTransport,
         repository: Repository,
         public_base_url: str,
+        tariffs_by_id: dict[str, Tariff] | None = None,
     ) -> None:
         self.transport = transport
         self.repository = repository
         self.public_base_url = public_base_url.rstrip("/")
+        self.tariffs_by_id = tariffs_by_id or {}
 
     def get_username(self) -> str:
         me = self.transport.call("getMe", {})
         return str(me.get("username", ""))
+
+    def set_commands(self) -> None:
+        """Registers the / command menu Telegram shows next to the message box."""
+        self.transport.call("setMyCommands", {"commands": _COMMANDS})
 
     def get_updates(self, offset: int, poll_timeout: int = 25) -> list[dict[str, Any]]:
         result = self.transport.call(
@@ -99,6 +122,9 @@ class TelegramBot:
             if token:
                 self._bind(chat_id, token)
                 return
+        if text.startswith("/help"):
+            self.send(chat_id, _HELP_TEXT)
+            return
         self._send_bound_orders(chat_id)
 
     def notify_activated(self, subscription: CommercialSubscription) -> bool:
@@ -109,7 +135,9 @@ class TelegramBot:
                 subscription.tg_chat_id,
                 "✅ <b>Оплата подтверждена — VPN активен"
                 + (f" до {subscription.expires_at.strftime('%d.%m.%Y')}" if subscription.expires_at else "")
-                + "!</b>\n\nНажмите кнопку — ссылка скопируется. Вставьте её в v2rayN / v2rayNG / Hiddify "
+                + "!</b>\n\n"
+                + self._limits_line(subscription)
+                + "\n\nНажмите кнопку — ссылка скопируется. Вставьте её в v2rayN / v2rayNG / Hiddify "
                 "как подписку (subscription).",
                 keyboard=self._active_keyboard(subscription),
             )
@@ -126,7 +154,8 @@ class TelegramBot:
             self.send(
                 chat_id,
                 "🔗 <b>Заказ привязан — VPN активен!</b>\n\n"
-                "Нажмите кнопку — ссылка скопируется. Вставьте её в v2rayN / v2rayNG / Hiddify.",
+                + self._limits_line(subscription)
+                + "\n\nНажмите кнопку — ссылка скопируется. Вставьте её в v2rayN / v2rayNG / Hiddify.",
                 keyboard=self._active_keyboard(subscription),
             )
         elif subscription.status == "pending":
@@ -152,22 +181,27 @@ class TelegramBot:
             self.send(
                 chat_id,
                 "У этого чата пока нет привязанных заказов.\n"
-                f"Оформите доступ на {self.public_base_url} и нажмите «привязать Telegram» на странице заказа.",
+                f"Оформите доступ на {self.public_base_url} и нажмите «привязать Telegram» на странице заказа.\n\n"
+                "/help — что умеет этот бот",
             )
             return
         for subscription in sorted(subscriptions, key=lambda item: item.created_at, reverse=True):
             ref = subscription.token[:12].upper()
+            tariff_title = self._tariff_title(subscription)
             if subscription.is_active():
                 expires = subscription.expires_at.strftime("%d.%m.%Y")
+                days_left = self._days_left(subscription)
                 self.send(
                     chat_id,
-                    f"✅ Заказ <code>{ref}</code> — активен до {expires}.",
+                    f"✅ <b>{ref}</b>{tariff_title}\n"
+                    f"Активен ещё {days_left} (до {expires})\n"
+                    f"{self._limits_line(subscription)}",
                     keyboard=self._active_keyboard(subscription),
                 )
             elif subscription.status == "pending":
                 self.send(
                     chat_id,
-                    f"⏳ Заказ <code>{ref}</code> — ждёт оплату.",
+                    f"⏳ <b>{ref}</b>{tariff_title}\nЖдём оплату.",
                     keyboard=[
                         [{"text": "💳 Перейти к оплате", "url": self._invoice_url(subscription)}],
                         [{"text": "📄 Страница заказа", "url": self._connect_url(subscription)}],
@@ -176,7 +210,7 @@ class TelegramBot:
             else:
                 self.send(
                     chat_id,
-                    f"❌ Заказ <code>{ref}</code> — подписка истекла.",
+                    f"❌ <b>{ref}</b>{tariff_title}\nПодписка истекла.",
                     keyboard=[[{"text": "🔄 Продлить доступ", "url": self._connect_url(subscription)}]],
                 )
 
@@ -185,6 +219,34 @@ class TelegramBot:
             [{"text": "📋 Скопировать ссылку подписки", "copy_text": {"text": self._sub_url(subscription)}}],
             [{"text": "📄 Страница заказа · QR · инструкция", "url": self._connect_url(subscription)}],
         ]
+
+    def _tariff_title(self, subscription: CommercialSubscription) -> str:
+        tariff = self.tariffs_by_id.get(subscription.tariff_id)
+        return f" — {tariff.title}" if tariff else ""
+
+    def _limits_line(self, subscription: CommercialSubscription) -> str:
+        tariff = self.tariffs_by_id.get(subscription.tariff_id)
+        if tariff is None:
+            return ""
+        traffic = f"{tariff.traffic_gb} ГБ" if tariff.traffic_gb else "безлимит"
+        return f"До {tariff.max_devices} устройств · {traffic} трафика"
+
+    def _days_left(self, subscription: CommercialSubscription) -> str:
+        if subscription.expires_at is None:
+            return "0 дней"
+        remaining = (subscription.expires_at - datetime.now(timezone.utc)).days
+        remaining = max(remaining, 0)
+        last_digit = remaining % 10
+        last_two = remaining % 100
+        if 11 <= last_two <= 14:
+            word = "дней"
+        elif last_digit == 1:
+            word = "день"
+        elif 2 <= last_digit <= 4:
+            word = "дня"
+        else:
+            word = "дней"
+        return f"{remaining} {word}"
 
     def _sub_url(self, subscription: CommercialSubscription) -> str:
         return f"{self.public_base_url}/sub/{subscription.token}"
