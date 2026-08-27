@@ -122,6 +122,12 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path == "/privacy":
             self._send_html(HTTPStatus.OK, API_SERVICE.privacy_html())
             return
+        if path == "/freekassa/success":
+            self._send_html(HTTPStatus.OK, API_SERVICE.freekassa_success_html())
+            return
+        if path == "/freekassa/failure":
+            self._send_html(HTTPStatus.OK, API_SERVICE.freekassa_failure_html())
+            return
         if path == "/admin/orders":
             query_token = (parse_qs(urlparse(self.path).query).get("token") or [""])[0]
             if query_token:
@@ -333,6 +339,14 @@ class ApiHandler(BaseHTTPRequestHandler):
             if payload is None:
                 return
             self._send_service_response(lambda: API_SERVICE.yookassa_webhook(payload))
+            return
+
+        if path == "/freekassa/notify":
+            payload = self._read_form_or_json()
+            if payload is None:
+                return
+            result = API_SERVICE.freekassa_notify(payload)
+            self._send_text(HTTPStatus.OK, result, "text/plain")
             return
 
         if path == "/api/admin/nodes":

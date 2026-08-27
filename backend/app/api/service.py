@@ -13,6 +13,7 @@ from typing import Any
 from app.api.pages import (
     admin_orders_page,
     connect_page,
+    freekassa_result_page,
     invoice_page,
     landing_page,
     privacy_page,
@@ -128,6 +129,12 @@ class ApiService:
 
     def privacy_html(self) -> str:
         return privacy_page(self.support_email)
+
+    def freekassa_success_html(self) -> str:
+        return freekassa_result_page(success=True, support_email=self.support_email)
+
+    def freekassa_failure_html(self) -> str:
+        return freekassa_result_page(success=False, support_email=self.support_email)
 
     def checkout(self, payload: dict[str, Any]) -> dict[str, Any]:
         tariff = self._tariff_from_payload(payload)
@@ -608,6 +615,30 @@ class ApiService:
             "user_id": subscription.user_id,
             "expires_at": subscription.expires_at.isoformat(),
         }
+
+    def freekassa_notify(self, payload: dict[str, Any]) -> str:
+        """Records an incoming FreeKassa notification for manual review.
+
+        Deliberately does NOT verify the signature or activate anything yet —
+        we don't have FreeKassa's notification signing scheme confirmed, and
+        this specific button (a fixed-amount quick-pay widget, not our own
+        /checkout flow) carries no order token to activate against anyway.
+        Trusting an unverified POST to grant access would let anyone "pay"
+        for free. Visible in /admin/orders audit log for manual activation
+        until the signature check is wired up.
+        """
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="freekassa.notify_received",
+                target_type="freekassa_payment",
+                target_id=str(payload.get("MERCHANT_ORDER_ID") or payload.get("intid") or "unknown"),
+                result="unverified",
+                details={k: str(v) for k, v in payload.items()},
+            )
+        )
+        return "YES"
 
     def nodes(self, user_id: str) -> dict[str, Any]:
         self._require_known_user(user_id)

@@ -15,22 +15,9 @@ _ACCENTS = (
 )
 
 
-_FREEKASSA_BUTTON = """
-      <div class="freekassa-btn">
-        <iframe src="https://widgets.freekassa.net?type=payment-button&currency=RUB&destination=Оплата услуги доступа согласно выбранному тарифу&theme=dark&default_amount=200&button_text=Оплатить&button_size=36px&shopId=75677&s=63a0733bfe0e55968296cd13605db891" width="300" height="50" frameborder="0"></iframe>
-        <div class="dim" style="margin-top:4px">// оплата картой через FreeKassa — 1 месяц</div>
-      </div>
-    """
-
-
 def landing_page(tariffs: tuple[Tariff, ...]) -> str:
     base_monthly = _base_monthly_price(tariffs)
-    row_parts = []
-    for i, tariff in enumerate(tariffs):
-        row_parts.append(_tariff_row(i, tariff, base_monthly))
-        if tariff.id == "vpn.1m":
-            row_parts.append(_FREEKASSA_BUTTON)
-    rows = "\n".join(row_parts)
+    rows = "\n".join(_tariff_row(i, tariff, base_monthly) for i, tariff in enumerate(tariffs))
     steps = """
       <div class="steps">
         <span class="c-cyan">01.</span> оплата криптовалютой<br>
@@ -240,6 +227,14 @@ def invoice_page(
         ensure_ascii=False,
     )
     coin_blocks = "\n".join(_coin_block(i, opt, token) for i, opt in enumerate(coin_options))
+    card_row = ""
+    if tariff.id == "vpn.1m":
+        card_row = """
+          <div class="coin-group">
+            <div class="coin-group-label"><span class="coin-dot" style="background:#f5b301"></span>Карта РФ</div>
+            <iframe class="freekassa-btn" src="https://widgets.freekassa.net?type=payment-button&currency=RUB&destination=Оплата услуги доступа согласно выбранному тарифу&theme=dark&default_amount=200&button_text=Оплатить&button_size=36px&shopId=75677&s=63a0733bfe0e55968296cd13605db891" width="140" height="36" frameborder="0"></iframe>
+          </div>
+        """
     return _page(
         "Оплата криптовалютой",
         f"""
@@ -250,6 +245,7 @@ def invoice_page(
           <div class="subhead">// стоимость: <span class="c-white">{escape(price_rub)}</span> · заказ: <code>{escape(order_ref)}</code><br>// выберите валюту и переведите точную сумму</div>
           <div class="coin-tabs" id="coinTabs">
             {_coin_tab_buttons(coin_options)}
+            {card_row}
           </div>
           {coin_blocks}
           <p class="hint c-yellow" id="watchState">ожидание выбора валюты…</p>
@@ -528,6 +524,33 @@ def terms_page(support_email: str | None = None) -> str:
           <p>Споры разрешаются в соответствии с законодательством РФ по месту нахождения Исполнителя. Реквизиты Исполнителя — см. п. «Исполнитель» выше.</p>
 
           <p class="dim" style="margin-top:24px">// черновик, требует проверки юристом перед публикацией — заполните раздел про возврат средств</p>
+        </div>
+        """,
+    )
+
+
+def freekassa_result_page(success: bool, support_email: str | None = None) -> str:
+    contact = escape(support_email) if support_email else "поддержку"
+    if success:
+        return _page(
+            "Оплата получена",
+            f"""
+            <div class="block block-green">
+              <div class="dim">root@core:~$ ./vpn_router --freekassa --status</div>
+              <h1 class="small">Оплата получена<span class="cursor"></span></h1>
+              <div class="subhead">// доступ активируется в течение пары минут<br>// если привязали Telegram — ссылка придёт туда автоматически<br>// не пришла? напишите нам на {contact}, укажите время и сумму оплаты</div>
+              <a class="cta" href="/recover">$ восстановить_по_email --run</a>
+            </div>
+            """,
+        )
+    return _page(
+        "Оплата не прошла",
+        f"""
+        <div class="block block-red">
+          <div class="dim">root@core:~$ ./vpn_router --freekassa --status</div>
+          <h1 class="small c-red">Оплата не прошла</h1>
+          <div class="subhead">// деньги не списаны — попробуйте ещё раз или выберите другой способ оплаты</div>
+          <a class="cta" href="/#pricing">$ выбрать_тариф --run</a>
         </div>
         """,
     )
@@ -830,8 +853,7 @@ def _page(title: str, body: str) -> str:
     .legal-text a {{ color: var(--cyan); }}
     .footer-links {{ margin-top: 18px; font-size: 11px; color: var(--green-mute); }}
     .footer-links a {{ color: var(--green-mute); text-decoration: underline; }}
-    .freekassa-btn {{ margin: 6px 0 4px; }}
-    .freekassa-btn iframe {{ display: block; max-width: 100%; }}
+    iframe.freekassa-btn {{ border: 0; vertical-align: middle; }}
     .payment-badge {{ margin-top: 14px; opacity: .85; transition: opacity .15s; }}
     .payment-badge:hover {{ opacity: 1; }}
     .payment-badge img {{ display: block; max-width: 100%; height: auto; border: 1px solid var(--green-line); }}
