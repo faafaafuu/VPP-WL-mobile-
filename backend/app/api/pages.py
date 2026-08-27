@@ -15,9 +15,22 @@ _ACCENTS = (
 )
 
 
+_FREEKASSA_BUTTON = """
+      <div class="freekassa-btn">
+        <iframe src="https://widgets.freekassa.net?type=payment-button&currency=RUB&destination=Оплата услуги доступа согласно выбранному тарифу&theme=dark&default_amount=200&button_text=Оплатить&button_size=36px&shopId=75677&s=63a0733bfe0e55968296cd13605db891" width="300" height="50" frameborder="0"></iframe>
+        <div class="dim" style="margin-top:4px">// оплата картой через FreeKassa — 1 месяц</div>
+      </div>
+    """
+
+
 def landing_page(tariffs: tuple[Tariff, ...]) -> str:
     base_monthly = _base_monthly_price(tariffs)
-    rows = "\n".join(_tariff_row(i, tariff, base_monthly) for i, tariff in enumerate(tariffs))
+    row_parts = []
+    for i, tariff in enumerate(tariffs):
+        row_parts.append(_tariff_row(i, tariff, base_monthly))
+        if tariff.id == "vpn.1m":
+            row_parts.append(_FREEKASSA_BUTTON)
+    rows = "\n".join(row_parts)
     steps = """
       <div class="steps">
         <span class="c-cyan">01.</span> оплата криптовалютой<br>
@@ -817,6 +830,8 @@ def _page(title: str, body: str) -> str:
     .legal-text a {{ color: var(--cyan); }}
     .footer-links {{ margin-top: 18px; font-size: 11px; color: var(--green-mute); }}
     .footer-links a {{ color: var(--green-mute); text-decoration: underline; }}
+    .freekassa-btn {{ margin: 6px 0 4px; }}
+    .freekassa-btn iframe {{ display: block; max-width: 100%; }}
     .payment-badge {{ margin-top: 14px; opacity: .85; transition: opacity .15s; }}
     .payment-badge:hover {{ opacity: 1; }}
     .payment-badge img {{ display: block; max-width: 100%; height: auto; border: 1px solid var(--green-line); }}
