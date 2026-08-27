@@ -334,7 +334,7 @@ def _decimal_str(raw_value: str, key: str) -> str:
 
 def _parse_crypto_wallets(source: Mapping[str, str]) -> dict[str, str]:
     wallets: dict[str, str] = {}
-    for key in ("trc20", "ton", "eth", "btc"):
+    for key in ("trc20", "ton", "eth", "btc", "polygon", "solana"):
         addr = source.get(f"CRYPTO_WALLET_{key.upper()}", "").strip()
         if addr:
             wallets[key] = addr

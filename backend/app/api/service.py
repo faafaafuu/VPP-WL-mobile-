@@ -1051,18 +1051,18 @@ def _build_coin_options(
     wallets: dict[str, str],
     rate_svc: ExchangeRateService,
 ) -> list[dict[str, str]]:
-    """Return list of {id, label, network_label, amount, address, color} for configured coins."""
-    seen_wallet_keys: set[str] = set()
+    """Return list of {id, label, network_label, amount, address, color} for configured coins.
+
+    Distinct networks legitimately share one wallet_key (e.g. ERC20 and BEP20
+    both settle to the same EVM address), so dedup is keyed on coin.id, not on
+    (wallet_key, coingecko_id) — that pair would otherwise hide every network
+    past the first for a coin whose networks share an address.
+    """
     result: list[dict[str, str]] = []
     for coin in ALL_COINS:
         addr = wallets.get(coin.wallet_key)
         if not addr:
             continue
-        # deduplicate: same wallet_key already added a coin with same address
-        entry_key = (coin.wallet_key, coin.coingecko_id)
-        if entry_key in seen_wallet_keys:
-            continue
-        seen_wallet_keys.add(entry_key)
         amount = rate_svc.coin_amount(price_rub, coin) or "—"
         result.append({
             "id": coin.id,

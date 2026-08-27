@@ -219,6 +219,7 @@ def invoice_page(
         f"""
         <div class="block block-green">
           <div class="dim">root@core:~$ ./vpn_router --pay</div>
+          <div class="footer-links" style="margin:0 0 10px"><a href="/#pricing">&larr; сменить тариф</a></div>
           <h1 class="small">{escape(tariff.title)}<span class="cursor"></span></h1>
           <div class="subhead">// стоимость: <span class="c-white">{escape(price_rub)}</span> · заказ: <code>{escape(order_ref)}</code><br>// выберите валюту и переведите точную сумму</div>
           <div class="coin-tabs" id="coinTabs">
@@ -533,14 +534,46 @@ def _tariff_row(idx: int, tariff: Tariff) -> str:
 
 
 def _coin_tab_buttons(coin_options: list[dict[str, str]]) -> str:
-    parts = []
+    """Groups consecutive options that share a label (e.g. every USDT network)
+    under one asset header with network-only chips underneath, instead of
+    repeating "USDT" on every chip — coin_options is already asset-grouped by
+    ALL_COINS's declaration order. Assets with only one network (TON/ETH/BTC)
+    are collected into one shared row at the end instead of each getting its
+    own line, so the picker reads as a couple of neat rows, not one column."""
+    groups: list[tuple[str, list[tuple[int, dict[str, str]]]]] = []
     for i, opt in enumerate(coin_options):
+        if groups and groups[-1][0] == opt["label"]:
+            groups[-1][1].append((i, opt))
+        else:
+            groups.append((opt["label"], [(i, opt)]))
+
+    parts = []
+    singles: list[tuple[int, dict[str, str]]] = []
+    for label, entries in groups:
+        if len(entries) == 1:
+            singles.append(entries[0])
+            continue
+        chips = "\n".join(
+            f'<button class="coin-tab" type="button" onclick="selectCoin({i})">'
+            f'{escape(opt["network_label"])}'
+            f'</button>'
+            for i, opt in entries
+        )
         parts.append(
+            f'<div class="coin-group">'
+            f'<div class="coin-group-label"><span class="coin-dot" style="background:{escape(entries[0][1]["color"])}"></span>{escape(label)}</div>'
+            f'<div class="coin-group-chips">{chips}</div>'
+            f'</div>'
+        )
+    if singles:
+        chips = "\n".join(
             f'<button class="coin-tab" type="button" onclick="selectCoin({i})">'
             f'<span class="coin-dot" style="background:{escape(opt["color"])}"></span>'
-            f'{escape(opt["label"])} <span class="coin-net">{escape(opt["network_label"])}</span>'
+            f'{escape(opt["label"])}'
             f'</button>'
+            for i, opt in singles
         )
+        parts.append(f'<div class="coin-group-chips">{chips}</div>')
     return "\n".join(parts)
 
 
@@ -687,7 +720,13 @@ def _page(title: str, body: str) -> str:
     .guides summary {{ padding: 12px 14px; cursor: pointer; font-size: 12px; font-weight: 700; }}
     .guides ol {{ margin: 0; padding: 0 18px 14px 32px; font-size: 12px; line-height: 1.9; color: var(--green-dim2); }}
     code {{ color: var(--cyan); }}
-    .coin-tabs {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }}
+    .coin-tabs {{ display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }}
+    .coin-group {{ display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }}
+    .coin-group-label {{
+      display: flex; align-items: center; gap: 6px; min-width: 52px;
+      font-size: 12px; font-weight: 700; color: var(--white);
+    }}
+    .coin-group-chips {{ display: flex; flex-wrap: wrap; gap: 8px; }}
     .coin-tab {{
       padding: 10px 14px; min-height: 40px; border: 1px solid var(--green-line); background: transparent;
       font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--green);

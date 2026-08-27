@@ -92,7 +92,7 @@ class CoinDefinitionsTest(unittest.TestCase):
         self.assertEqual(ALL_COINS[0].id, "usdt_trc20")
 
     def test_all_coins_have_valid_wallet_keys(self) -> None:
-        valid_keys = {"trc20", "ton", "eth", "btc"}
+        valid_keys = {"trc20", "ton", "eth", "btc", "polygon", "solana"}
         for coin in ALL_COINS:
             self.assertIn(coin.wallet_key, valid_keys, f"{coin.id} has invalid wallet_key")
 
@@ -164,6 +164,52 @@ class BuildCoinOptionsTest(unittest.TestCase):
 
         usdt_opt = next(o for o in opts if o["id"] == "usdt_trc20")
         self.assertEqual(usdt_opt["amount"], "2.00")
+
+    def test_one_evm_address_shows_every_network_that_shares_it(self) -> None:
+        """usdt_bep20, usdt_erc20 and eth all declare wallet_key="eth" — one
+        configured address must surface all three, not just the first match."""
+        from app.api.service import _build_coin_options
+
+        wallets = {"eth": "0xShared"}
+        svc = make_fixed_rate_service({"tether": Decimal("90.00"), "usd-coin": Decimal("90.00"), "ethereum": Decimal("300000.00")})
+
+        opts = _build_coin_options("200.00", wallets, svc)
+
+        ids = [o["id"] for o in opts]
+        for expected in ("usdt_bep20", "usdt_erc20", "usdc_bep20", "usdc_erc20", "eth"):
+            self.assertIn(expected, ids)
+            addr = next(o["address"] for o in opts if o["id"] == expected)
+            self.assertEqual(addr, "0xShared")
+
+
+class CoinTabButtonsTest(unittest.TestCase):
+    def test_multi_network_asset_gets_one_header_and_a_chip_per_network(self) -> None:
+        from app.api.pages import _coin_tab_buttons
+
+        wallets = {"trc20": "T1", "eth": "0x1"}
+        svc = make_fixed_rate_service({"tether": Decimal("90.00")})
+        from app.api.service import _build_coin_options
+        opts = [o for o in _build_coin_options("200.00", wallets, svc) if o["label"] == "USDT"]
+
+        html = _coin_tab_buttons(opts)
+
+        self.assertEqual(html.count(">USDT<"), 1)  # one group header, not one per network
+        self.assertIn("TRC20 (Tron)", html)
+        self.assertIn("BEP20 (BSC)", html)
+        self.assertIn("ERC20 (Ethereum)", html)
+
+    def test_single_network_assets_share_one_row(self) -> None:
+        from app.api.pages import _coin_tab_buttons
+
+        wallets = {"ton": "UQ1", "eth": "0x1", "btc": "bc1"}
+        svc = make_fixed_rate_service({"toncoin": Decimal("600.00"), "ethereum": Decimal("310000.00"), "bitcoin": Decimal("9000000.00")})
+        from app.api.service import _build_coin_options
+        opts = [o for o in _build_coin_options("200.00", wallets, svc) if o["label"] in {"TON", "ETH", "BTC"}]
+
+        html = _coin_tab_buttons(opts)
+
+        self.assertEqual(html.count('class="coin-group-chips"'), 1)
+        self.assertEqual(html.count('class="coin-group"'), 0)  # no asset header for singles
 
 
 class SettingsCryptoWalletsTest(unittest.TestCase):
