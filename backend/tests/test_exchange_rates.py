@@ -12,7 +12,7 @@ class ExchangeRateServiceTest(unittest.TestCase):
         return make_fixed_rate_service({
             "tether":   Decimal("90.00"),
             "usd-coin": Decimal("90.00"),
-            "toncoin":  Decimal("600.00"),
+            "the-open-network":  Decimal("600.00"),
             "bitcoin":  Decimal("9000000.00"),
             "ethereum": Decimal("310000.00"),
         })
@@ -88,8 +88,10 @@ class CoinDefinitionsTest(unittest.TestCase):
     def test_coins_by_id_covers_all(self) -> None:
         self.assertEqual(set(COINS_BY_ID.keys()), {c.id for c in ALL_COINS})
 
-    def test_usdt_trc20_is_first(self) -> None:
-        self.assertEqual(ALL_COINS[0].id, "usdt_trc20")
+    def test_usdt_is_first_asset_and_trc20_is_its_last_network(self) -> None:
+        self.assertEqual(ALL_COINS[0].label, "USDT")
+        usdt_networks = [c for c in ALL_COINS if c.label == "USDT"]
+        self.assertEqual(usdt_networks[-1].id, "usdt_trc20")
 
     def test_all_coins_have_valid_wallet_keys(self) -> None:
         valid_keys = {"trc20", "ton", "eth", "btc", "polygon", "solana"}
@@ -127,7 +129,7 @@ class BuildCoinOptionsTest(unittest.TestCase):
         wallets = {"trc20": "T1", "ton": "UQ1", "eth": "0x1", "btc": "bc1"}
         svc = make_fixed_rate_service({
             "tether": Decimal("90.00"), "usd-coin": Decimal("90.00"),
-            "toncoin": Decimal("600.00"), "ethereum": Decimal("310000.00"),
+            "the-open-network": Decimal("600.00"), "ethereum": Decimal("310000.00"),
             "bitcoin": Decimal("9000000.00"),
         })
 
@@ -202,7 +204,7 @@ class CoinTabButtonsTest(unittest.TestCase):
         from app.api.pages import _coin_tab_buttons
 
         wallets = {"ton": "UQ1", "eth": "0x1", "btc": "bc1"}
-        svc = make_fixed_rate_service({"toncoin": Decimal("600.00"), "ethereum": Decimal("310000.00"), "bitcoin": Decimal("9000000.00")})
+        svc = make_fixed_rate_service({"the-open-network": Decimal("600.00"), "ethereum": Decimal("310000.00"), "bitcoin": Decimal("9000000.00")})
         from app.api.service import _build_coin_options
         opts = [o for o in _build_coin_options("200.00", wallets, svc) if o["label"] in {"TON", "ETH", "BTC"}]
 

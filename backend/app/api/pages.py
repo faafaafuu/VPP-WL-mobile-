@@ -113,25 +113,26 @@ def connect_page(
         {status}
         <div class="guides">
           <details open>
-            <summary>iPhone / Hiddify / Streisand / Shadowrocket</summary>
-            <ol>
-              <li>Установите клиент — через App Store, последнюю версию ставит сам стор: <a href="https://apps.apple.com/us/search?term=Hiddify" target="_blank" rel="noopener">Hiddify</a>, <a href="https://apps.apple.com/us/search?term=Streisand" target="_blank" rel="noopener">Streisand</a> или <a href="https://apps.apple.com/us/search?term=Shadowrocket" target="_blank" rel="noopener">Shadowrocket</a>.</li>
-              <li>Нажмите “Подключить”.</li>
-              <li>Если не открылось, отсканируйте QR или вставьте ссылку.</li>
-            </ol>
+            <summary>iPhone / iPad</summary>
+            <ol><li>Установите <a href="https://apps.apple.com/us/search?term=Hiddify" target="_blank" rel="noopener">Hiddify</a> из App Store (стор сам ставит последнюю версию).</li><li>Нажмите “Подключить”.</li><li>Если не открылось, отсканируйте QR или вставьте ссылку.</li></ol>
           </details>
           <details>
-            <summary>Android / Hiddify</summary>
+            <summary>Android</summary>
             <ol><li>Установите <a href="https://github.com/hiddify/hiddify-app/releases/latest/download/Hiddify-Android-universal.apk">Hiddify (.apk, сразу скачается последняя версия)</a>.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
           </details>
           <details>
-            <summary>Android / v2rayNG</summary>
-            <ol><li>Установите <a href="https://github.com/2dust/v2rayNG/releases/latest" target="_blank" rel="noopener">v2rayNG</a> (страница релизов — версии в именах файлов, стабильной прямой ссылки GitHub не даёт; выберите .apk под архитектуру телефона).</li><li>Нажмите “Скопировать ссылку”.</li><li>Добавьте subscription URL.</li></ol>
+            <summary>Windows</summary>
+            <ol><li>Установите <a href="https://github.com/hiddify/hiddify-app/releases/latest/download/Hiddify-Windows-Setup-x64.exe">Hiddify (.exe, сразу скачается последняя версия)</a>.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
           </details>
           <details>
-            <summary>Windows / v2rayN</summary>
-            <ol><li>Установите <a href="https://github.com/2dust/v2rayN/releases/latest/download/v2rayN-windows-64.zip">v2rayN (.zip, сразу скачается последняя версия)</a>.</li><li>Нажмите “Скопировать ссылку”.</li><li>Subscriptions → Add subscription.</li><li>Вставьте ссылку и нажмите Update subscription.</li></ol>
+            <summary>macOS</summary>
+            <ol><li>Установите <a href="https://github.com/hiddify/hiddify-app/releases/latest/download/Hiddify-MacOS.dmg">Hiddify (.dmg, сразу скачается последняя версия)</a>.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
           </details>
+          <details>
+            <summary>Linux</summary>
+            <ol><li>Установите <a href="https://github.com/hiddify/hiddify-app/releases/latest/download/Hiddify-Linux-x64-AppImage.AppImage">Hiddify (.AppImage, сразу скачается последняя версия)</a>, дайте файлу права на запуск.</li><li>Нажмите “Подключить” или вставьте ссылку подписки.</li></ol>
+          </details>
+          <p class="dim" style="margin-top:2px">// один и тот же клиент на всех платформах — Hiddify. Уже пользуетесь v2rayNG / v2rayN / Streisand / Shadowrocket? Они тоже подходят — просто вставьте туда ссылку подписки.</p>
         </div>
         <div class="tariffs">
           <div class="dim" style="margin-bottom:4px">root@core:~$ ./vpn_router --renew</div>

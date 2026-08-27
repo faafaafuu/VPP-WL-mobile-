@@ -17,7 +17,7 @@ def _service() -> ApiService:
     rate_svc = make_fixed_rate_service({
         "tether": Decimal("100.00"),
         "usd-coin": Decimal("100.00"),
-        "toncoin": Decimal("650.00"),
+        "the-open-network": Decimal("650.00"),
         "bitcoin": Decimal("9000000.00"),
         "ethereum": Decimal("320000.00"),
     })
