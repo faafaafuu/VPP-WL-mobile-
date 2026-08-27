@@ -46,6 +46,9 @@ def landing_page(tariffs: tuple[Tariff, ...]) -> str:
         {steps}
         <div class="dim" style="padding-bottom:6px">// уже оплатили, но потеряли ссылку? <a href="/recover">восстановить доступ</a></div>
         <div class="footer-links">Оплачивая тариф, вы принимаете <a href="/terms">публичную оферту</a> и <a href="/privacy">политику конфиденциальности</a>.</div>
+        <div class="payment-badge">
+          <a href="https://freekassa.net" title="big-dark-1" target="_blank" rel="noopener"><img src="https://cdn.freekassa.net/images/logos/banners/f/big-dark-1.png" alt="big-dark-1" loading="lazy"></a>
+        </div>
         """,
     )
 
@@ -814,6 +817,9 @@ def _page(title: str, body: str) -> str:
     .legal-text a {{ color: var(--cyan); }}
     .footer-links {{ margin-top: 18px; font-size: 11px; color: var(--green-mute); }}
     .footer-links a {{ color: var(--green-mute); text-decoration: underline; }}
+    .payment-badge {{ margin-top: 14px; opacity: .85; transition: opacity .15s; }}
+    .payment-badge:hover {{ opacity: 1; }}
+    .payment-badge img {{ display: block; max-width: 100%; height: auto; border: 1px solid var(--green-line); }}
     @media (max-width: 480px) {{
       body {{ padding: 0 0 32px; }}
       .term {{ border-left: 0; border-right: 0; }}
