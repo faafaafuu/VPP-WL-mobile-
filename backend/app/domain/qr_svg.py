@@ -5,7 +5,10 @@ VERSION = 5
 SIZE = VERSION * 4 + 17
 DATA_CODEWORDS = 108
 ECC_CODEWORDS = 26
-FORMAT_BITS_L_MASK_0 = 0b111011111000100
+# Masked (ECC=L, mask=0) format-info codeword, verified bit-for-bit against
+# the reference `qrcode` library's version-5/ECC-L/mask-0 output — the value
+# this constant previously held did not match a real encoder's output.
+FORMAT_BITS_L_MASK_0 = 0b001000111110111
 
 
 def qr_svg(data: str, scale: int = 8, border: int = 4) -> str:
@@ -35,6 +38,19 @@ def _set(matrix: list[list[bool]], reserved: list[list[bool]], x: int, y: int, v
         reserved[y][x] = True
 
 
+def _format_info_coords() -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+    """The two 15-cell format-info strips that wrap the top-left finder, per
+    ISO/IEC 18004. Shared by pattern reservation and by _draw_format_bits so
+    the two can never drift apart (they previously did: a hand-mirrored
+    reservation loop skipped index 6 on both the direct *and* mirrored side,
+    but the mirrored side's index-6 cell isn't a timing-pattern collision —
+    it under-reserved 2 real format-info cells and over-reserved 2 unrelated
+    ones, which silently shifted every data bit placed after them)."""
+    coords_1 = [(8, i) for i in range(6)] + [(8, 7), (8, 8), (7, 8)] + [(i, 8) for i in range(5, -1, -1)]
+    coords_2 = [(SIZE - 1 - i, 8) for i in range(8)] + [(8, SIZE - 7 + i) for i in range(7)]
+    return coords_1, coords_2
+
+
 def _draw_patterns(matrix: list[list[bool]], reserved: list[list[bool]]) -> None:
     for x, y in ((0, 0), (SIZE - 7, 0), (0, SIZE - 7)):
         _draw_finder(matrix, reserved, x, y)
@@ -43,12 +59,9 @@ def _draw_patterns(matrix: list[list[bool]], reserved: list[list[bool]]) -> None
         _set(matrix, reserved, 6, i, i % 2 == 0)
     _draw_alignment(matrix, reserved, 30, 30)
     _set(matrix, reserved, 8, SIZE - 8, True)
-    for i in range(9):
-        if i != 6:
-            reserved[8][i] = True
-            reserved[i][8] = True
-            reserved[8][SIZE - 1 - i] = True
-            reserved[SIZE - 1 - i][8] = True
+    for coords in _format_info_coords():
+        for x, y in coords:
+            reserved[y][x] = True
 
 
 def _draw_finder(matrix: list[list[bool]], reserved: list[list[bool]], x: int, y: int) -> None:
@@ -154,8 +167,7 @@ def _draw_data(matrix: list[list[bool]], reserved: list[list[bool]], bits: list[
 
 
 def _draw_format_bits(matrix: list[list[bool]], reserved: list[list[bool]]) -> None:
-    coords_1 = [(8, i) for i in range(6)] + [(8, 7), (8, 8), (7, 8)] + [(i, 8) for i in range(5, -1, -1)]
-    coords_2 = [(SIZE - 1 - i, 8) for i in range(8)] + [(8, SIZE - 7 + i) for i in range(7)]
+    coords_1, coords_2 = _format_info_coords()
     bits = [(FORMAT_BITS_L_MASK_0 >> i) & 1 == 1 for i in range(14, -1, -1)]
     for (x, y), value in zip(coords_1, bits):
         _set(matrix, reserved, x, y, value)
