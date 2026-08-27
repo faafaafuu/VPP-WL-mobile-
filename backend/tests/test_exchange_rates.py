@@ -200,6 +200,23 @@ class CoinTabButtonsTest(unittest.TestCase):
         self.assertIn("BEP20 (BSC)", html)
         self.assertIn("ERC20 (Ethereum)", html)
 
+    def test_multi_network_asset_renders_a_dropdown_defaulting_to_erc20(self) -> None:
+        from app.api.pages import _coin_tab_buttons
+        from app.api.service import _build_coin_options
+
+        wallets = {"trc20": "T1", "eth": "0x1"}
+        svc = make_fixed_rate_service({"tether": Decimal("90.00")})
+        opts = [o for o in _build_coin_options("200.00", wallets, svc) if o["label"] == "USDT"]
+
+        html = _coin_tab_buttons(opts)
+
+        self.assertIn('<select class="coin-select"', html)
+        # the ERC20 <option> carries `selected`; TRC20's must not
+        erc20_option = next(line for line in html.splitlines() if "ERC20 (Ethereum)" in line)
+        trc20_option = next(line for line in html.splitlines() if "TRC20 (Tron)" in line)
+        self.assertIn("selected", erc20_option)
+        self.assertNotIn("selected", trc20_option)
+
     def test_single_network_assets_share_one_row(self) -> None:
         from app.api.pages import _coin_tab_buttons
 

@@ -39,8 +39,9 @@ ALL_COINS: tuple[Coin, ...] = (
     Coin("usdc_ton",     "USDC", "TON",               "usd-coin", "ton",     2, _USDC, 11),
     Coin("usdc_trc20",   "USDC", "TRC20 (Tron)",      "usd-coin", "trc20",   2, _USDC, 12),
     Coin("ton",          "TON",  "TON Blockchain",    "the-open-network", "ton", 4, "#0098ea", 13),
-    Coin("eth",          "ETH",  "Ethereum",          "ethereum", "eth",     6, "#627eea", 14),
-    Coin("btc",          "BTC",  "Bitcoin",           "bitcoin",  "btc",     8, "#f7931a", 15),
+    Coin("sol",          "SOL",  "Solana",            "solana",   "solana",  4, "#9945ff", 14),
+    Coin("eth",          "ETH",  "Ethereum",          "ethereum", "eth",     6, "#627eea", 15),
+    Coin("btc",          "BTC",  "Bitcoin",           "bitcoin",  "btc",     8, "#f7931a", 16),
 )
 
 COINS_BY_ID: dict[str, Coin] = {c.id: c for c in ALL_COINS}

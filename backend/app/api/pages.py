@@ -265,7 +265,10 @@ def invoice_page(
           async function selectCoin(idx) {{
             selectedIdx = idx;
             document.querySelectorAll('.coin-panel').forEach((p, i) => p.hidden = i !== idx);
-            document.querySelectorAll('.coin-tab').forEach((b, i) => b.classList.toggle('active', i === idx));
+            document.querySelectorAll('.coin-tab').forEach(b => b.classList.toggle('active', parseInt(b.dataset.idx) === idx));
+            document.querySelectorAll('.coin-select').forEach(s => {{
+              if ([...s.options].some(o => parseInt(o.value) === idx)) s.value = idx;
+            }});
             const state = document.getElementById('watchState');
             try {{
               const resp = await fetch('/invoice/' + TOKEN + '/select', {{
@@ -576,9 +579,11 @@ def _coin_tab_buttons(coin_options: list[dict[str, str]]) -> str:
     """Groups consecutive options that share a label (e.g. every USDT network)
     under one asset header with network-only chips underneath, instead of
     repeating "USDT" on every chip — coin_options is already asset-grouped by
-    ALL_COINS's declaration order. Assets with only one network (TON/ETH/BTC)
-    are collected into one shared row at the end instead of each getting its
-    own line, so the picker reads as a couple of neat rows, not one column."""
+    ALL_COINS's declaration order. An asset with multiple networks (USDT/USDC)
+    gets one row with a network dropdown (defaulting to ERC20, changing it
+    selects that coin right away); an asset with only one network (TON/SOL/
+    ETH/BTC) is a plain chip. All the single-network chips share one row at
+    the end so the picker reads as a couple of neat rows, not one column."""
     groups: list[tuple[str, list[tuple[int, dict[str, str]]]]] = []
     for i, opt in enumerate(coin_options):
         if groups and groups[-1][0] == opt["label"]:
@@ -592,21 +597,20 @@ def _coin_tab_buttons(coin_options: list[dict[str, str]]) -> str:
         if len(entries) == 1:
             singles.append(entries[0])
             continue
-        chips = "\n".join(
-            f'<button class="coin-tab" type="button" onclick="selectCoin({i})">'
-            f'{escape(opt["network_label"])}'
-            f'</button>'
+        default_i = next((i for i, opt in entries if opt["network_label"].startswith("ERC20")), entries[0][0])
+        options = "\n".join(
+            f'<option value="{i}"{" selected" if i == default_i else ""}>{escape(opt["network_label"])}</option>'
             for i, opt in entries
         )
         parts.append(
             f'<div class="coin-group">'
             f'<div class="coin-group-label"><span class="coin-dot" style="background:{escape(entries[0][1]["color"])}"></span>{escape(label)}</div>'
-            f'<div class="coin-group-chips">{chips}</div>'
+            f'<select class="coin-select" onchange="selectCoin(parseInt(this.value))">{options}</select>'
             f'</div>'
         )
     if singles:
         chips = "\n".join(
-            f'<button class="coin-tab" type="button" onclick="selectCoin({i})">'
+            f'<button class="coin-tab" type="button" data-idx="{i}" onclick="selectCoin({i})">'
             f'<span class="coin-dot" style="background:{escape(opt["color"])}"></span>'
             f'{escape(opt["label"])}'
             f'</button>'
@@ -774,13 +778,18 @@ def _page(title: str, body: str) -> str:
       font-size: 12px; font-weight: 700; color: var(--white);
     }}
     .coin-group-chips {{ display: flex; flex-wrap: wrap; gap: 8px; }}
+    .coin-select {{
+      padding: 10px 12px; min-height: 40px; border: 1px solid var(--green-line); background: rgba(0,0,0,.35);
+      font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--green);
+    }}
+    .coin-select:focus {{ outline: none; border-color: var(--cyan); }}
     .coin-tab {{
       padding: 10px 14px; min-height: 40px; border: 1px solid var(--green-line); background: transparent;
       font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--green);
     }}
     .coin-tab.active {{ border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,.08); }}
     .coin-panel {{ margin-top: 14px; border: 1px solid var(--green-line); padding: 14px; background: rgba(0,0,0,.3); }}
-    .coin-dot {{ width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }}
+    .coin-dot {{ width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; margin-right: 6px; }}
     .coin-net {{ color: var(--green-mute); font-size: 11px; }}
     .crypto-meta {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }}
     .crypto-amount {{ font-size: 24px; font-weight: 800; margin: 0 0 12px; color: var(--white); cursor: pointer; }}
