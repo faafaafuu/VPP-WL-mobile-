@@ -209,6 +209,15 @@ class SolanaProvider:
             raise ChainProviderError(f"solana RPC error: {payload['error']}")
         return payload.get("result")
 
+    def latest_blockhash(self) -> str:
+        """A blockhash recent enough for a wallet to sign against — a
+        transaction built on a stale one is rejected outright."""
+        result = self._rpc("getLatestBlockhash", [{"commitment": "finalized"}])
+        blockhash = ((result or {}).get("value") or {}).get("blockhash")
+        if not blockhash:
+            raise ChainProviderError("solana RPC returned no blockhash")
+        return str(blockhash)
+
     def incoming_transfers(self, address: str) -> list[IncomingTransfer]:
         signatures = self._rpc(
             "getSignaturesForAddress", [address, {"limit": self.signature_limit}]

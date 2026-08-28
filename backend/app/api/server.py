@@ -72,13 +72,12 @@ _CARD_ERRORS = {
     "contact": "Сначала укажите email или привяжите Telegram — иначе ссылку будет некуда прислать.",
 }
 
-WATCHABLE_COIN_IDS = frozenset(
-    build_providers(
-        SETTINGS.crypto_trongrid_api_key,
-        SETTINGS.crypto_etherscan_api_key,
-        bep20_enabled=SETTINGS.crypto_bep20_enabled,
-    )
+CHAIN_PROVIDERS = build_providers(
+    SETTINGS.crypto_trongrid_api_key,
+    SETTINGS.crypto_etherscan_api_key,
+    bep20_enabled=SETTINGS.crypto_bep20_enabled,
 )
+WATCHABLE_COIN_IDS = frozenset(CHAIN_PROVIDERS)
 API_SERVICE = ApiService(
     REPOSITORY,
     TOKEN_SERVICE,
@@ -108,6 +107,7 @@ API_SERVICE = ApiService(
     freekassa_api_key=SETTINGS.freekassa_api_key,
     freekassa_payment_system_i=SETTINGS.freekassa_payment_system_i,
     watchable_coin_ids=WATCHABLE_COIN_IDS,
+    chain_providers=CHAIN_PROVIDERS,
 )
 
 
@@ -369,6 +369,13 @@ class ApiHandler(BaseHTTPRequestHandler):
             self._send_service_response(lambda: API_SERVICE.set_invoice_contact(token, payload))
             return
 
+        if path.startswith("/invoice/") and path.endswith("/solana/tx"):
+            payload = self._read_json()
+            if payload is None:
+                return
+            token = path.removeprefix("/invoice/")[: -len("/solana/tx")].strip("/")
+            self._send_service_response(lambda: API_SERVICE.solana_transfer_message(token, payload))
+            return
         if path.startswith("/invoice/") and path.endswith("/select"):
             payload = self._read_form_or_json()
             if payload is None:

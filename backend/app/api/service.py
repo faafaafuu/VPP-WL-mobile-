@@ -21,6 +21,8 @@ from app.api.pages import (
     terms_page,
 )
 from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
+from app.domain.solana_tx import SolanaTxError, build_transfer_message
+from app.services.chain_providers import ChainProviderError
 from app.domain.wallet_connect import payment_units, payment_uri, transfer_spec, wallet_links
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
@@ -73,6 +75,7 @@ class ApiService:
         freekassa_api_key: str | None = None,
         freekassa_payment_system_i: str = "36",
         watchable_coin_ids: frozenset[str] | None = None,
+        chain_providers: dict[str, Any] | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -106,6 +109,9 @@ class ApiService:
         self.freekassa_payment_system_i = freekassa_payment_system_i
         # None = no filtering (tests and setups without a payment watcher).
         self.watchable_coin_ids = watchable_coin_ids
+        # Only the Solana one is used here, to fetch a recent blockhash
+        # for a transfer the buyer's browser wallet will sign.
+        self.chain_providers = chain_providers or {}
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -370,6 +376,41 @@ class ApiService:
         if not address:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
         return qr_svg(address)
+
+    def solana_transfer_message(self, token: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """An unsigned SOL transfer for the buyer's browser wallet to sign.
+
+        Phantom's desktop extension never registers the solana: URI scheme —
+        it injects a provider instead — so the payment link does nothing
+        there. The page hands this to that provider.
+        """
+        subscription = self._commercial_subscription(token)
+        if not self._contact_known(subscription):
+            raise ApiError(HTTPStatus.CONFLICT, {"error": "contact required"})
+        sender = str(payload.get("from", "")).strip()
+        if not sender:
+            raise ApiError(HTTPStatus.BAD_REQUEST, {"error": "missing sender"})
+
+        coin = COINS_BY_ID["sol"]
+        address = self.crypto_wallets.get(coin.wallet_key)
+        if not address:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "coin not configured"})
+        amount = subscription.pay_amount if subscription.pay_coin_id == "sol" else None
+        if not amount:
+            raise ApiError(HTTPStatus.CONFLICT, {"error": "select the coin first"})
+        lamports = payment_units("sol", amount)
+        if not lamports:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "amount unavailable"})
+
+        provider = (self.chain_providers or {}).get("sol")
+        if provider is None or not hasattr(provider, "latest_blockhash"):
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "solana rpc unavailable"})
+        try:
+            blockhash = provider.latest_blockhash()
+            message = build_transfer_message(sender, address, int(lamports), blockhash)
+        except (ChainProviderError, SolanaTxError) as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+        return {"message": message, "amount": amount, "address": address}
 
     def invoice_payment_qr_svg(self, token: str, coin_id: str) -> str:
         """QR of the full payment request — recipient, network and amount.

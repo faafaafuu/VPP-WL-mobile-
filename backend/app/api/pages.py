@@ -892,12 +892,15 @@ _INVOICE_JS = r"""
             return true;
           }
 
-          let notInstalledTimer = null;
+          let openedHintTimer = null;
           function notInstalledLater(name) {
-            if (notInstalledTimer) clearTimeout(notInstalledTimer);
-            notInstalledTimer = setTimeout(function () {
-              walletMsg('Если ' + name + ' не открылся — приложения нет на этом устройстве. ' +
-                        'Выберите другой кошелёк или отсканируйте QR ниже.', 'c-yellow');
+            if (openedHintTimer) clearTimeout(openedHintTimer);
+            /* Открылся кошелёк или нет — со страницы не видно. Раньше здесь
+               утверждалось, что приложения нет: неправда ровно в том случае,
+               когда оно есть, а схему просто некому обработать. */
+            openedHintTimer = setTimeout(function () {
+              walletMsg('Открываем ' + name + '. Если окно не появилось — ' +
+                        'выберите другой кошелёк или отсканируйте QR ниже.', '');
             }, 1500);
           }
 
@@ -967,7 +970,66 @@ _INVOICE_JS = r"""
               : 'У TRC20 нет платёжной ссылки, а TronLink подключается только расширением в браузере. С телефона переведите вручную: адрес ниже, сумма ровно ' + coin.amount + ' ' + coin.label + '.', '');
           }
 
+          /* Расширения Solana-кошельков не регистрируют схему solana: —
+             они инжектят провайдер. Поэтому на десктопе ссылка молчит, и
+             говорить при этом "кошелька нет" было неправдой: он есть,
+             обращаться к нему надо иначе. */
+          function solanaProviders() {
+            const found = [];
+            const phantom = window.phantom && window.phantom.solana;
+            if (phantom && phantom.isPhantom) found.push({name: 'Phantom', id: 'phantom', provider: phantom});
+            if (window.solflare && window.solflare.isSolflare) {
+              found.push({name: 'Solflare', id: 'solflare', provider: window.solflare});
+            }
+            if (window.backpack && window.backpack.isBackpack) {
+              found.push({name: 'Backpack', id: 'backpack', provider: window.backpack});
+            }
+            return found;
+          }
+
+          async function solanaSend(entry, coin) {
+            try {
+              walletMsg('Подтвердите подключение в ' + entry.name + '…', '');
+              const res = await entry.provider.connect();
+              const from = (res && res.publicKey ? res.publicKey : entry.provider.publicKey);
+              if (!from) { walletMsg('Кошелёк не выдал адрес — попробуйте ещё раз.', 'c-red'); return; }
+              walletMsg('Готовим перевод…', '');
+              const resp = await fetch('/invoice/' + TOKEN + '/solana/tx', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({from: from.toString()}),
+              });
+              const data = await resp.json();
+              if (!resp.ok || !data.message) {
+                walletMsg('Не удалось собрать перевод: ' + (data.error || 'попробуйте ещё раз') + '.', 'c-red');
+                return;
+              }
+              walletMsg('Подтвердите перевод в ' + entry.name + '…', '');
+              const sent_ = await entry.provider.request({
+                method: 'signAndSendTransaction',
+                params: {message: data.message},
+              });
+              sent((sent_ && (sent_.signature || sent_)) || '', coin.pay);
+            } catch (e) {
+              walletMsg(walletError(e), 'c-red');
+            }
+          }
+
           function buildUriSheet(coin) {
+            if (coin.id === 'sol') {
+              const injected = solanaProviders();
+              if (injected.length) {
+                const group = sheetGroup('кошелёк в этом браузере');
+                injected.forEach(function (entry) {
+                  walletRow(group, entry.name, WALLET_ICONS[entry.id] || '', function () {
+                    solanaSend(entry, coin);
+                  });
+                });
+                addQr(coin);
+                walletMsg('Выберите кошелёк — счёт для оплаты выбираете в нём сами, сумма и получатель подставятся.', '');
+                return;
+              }
+            }
             addWalletButtons(coin);
             addQr(coin);
             walletMsg('Выберите кошелёк — он откроется сразу на экране отправки, сумма и адрес уже подставлены.', '');
