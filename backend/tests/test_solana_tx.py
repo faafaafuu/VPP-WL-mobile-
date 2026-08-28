@@ -178,3 +178,39 @@ class SheetHonestyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SolanaErrorMessagesTest(unittest.TestCase):
+    def test_paying_from_the_receiving_wallet_is_named_plainly(self) -> None:
+        """Happens the moment the shop owner tests with their own wallet.
+        Solana rejects a self-transfer, and "sender and recipient are the
+        same account" told the buyer nothing they could act on."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
+        svc.select_invoice_coin(token, {"coin_id": "sol"})
+
+        with self.assertRaises(ApiError) as ctx:
+            svc.solana_transfer_message(token, {"from": _TO})
+
+        self.assertEqual(ctx.exception.payload["error"], "same_account")
+
+    def test_every_error_code_has_russian_text_on_the_page(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        html = svc.invoice_html(token)
+        block = html.split("const SOLANA_ERRORS = {")[1].split("};")[0]
+
+        codes = [
+            "same_account", "contact required", "missing sender", "select the coin first",
+            "amount unavailable", "coin not configured", "solana rpc unavailable", "build_failed",
+        ]
+        for code in codes:
+            with self.subTest(code=code):
+                self.assertIn(f"'{code}'", block)
+
+    def test_raw_server_text_is_not_shown_to_the_buyer(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        self.assertNotIn("data.error || ", svc.invoice_html(token))

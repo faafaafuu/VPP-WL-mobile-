@@ -402,6 +402,11 @@ class ApiService:
         if not lamports:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "amount unavailable"})
 
+        if sender == address:
+            # The merchant's own wallet, which happens whenever the shop
+            # owner tests with it. Solana rejects a self-transfer outright.
+            raise ApiError(HTTPStatus.CONFLICT, {"error": "same_account"})
+
         provider = (self.chain_providers or {}).get("sol")
         if provider is None or not hasattr(provider, "latest_blockhash"):
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "solana rpc unavailable"})
@@ -409,7 +414,9 @@ class ApiService:
             blockhash = provider.latest_blockhash()
             message = build_transfer_message(sender, address, int(lamports), blockhash)
         except (ChainProviderError, SolanaTxError) as exc:
-            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+            # Codes, not prose: the page renders these to the buyer, and it
+            # renders them in Russian.
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "build_failed", "detail": str(exc)}) from exc
         return {"message": message, "amount": amount, "address": address}
 
     def invoice_payment_qr_svg(self, token: str, coin_id: str) -> str:
