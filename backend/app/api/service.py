@@ -29,7 +29,7 @@ from app.domain.config_validation import ConfigValidationError, validate_config_
 from app.domain.models import AdminAuditEvent, CommercialSubscription, NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
 from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
-from app.domain.qr_svg import qr_svg
+from app.domain.qr_svg import fits as qr_fits, qr_svg
 from app.domain.tariffs import Tariff, parse_tariffs, tariffs_by_id
 from app.domain.unique_amount import AmountCollisionError, unique_coin_amount
 from app.domain.v2ray_subscription import encoded_subscription, hysteria2_link, raw_subscription
@@ -262,6 +262,8 @@ class ApiService:
             coin_options = [opt for opt in coin_options if opt["id"] in self.watchable_coin_ids]
         if not coin_options:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "no configured crypto wallets"})
+        for option in coin_options:
+            option["pay_qr_url"] = self.payment_qr_path(token, option["id"], option.get("pay_uri"))
         return invoice_page(
             subscription,
             tariff,
@@ -351,7 +353,15 @@ class ApiService:
             "contact_telegram": bool((subscription.tg_chat_id or "").strip()),
         }
 
+    @staticmethod
+    def payment_qr_path(token: str, coin_id: str, uri: str | None) -> str | None:
+        """Where the payment QR lives, or None when this request cannot be
+        drawn as one. EIP-681 token transfers run past the encoder's capacity,
+        and offering a button that 503s is worse than offering none."""
+        return f"/invoice/{token}/payqr/{coin_id}" if uri and qr_fits(uri) else None
+
     def _payment_intent_response(self, token: str, coin: Coin, amount: str, address: str) -> dict[str, Any]:
+        uri = payment_uri(coin.id, address, amount)
         return {
             "status": "pending",
             "coin_id": coin.id,
@@ -362,9 +372,9 @@ class ApiService:
             "qr_url": f"/invoice/{token}/qr/{coin.id}",
             # The amount is only final here, so the one-tap link and its QR
             # have to be rebuilt now rather than at page-render time.
-            "pay_uri": payment_uri(coin.id, address, amount),
+            "pay_uri": uri,
             "pay_units": payment_units(coin.id, amount),
-            "pay_qr_url": f"/invoice/{token}/payqr/{coin.id}",
+            "pay_qr_url": self.payment_qr_path(token, coin.id, uri),
             # Rebuilt with the final amount so every wallet button carries the
             # sum the payment watcher is actually waiting for.
             "wallets": wallet_links(coin.id, address, amount),
@@ -441,6 +451,11 @@ class ApiService:
         uri = payment_uri(coin_id, address, amount or "")
         if not uri:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "coin has no payment uri"})
+        if not qr_fits(uri):
+            # EIP-681 token transfers run past what the encoder holds. Better
+            # to say so than to raise on a request path and hand the buyer a
+            # 502 in the middle of paying.
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "qr_too_long"})
         return qr_svg(uri)
 
     def _wallet_address_for_coin(self, coin_id: str | None) -> str | None:

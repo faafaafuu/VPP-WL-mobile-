@@ -226,7 +226,7 @@ def invoice_page(
                 "pay_uri": opt.get("pay_uri"),
                 "pay_units": opt.get("pay_units"),
                 "wallets": opt.get("wallets") or [],
-                "pay_qr_url": f"/invoice/{token}/payqr/{opt['id']}" if opt.get("pay_uri") else None,
+                "pay_qr_url": opt.get("pay_qr_url"),
             }
             for opt in coin_options
         ],

@@ -11,10 +11,20 @@ ECC_CODEWORDS = 26
 FORMAT_BITS_L_MASK_0 = 0b001000111110111
 
 
+# Version-5 symbol, byte mode: 106 bytes of payload and not one more. Callers
+# that build their own payloads must check with fits() first — this encoder
+# raises, and a raise on a request path is a 502 for the buyer.
+MAX_BYTES = 106
+
+
+def fits(data: str) -> bool:
+    return len(data.encode("utf-8")) <= MAX_BYTES
+
+
 def qr_svg(data: str, scale: int = 8, border: int = 4) -> str:
     raw = data.encode("utf-8")
-    if len(raw) > 106:
-        raise ValueError("QR data is too long for MVP encoder")
+    if len(raw) > MAX_BYTES:
+        raise ValueError(f"QR data is {len(raw)} bytes, encoder holds {MAX_BYTES}")
     matrix, reserved = _empty_matrix()
     _draw_patterns(matrix, reserved)
     codewords = _data_codewords(raw)

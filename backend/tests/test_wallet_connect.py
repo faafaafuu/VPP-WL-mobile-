@@ -424,3 +424,52 @@ class InvoiceSheetLayoutTest(unittest.TestCase):
 
         self.assertNotIn("evmShortfall", html)
         self.assertNotIn("0x70a08231", html)
+
+
+class PaymentQrCapacityTest(unittest.TestCase):
+    """The QR encoder is a version-5 symbol: 106 bytes and no more. EIP-681
+    token transfers are 133-135 bytes, so asking it to draw one raised inside
+    a request handler — the buyer got a 502 on the payment page."""
+
+    def test_long_uris_are_reported_not_raised(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
+        svc.select_invoice_coin(token, {"coin_id": "usdt_polygon"})
+
+        with self.assertRaises(ApiError) as ctx:
+            svc.invoice_payment_qr_svg(token, "usdt_polygon")
+
+        self.assertEqual(ctx.exception.status, HTTPStatus.SERVICE_UNAVAILABLE)
+        self.assertEqual(ctx.exception.payload["error"], "qr_too_long")
+
+    def test_no_qr_button_is_offered_when_it_cannot_be_drawn(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
+
+        result = svc.select_invoice_coin(token, {"coin_id": "usdt_polygon"})
+
+        self.assertIsNone(result["pay_qr_url"])
+
+    def test_short_uris_still_get_a_qr(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
+
+        for coin_id in ("btc", "ton", "sol", "eth"):
+            with self.subTest(coin_id=coin_id):
+                result = svc.select_invoice_coin(token, {"coin_id": coin_id})
+                self.assertIsNotNone(result["pay_qr_url"])
+                self.assertIn("<svg", svc.invoice_payment_qr_svg(token, coin_id))
+
+    def test_every_offered_uri_either_fits_or_offers_no_button(self) -> None:
+        from app.domain.qr_svg import fits
+
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        for coin in _coins_from(svc.invoice_html(token)):
+            with self.subTest(coin_id=coin["id"]):
+                if coin["pay_qr_url"]:
+                    self.assertTrue(fits(coin["pay_uri"]))
