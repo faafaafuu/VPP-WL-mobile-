@@ -132,6 +132,11 @@ class ApiHandler(BaseHTTPRequestHandler):
         if path == "/":
             self._send_html(HTTPStatus.OK, API_SERVICE.landing_html())
             return
+        if path == "/robots.txt":
+            # A noindex meta tag only works on pages a crawler already
+            # fetched; this keeps them from being fetched at all.
+            self._send_text(HTTPStatus.OK, "User-agent: *\nDisallow: /\n", "text/plain")
+            return
         if path == "/health":
             self._send_json(HTTPStatus.OK, {"status": "ok"})
             return

@@ -19,7 +19,7 @@ def landing_page(tariffs: tuple[Tariff, ...]) -> str:
     base_monthly = _base_monthly_price(tariffs)
     rows = "\n".join(_tariff_row(i, tariff, base_monthly) for i, tariff in enumerate(tariffs))
     return _page(
-        "Быстрый VPN-доступ",
+        "Клео",
         f"""
         <section class="section" style="gap:var(--s6)">
           <div class="log">
@@ -130,7 +130,7 @@ def connect_page(
           </div>
         """
     return _page(
-        "Подключение VPN",
+        "Клео — подключение",
         f"""
         {status}
         <div class="guides">
@@ -1186,6 +1186,13 @@ def _page(title: str, body: str) -> str:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{escape(title)}</title>
+  <!-- Реклама VPN-сервисов в РФ запрещена с марта 2024 года, а в реестр
+       блокировок домены попадают в том числе по находке в поисковой выдаче.
+       Продажи идут из Telegram, поиск канал привлечения не даёт — поэтому
+       страницы закрыты от индексации, а не переписаны под поисковик. -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="description" content="Личный кабинет сервиса Клео.">
+  <meta name="referrer" content="no-referrer">
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%23050705%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2300ff41%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%2210.5%22%2F%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%2216%22%20rx%3D%224.6%22%20ry%3D%2210.5%22%2F%3E%3Cpath%20d%3D%22M5.5%2016h21M7.6%2010.2h16.8M7.6%2021.8h16.8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
