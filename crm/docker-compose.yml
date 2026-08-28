@@ -2,6 +2,9 @@ name: twenty
 
 services:
   server:
+    # DISABLED: CRM memory usage too high (postgres + redis + node). To re-enable:
+    # remove profiles, restart: "no" lines, and run: docker compose up -d
+    profiles: ["disabled"]
     image: twentycrm/twenty:${TAG:-latest}
     volumes:
       - server-local-data:/app/packages/twenty-server/.local-storage
@@ -56,9 +59,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-    restart: always
+    restart: "no"
 
   worker:
+    profiles: ["disabled"]
     image: twentycrm/twenty:${TAG:-latest}
     volumes:
       - server-local-data:/app/packages/twenty-server/.local-storage
@@ -106,9 +110,10 @@ services:
         condition: service_healthy
       server:
         condition: service_healthy
-    restart: always
+    restart: "no"
 
   db:
+    profiles: ["disabled"]
     image: postgres:16
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -121,11 +126,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    restart: always
+    restart: "no"
 
   redis:
+    profiles: ["disabled"]
     image: redis
-    restart: always
+    restart: "no"
     command: ["--maxmemory-policy", "noeviction"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]

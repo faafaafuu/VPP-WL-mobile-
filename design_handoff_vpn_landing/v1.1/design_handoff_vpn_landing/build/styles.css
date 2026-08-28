@@ -1,0 +1,265 @@
+/* ============================================================
+   CLEOHOP — cyberpunk terminal theme
+   Единая система: сетка 4px, одна высота контролов, моно-типографика.
+   Мобильный брейкпоинт: 720px.
+   ============================================================ */
+
+:root{
+  /* цвета */
+  --bg:#050705;
+  --green:#00ff41;
+  --green-dim:rgba(0,255,65,.55);
+  --green-mute:rgba(0,255,65,.35);
+  --green-faint:rgba(0,255,65,.3);
+  --line:rgba(0,255,65,.18);
+  --line-soft:rgba(0,255,65,.12);
+  --line-strong:rgba(0,255,65,.35);
+  --panel:rgba(0,255,65,.02);
+  --cyan:#00d4ff;
+  --yellow:#ffd60a;
+  --red:#ff2b4d;
+  --white:#fff;
+  --ink-on-green:#020402;
+
+  /* сетка 4px */
+  --s1:4px;  --s2:8px;  --s3:12px; --s4:16px;
+  --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px;
+
+  /* размеры */
+  --ctrl:52px;          /* единая высота всех кнопок/полей */
+  --page:840px;         /* макс. ширина контента */
+  --pad:40px;           /* внутренний отступ страницы (десктоп) */
+  --font:'Share Tech Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--bg);
+  background-image:
+    linear-gradient(rgba(0,255,65,.028) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,65,.028) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--green);
+  font:400 14px/1.5 var(--font);
+  -webkit-font-smoothing:antialiased;
+}
+
+a{color:var(--cyan);text-decoration:none}
+a:hover{color:var(--green)}
+
+/* ---------- каркас окна терминала ---------- */
+.shell{max-width:var(--page);margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:100vh;display:flex;flex-direction:column}
+
+.chrome{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 var(--s5);border-bottom:1px solid rgba(0,255,65,.2);background:rgba(0,255,65,.03);position:sticky;top:0;z-index:10;backdrop-filter:blur(4px)}
+.chrome__dots{display:flex;gap:var(--s2)}
+.chrome__dots i{width:10px;height:10px;border-radius:50%;display:block}
+.chrome__dots i:nth-child(1){background:var(--red)}
+.chrome__dots i:nth-child(2){background:var(--yellow)}
+.chrome__dots i:nth-child(3){background:var(--green)}
+.chrome__title{font-size:11px;letter-spacing:.5px;color:rgba(0,255,65,.4)}
+
+.main{flex:1;padding:var(--pad);display:flex;flex-direction:column;gap:var(--s12)}
+
+.statusbar{display:flex;align-items:center;height:44px;padding:0 var(--pad);border-top:1px dashed rgba(0,255,65,.2);font-size:11px;letter-spacing:.5px;color:var(--green-faint)}
+.statusbar b{color:var(--green);font-weight:400;margin:0 var(--s1)}
+
+/* ---------- секции ---------- */
+.section{display:flex;flex-direction:column;gap:14px}
+.section__label{font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--green-faint)}
+.section__head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s4)}
+.section__hint{font-size:11.5px;color:var(--green-faint)}
+
+.panel{padding:var(--s6) 28px;border:1px solid rgba(0,255,65,.14);background:var(--panel)}
+
+/* ---------- лог ---------- */
+.log{display:flex;flex-direction:column;gap:var(--s1);font-size:12.5px;line-height:1.7}
+.log .dim{color:rgba(0,255,65,.4)}
+.log .ok{color:var(--cyan)}
+.log .warn{color:var(--red)}
+.log .hl{color:var(--green)}
+
+/* ---------- герой ---------- */
+.hero{display:flex;flex-direction:column;gap:var(--s5)}
+.hero h1{margin:0;font-size:44px;line-height:1.15;letter-spacing:-.5px;font-weight:700;color:var(--green);text-shadow:0 0 14px rgba(0,255,65,.45)}
+.hero h1 .cursor{display:inline-block;width:14px;height:.82em;background:var(--green);margin-left:4px;vertical-align:-.06em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.hero__sub{display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.6;color:var(--green-dim)}
+
+/* ---------- кнопки (все одной высоты) ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);height:var(--ctrl);padding:0 28px;font:inherit;font-size:13.5px;line-height:1;border:1px solid var(--line-strong);background:rgba(0,255,65,.03);color:var(--green);cursor:pointer;transition:background .15s,box-shadow .15s,filter .15s;text-align:center}
+.btn:hover{background:rgba(0,255,65,.08);color:var(--green)}
+.btn--primary{background:var(--green);border-color:var(--green);color:var(--ink-on-green);font-weight:700;box-shadow:0 0 20px rgba(0,255,65,.3)}
+.btn--primary:hover{filter:brightness(1.15);box-shadow:0 0 28px rgba(0,255,65,.5);color:var(--ink-on-green)}
+.btn--cta{height:56px;padding:0 32px;font-size:14px;align-self:flex-start}
+.btn--cyan{border-color:rgba(0,212,255,.45);background:rgba(0,212,255,.06);color:var(--cyan)}
+.btn--cyan:hover{background:rgba(0,212,255,.14);color:var(--cyan)}
+.btn--block{width:100%}
+
+/* ---------- тарифы ---------- */
+.tariffs{display:flex;flex-direction:column;gap:var(--s3)}
+.tariff{display:grid;grid-template-columns:1fr 110px 64px;align-items:center;gap:var(--s4);min-height:64px;padding:14px var(--s5);border:1px solid rgba(0,212,255,.3);background:rgba(0,212,255,.04);transition:background .15s,box-shadow .15s}
+.tariff:hover{background:rgba(0,212,255,.1)}
+.tariff__name{font-size:14px;color:var(--cyan)}
+.tariff__name .note{color:var(--green-mute)}
+.tariff__meta{font-size:11.5px;color:rgba(0,255,65,.4);margin-top:5px}
+.tariff__price{display:flex;align-items:baseline;justify-content:flex-end;gap:var(--s2);text-align:right}
+.tariff__old{font-size:12px;color:var(--green-faint);text-decoration:line-through}
+.tariff__now{font-size:17px;font-weight:700;color:var(--white)}
+.tariff__badge{justify-self:end;display:inline-flex;align-items:center;justify-content:center;width:52px;height:24px;background:rgba(255,43,77,.14);border:1px solid rgba(255,43,77,.5);font-size:11.5px;color:var(--red)}
+.tariff--warn{border-color:rgba(255,214,10,.55);background:rgba(255,214,10,.05)}
+.tariff--warn:hover{background:rgba(255,214,10,.1)}
+.tariff--warn .tariff__name{color:var(--yellow)}
+.tariff--best{border-color:var(--green);background:rgba(0,255,65,.07);box-shadow:0 0 18px rgba(0,255,65,.12)}
+.tariff--best:hover{background:rgba(0,255,65,.12)}
+.tariff--best .tariff__name{color:var(--green)}
+
+/* ---------- шаги «как это работает» ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+.step{display:flex;flex-direction:column;gap:var(--s3);padding:18px;border:1px solid rgba(0,255,65,.14);background:var(--panel)}
+.step__n{font-size:12px}
+.step__n--cyan{color:var(--cyan)} .step__n--yellow{color:var(--yellow)} .step__n--red{color:var(--red)}
+.step__text{font-size:13px;line-height:1.5;color:rgba(0,255,65,.6)}
+
+/* ---------- подвал-примечания ---------- */
+.notes{display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s5);border-top:1px solid var(--line-soft);font-size:12px;line-height:1.7;color:var(--green-mute)}
+
+/* ============================================================
+   СТРАНИЦА ОПЛАТЫ
+   Порядок блоков: стейблкоины → сеть → другая крипта → карта
+   ============================================================ */
+
+.order{display:flex;flex-direction:column;gap:var(--s4)}
+.order__cmd{display:flex;flex-direction:column;gap:var(--s2);font-size:12px;color:rgba(0,255,65,.4)}
+.order__back{color:var(--yellow);font-size:12px}
+.order__back:hover{color:var(--yellow);text-decoration:underline}
+.order__head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s6);padding-bottom:var(--s5);border-bottom:1px solid rgba(0,255,65,.14)}
+.order__head h1{margin:0;font-size:32px;line-height:1;font-weight:700;color:var(--green);text-shadow:0 0 12px rgba(0,255,65,.4)}
+.order__meta{display:grid;grid-template-columns:auto auto;gap:6px var(--s5);font-size:12px;text-align:right}
+.order__meta dt{color:var(--green-faint);margin:0}
+.order__meta dd{margin:0;color:var(--white)}
+.order__meta dd.code{color:var(--cyan)}
+
+/* группа способов оплаты */
+.paygroup{display:flex;flex-direction:column;gap:var(--s3)}
+.paygroup__label{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green-faint)}
+
+/* монеты — равномерная сетка, одна высота */
+.coins{display:grid;gap:var(--s3)}
+.coins--2{grid-template-columns:repeat(2,1fr)}
+.coins--4{grid-template-columns:repeat(4,1fr)}
+.coin{display:flex;align-items:center;gap:var(--s3);height:var(--ctrl);padding:0 var(--s4);border:1px solid var(--line);background:var(--panel);color:var(--green-dim);font-size:13.5px;cursor:pointer;transition:background .15s,border-color .15s}
+.coin:hover{border-color:var(--line-strong);background:rgba(0,255,65,.05);color:var(--green)}
+.coin i{width:8px;height:8px;border-radius:50%;flex:none;display:block}
+.coin.is-active{border-color:var(--green);background:rgba(0,255,65,.08);color:var(--green)}
+.coin--usdt i{background:#26a17b}
+.coin--usdc i{background:#2775ca}
+.coin--eth  i{background:#627eea}
+.coin--btc  i{background:#f7931a}
+.coin--ton  i{background:#0098ea}
+.coin--sol  i{background:#9945ff}
+
+/* выбор сети — отдельная строка, не рваные дропдауны */
+.network{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:var(--s4);height:var(--ctrl);padding:0 var(--s4);border:1px solid var(--line);background:var(--panel)}
+.network__label{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green-faint)}
+.network select{appearance:none;width:100%;background:transparent;border:0;color:var(--green);font:inherit;font-size:13.5px;cursor:pointer;padding-right:var(--s5);
+  background-image:linear-gradient(45deg,transparent 50%,rgba(0,255,65,.5) 50%),linear-gradient(135deg,rgba(0,255,65,.5) 50%,transparent 50%);
+  background-position:calc(100% - 10px) center,calc(100% - 5px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.network select:focus{outline:1px solid var(--line-strong);outline-offset:4px}
+
+/* карта */
+.card-pay{display:grid;grid-template-columns:1fr auto;align-items:center;gap:var(--s4);padding:var(--s4) var(--s5);border:1px solid rgba(0,255,65,.14);background:var(--panel)}
+.card-pay .btn{justify-self:start}
+.card-brands{display:flex;gap:var(--s2)}
+.card-brands span{display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 10px;border:1px solid rgba(0,212,255,.35);font-size:10.5px;letter-spacing:.5px;color:rgba(0,212,255,.8)}
+
+/* блок перевода */
+.transfer{display:flex;flex-direction:column;gap:var(--s6);padding:28px;border:1px solid var(--green);background:rgba(0,255,65,.05);box-shadow:0 0 24px rgba(0,255,65,.1)}
+.transfer__coin{display:flex;align-items:center;gap:var(--s3);font-size:11.5px}
+.transfer__coin i{width:8px;height:8px;border-radius:50%;background:#26a17b;display:block}
+.transfer__coin .net{color:var(--green-faint)}
+.transfer__amount{font-size:34px;line-height:1;font-weight:700;color:var(--white);letter-spacing:-.5px;margin-top:10px}
+.field{display:flex;flex-direction:column;gap:var(--s2)}
+.field__label{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green-faint)}
+.field__value{display:flex;align-items:center;height:48px;padding:0 var(--s4);border:1px solid rgba(0,255,65,.2);background:rgba(0,0,0,.4);font-size:13px;color:var(--cyan);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.transfer__actions{display:grid;grid-template-columns:1fr 140px;gap:var(--s3)}
+.callout{padding:14px var(--s4);border-left:2px solid var(--yellow);background:rgba(255,214,10,.06);font-size:12.5px;line-height:1.6;color:var(--yellow)}
+
+/* инструкция — висячий отступ */
+.howto{display:flex;flex-direction:column;gap:14px}
+.howto li{display:grid;grid-template-columns:28px 1fr;gap:var(--s3);font-size:13px;line-height:1.6;color:rgba(0,255,65,.6)}
+.howto ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.howto li::before{content:counter(i) ".";counter-increment:i;color:var(--green-faint)}
+.howto ol{counter-reset:i}
+.howto b{color:var(--green);font-weight:400}
+
+/* доступ после оплаты */
+.access{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.email-form{display:grid;grid-template-columns:1fr 200px;gap:var(--s3)}
+.input{height:var(--ctrl);padding:0 var(--s4);border:1px solid rgba(0,255,65,.2);background:rgba(0,0,0,.4);color:var(--green);font:inherit;font-size:13.5px;width:100%}
+.input::placeholder{color:var(--green-faint)}
+.input:focus{outline:1px solid var(--line-strong);outline-offset:2px}
+
+/* ============================================================
+   МОБИЛЬНАЯ ВЕРСИЯ
+   ============================================================ */
+@media (max-width:720px){
+  :root{--pad:18px}
+  .shell{border:0}
+  .chrome{height:44px;padding:0 var(--s4)}
+  .chrome__title{font-size:10px}
+  .main{gap:var(--s8);padding:var(--s6) var(--pad)}
+  .statusbar{height:40px;padding:0 var(--pad);font-size:10px}
+
+  .hero h1{font-size:30px;line-height:1.2}
+  .hero__sub{font-size:12.5px}
+  .btn--cta{width:100%;align-self:stretch;height:54px}
+  .log{font-size:11.5px}
+
+  /* тариф — в две строки, цена справа, скидка под ней */
+  .tariff{grid-template-columns:1fr auto;gap:var(--s2) var(--s3);padding:var(--s4)}
+  .tariff__price{grid-column:2;grid-row:1}
+  .tariff__badge{grid-column:2;grid-row:2;width:48px;height:22px;font-size:11px}
+  .tariff__name{font-size:13.5px}
+  .tariff__meta{grid-column:1;grid-row:2;margin:0;font-size:11px}
+
+  .steps{grid-template-columns:1fr;gap:var(--s2)}
+  .step{flex-direction:row;align-items:center;gap:var(--s3);padding:14px var(--s4)}
+  .step__n{min-width:28px}
+  .step__text{font-size:12.5px}
+
+  .order__head{flex-direction:column;align-items:flex-start;gap:var(--s4)}
+  .order__head h1{font-size:26px}
+  .order__meta{grid-template-columns:auto 1fr;text-align:left;width:100%;font-size:11.5px}
+  .order__meta dd{text-align:left}
+
+  .coins--4{grid-template-columns:repeat(2,1fr)}
+  .coins{gap:var(--s2)}
+  .coin{gap:9px;padding:0 14px;font-size:13px}
+
+  .network{grid-template-columns:auto 1fr;gap:var(--s3)}
+  .network select{text-align:right;padding-right:var(--s4)}
+
+  .card-pay{grid-template-columns:1fr;gap:var(--s3);padding:var(--s4)}
+  .card-pay .btn{justify-self:stretch;width:100%}
+  .card-brands{display:grid;grid-template-columns:repeat(3,1fr)}
+  .card-brands span{padding:0;font-size:9.5px}
+
+  .transfer{padding:var(--s5) 18px;gap:var(--s5)}
+  .transfer__amount{font-size:28px}
+  .field__value{height:auto;padding:12px 14px;white-space:normal;word-break:break-all;font-size:11.5px;line-height:1.5}
+  .transfer__actions{grid-template-columns:1fr;gap:var(--s2)}
+  .callout{font-size:12px;padding:12px 14px}
+
+  .panel{padding:18px}
+  .access{grid-template-columns:1fr;gap:var(--s2)}
+  .email-form{grid-template-columns:1fr;gap:var(--s3)}
+  .notes{font-size:11.5px}
+}
+
+/* уважение к настройкам ОС */
+@media (prefers-reduced-motion:reduce){
+  .hero h1 .cursor{animation:none}
+  *{transition:none!important}
+}

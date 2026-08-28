@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Быстрый VPN-доступ</title>
+<meta name="description" content="Быстрый VPN-доступ: YouTube, Telegram, Instagram, ChatGPT. Подключение за 60 секунд, без логов. Оплата криптовалютой или картой.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+
+  <header class="chrome">
+    <div class="chrome__dots"><i></i><i></i><i></i></div>
+    <span class="chrome__title">vpn-router — bash — 80×24</span>
+  </header>
+
+  <main class="main">
+
+    <section class="hero-block section" style="gap:24px">
+      <div class="log" aria-hidden="true">
+        <div class="dim">root@core:~$ nmap -sV target.net</div>
+        <div class="ok">[+] host up <span class="dim">0.014s latency</span></div>
+        <div class="ok">[+] 443/tcp <span class="hl">open</span> <span class="dim">encrypted</span></div>
+        <div class="warn">[!] traffic obfuscation <span class="hl">ENABLED</span></div>
+        <div class="dim">root@core:~$ ./vpn_router --start</div>
+      </div>
+
+      <div class="hero">
+        <h1>БЫСТРЫЙ_VPN<br>_ДОСТУП<span class="cursor"></span></h1>
+        <div class="hero__sub">
+          <div>// YouTube · Telegram · Instagram · ChatGPT</div>
+          <div>// подключение — 60 сек., без логов</div>
+        </div>
+        <a class="btn btn--primary btn--cta" href="#pricing">$ выбрать_тариф --run</a>
+      </div>
+    </section>
+
+    <section class="section" id="pricing">
+      <div class="section__label">// тарифы</div>
+      <div class="tariffs">
+
+        <a class="tariff" href="/pay?plan=1m">
+          <div>
+            <div class="tariff__name">[01] 1 месяц</div>
+            <div class="tariff__meta">200₽/мес · 3 устр. · 150 ГБ</div>
+          </div>
+          <div class="tariff__price"><span class="tariff__now">200₽</span></div>
+          <span></span>
+        </a>
+
+        <a class="tariff tariff--warn" href="/pay?plan=3m">
+          <div>
+            <div class="tariff__name">[03] 3 месяца <span class="note">// выгоднее</span></div>
+            <div class="tariff__meta">166.67₽/мес · 3 устр. · 150 ГБ</div>
+          </div>
+          <div class="tariff__price"><span class="tariff__old">600₽</span><span class="tariff__now">500₽</span></div>
+          <span class="tariff__badge">-17%</span>
+        </a>
+
+        <a class="tariff tariff--best" href="/pay?plan=6m">
+          <div>
+            <div class="tariff__name">[06] 6 месяцев <span class="note">// лучший выбор</span></div>
+            <div class="tariff__meta">150₽/мес · 3 устр. · 150 ГБ</div>
+          </div>
+          <div class="tariff__price"><span class="tariff__old">1200₽</span><span class="tariff__now">900₽</span></div>
+          <span class="tariff__badge">-25%</span>
+        </a>
+
+        <a class="tariff" href="/pay?plan=12m">
+          <div>
+            <div class="tariff__name">[12] 12 месяцев <span class="note">// макс. выгода</span></div>
+            <div class="tariff__meta">125₽/мес · 3 устр. · 150 ГБ</div>
+          </div>
+          <div class="tariff__price"><span class="tariff__old">2400₽</span><span class="tariff__now">1500₽</span></div>
+          <span class="tariff__badge">-38%</span>
+        </a>
+
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__label">// как это работает</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step__n step__n--cyan">01.</div>
+          <div class="step__text">оплата криптовалютой или картой</div>
+        </div>
+        <div class="step">
+          <div class="step__n step__n--yellow">02.</div>
+          <div class="step__text">установка v2rayN / v2rayNG / Hiddify</div>
+        </div>
+        <div class="step">
+          <div class="step__n step__n--red">03.</div>
+          <div class="step__text">ссылка приходит после подтверждения</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="notes">
+      <div>// уже оплатили, но потеряли ссылку? <a href="/recover">восстановить доступ</a></div>
+      <div>// оплачивая тариф, вы принимаете <a href="/terms" style="color:rgba(0,255,65,.6)">публичную оферту</a> и <a href="/privacy" style="color:rgba(0,255,65,.6)">политику конфиденциальности</a></div>
+    </div>
+
+  </main>
+
+  <footer class="statusbar">STATUS: <b>CONNECTED</b> · UPTIME 99.98% · ENCRYPTION AES-256</footer>
+</div>
+</body>
+</html>

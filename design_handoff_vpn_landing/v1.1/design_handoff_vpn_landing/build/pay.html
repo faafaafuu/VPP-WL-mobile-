@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оплата — 1 месяц</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+
+  <header class="chrome">
+    <div class="chrome__dots"><i></i><i></i><i></i></div>
+    <span class="chrome__title">vpn-router — bash — 80×24</span>
+  </header>
+
+  <main class="main">
+
+    <!-- ЗАКАЗ -->
+    <section class="order">
+      <div class="order__cmd">
+        <div>root@core:~$ ./vpn_router --pay</div>
+        <a class="order__back" href="/#pricing">← сменить тариф</a>
+      </div>
+      <div class="order__head">
+        <h1>1 месяц</h1>
+        <dl class="order__meta">
+          <dt>стоимость</dt><dd>200₽</dd>
+          <dt>заказ</dt><dd class="code">ZX4TB-MPO-VB</dd>
+        </dl>
+      </div>
+    </section>
+
+    <!-- ШАГ 1 — СПОСОБ ОПЛАТЫ: стейблы → сеть → крипта → карта -->
+    <section class="section">
+      <div class="section__head">
+        <div class="section__label">// шаг 1 — способ оплаты</div>
+        <div class="section__hint">выберите валюту и сеть</div>
+      </div>
+
+      <!-- 1. стейблкоины -->
+      <div class="paygroup">
+        <div class="paygroup__label">стейблкоины</div>
+        <div class="coins coins--2">
+          <button type="button" class="coin coin--usdt is-active" data-coin="USDT"><i></i>USDT</button>
+          <button type="button" class="coin coin--usdc" data-coin="USDC"><i></i>USDC</button>
+        </div>
+      </div>
+
+      <!-- 2. сеть выбранного стейбла -->
+      <label class="network">
+        <span class="network__label">сеть</span>
+        <select name="network" aria-label="Сеть перевода">
+          <option>BEP20 (BSC)</option>
+          <option>TRC20 (Tron)</option>
+          <option>ERC20 (Ethereum)</option>
+          <option>Polygon</option>
+          <option>Arbitrum One</option>
+        </select>
+      </label>
+
+      <!-- 3. остальная крипта -->
+      <div class="paygroup">
+        <div class="paygroup__label">другая криптовалюта</div>
+        <div class="coins coins--4">
+          <button type="button" class="coin coin--eth" data-coin="ETH"><i></i>ETH</button>
+          <button type="button" class="coin coin--btc" data-coin="BTC"><i></i>BTC</button>
+          <button type="button" class="coin coin--ton" data-coin="TON"><i></i>TON</button>
+          <button type="button" class="coin coin--sol" data-coin="SOL"><i></i>SOL</button>
+        </div>
+      </div>
+
+      <!-- 4. карта -->
+      <div class="paygroup">
+        <div class="paygroup__label">банковская карта</div>
+        <div class="card-pay">
+          <a class="btn btn--cyan" href="/pay/card">оплатить картой</a>
+          <div class="card-brands"><span>VISA</span><span>MASTERCARD</span><span>МИР</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 2 — ПЕРЕВОД -->
+    <section class="section">
+      <div class="section__label">// шаг 2 — перевод</div>
+      <div class="transfer">
+        <div>
+          <div class="transfer__coin"><i></i><span>USDT</span><span class="net">BEP20 (BSC)</span></div>
+          <div class="transfer__amount">2.52 USDT</div>
+        </div>
+
+        <div class="field">
+          <div class="field__label">адрес кошелька</div>
+          <div class="field__value" id="wallet">0x75B581D891668Af26771b18dD26Ec824b303042b</div>
+        </div>
+
+        <div class="transfer__actions">
+          <button type="button" class="btn btn--primary" data-copy="#wallet">$ скопировать_адрес</button>
+          <button type="button" class="btn" data-qr>QR-код</button>
+        </div>
+
+        <div class="callout">переведите ровно 2.52 USDT — доступ включится автоматически после подтверждения сети</div>
+      </div>
+    </section>
+
+    <!-- ИНСТРУКЦИЯ -->
+    <section class="section">
+      <div class="section__label">// инструкция</div>
+      <div class="panel howto">
+        <ol>
+          <li>Выберите валюту, которая удобна вам.</li>
+          <li>Откройте ваш кошелёк (Binance, OKX, Bybit, Trust Wallet и др.).</li>
+          <li>Убедитесь, что выбрали правильную <b>сеть</b> (TRC20, BSC и т.д.).</li>
+          <li>Переведите <b>точную сумму</b> — без округления, до последнего знака.</li>
+          <li>После подтверждения доступ включится автоматически — страница обновится сама.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ШАГ 3 — ДОСТУП -->
+    <section class="section">
+      <div class="section__label">// шаг 3 — получить доступ</div>
+      <div class="access">
+        <button type="button" class="btn">проверить статус доступа</button>
+        <a class="btn btn--cyan" href="https://t.me/">✈ привязать Telegram</a>
+      </div>
+      <div class="section__hint">// бот пришлёт ссылку сразу после подтверждения оплаты — и вы её никогда не потеряете</div>
+
+      <div class="panel" style="display:flex;flex-direction:column;gap:16px">
+        <div class="order__cmd">
+          <div style="color:rgba(0,255,65,.45)">root@core:~$ ./vpn_router --bind email</div>
+          <div>// нет Telegram? оставьте email — по нему восстановите ссылку на <a href="/recover">/recover</a></div>
+        </div>
+        <form class="email-form" action="/bind-email" method="post">
+          <input class="input" type="email" name="email" placeholder="you@example.com" required>
+          <button class="btn" type="submit">сохранить email</button>
+        </form>
+      </div>
+    </section>
+
+    <div class="notes">
+      <div>// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу</div>
+      <div>// потеряли? <a href="/recover">восстановить доступ по email</a></div>
+    </div>
+
+  </main>
+
+  <footer class="statusbar">STATUS: <b>CONNECTED</b> · UPTIME 99.98% · ENCRYPTION AES-256</footer>
+</div>
+
+<script>
+// выбор монеты (визуальный; реальный пересчёт суммы — на бэкенде)
+document.querySelectorAll('.coin').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.coin').forEach(function(b){ b.classList.remove('is-active'); });
+    btn.classList.add('is-active');
+  });
+});
+// копирование адреса
+document.querySelectorAll('[data-copy]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var el = document.querySelector(btn.getAttribute('data-copy'));
+    navigator.clipboard.writeText(el.textContent.trim()).then(function(){
+      var t = btn.textContent; btn.textContent = '$ адрес_скопирован ✓';
+      setTimeout(function(){ btn.textContent = t; }, 1600);
+    });
+  });
+});
+</script>
+</body>
+</html>

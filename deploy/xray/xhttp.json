@@ -1,0 +1,51 @@
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "listen": "0.0.0.0",
+      "port": 18080,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "0e96fe7c-891f-4120-907a-2dc456575f90"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "xhttpSettings": {
+          "host": "edge.mandanator.ru",
+          "path": "/3be8be5274af6f0a4e35",
+          "mode": "packet-up",
+          "uplinkHTTPMethod": "GET",
+          "xPaddingObfsMode": true,
+          "xPaddingMethod": "tokenish",
+          "xPaddingPlacement": "queryInHeader",
+          "xPaddingKey": "_dc",
+          "xPaddingHeader": "X-Cache",
+          "sessionPlacement": "header",
+          "sessionKey": "X-Client-ID",
+          "seqPlacement": "cookie",
+          "seqKey": "chunk",
+          "uplinkDataPlacement": "header",
+          "uplinkDataKey": "X-Data",
+          "uplinkChunkSize": 4096
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ]
+}
