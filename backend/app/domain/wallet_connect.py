@@ -208,16 +208,26 @@ def payment_units(coin_id: str, amount: str) -> str | None:
     return _scale(value, decimals)
 
 
-# --- wallet catalogue -------------------------------------------------------
+
+
+# --- wallet buttons ---------------------------------------------------------
 #
-# On desktop, EIP-6963 lets installed wallets announce themselves with their
-# own name and icon, so that list is always the accurate one. Mobile browsers
-# inject nothing, and the page previously fell back to exactly two hardcoded
-# names with no icons. This catalogue is that fallback: the wallets whose
-# deep links are documented and stable, drawn as small inline marks so the
-# sheet needs no external requests (an image the network blocks is worse than
-# none). Where a logo is not simple geometry we use a lettered badge in the
-# brand colour rather than a bad imitation of it.
+# One button per popular wallet: tapping it opens that wallet with the amount,
+# recipient and network already filled in, so the buyer only confirms.
+#
+# Where a wallet publishes its own payment deep link (MetaMask, Trust,
+# Tonkeeper, Tonhub) the button uses it and lands in that exact wallet. The
+# rest register their chain's standard payment scheme instead, so the button
+# carries the same request and the phone opens whichever of them is installed
+# — which is what "if you have it, it opens" means in practice. Nothing here
+# is invented: a wallet with no documented link and no scheme (TronLink) gets
+# no button at all, because one that misfires is worse than none.
+#
+# Icons are inline SVG marks: an icon fetched over the network is exactly what
+# a filtering mobile connection drops, leaving a sheet of blank squares. Where
+# a logo is plain geometry it is drawn; otherwise it is a lettered badge in the
+# brand colour rather than a bad imitation.
+
 
 def _svg(body: str, bg: str) -> str:
     svg = (
@@ -227,83 +237,97 @@ def _svg(body: str, bg: str) -> str:
     return "data:image/svg+xml," + quote(svg, safe="")
 
 
-def _mono_icon(letter: str, bg: str, fg: str = "#fff") -> str:
-    body = (
-        f'<text x="16" y="22" text-anchor="middle" fill="{fg}" '
-        f'font-family="monospace" font-size="17" font-weight="700">{letter}</text>'
+def _mono(letter: str, bg: str, fg: str = "#fff") -> str:
+    return _svg(
+        f'<text x="16" y="22" text-anchor="middle" fill="{fg}" font-family="monospace" '
+        f'font-size="17" font-weight="700">{letter}</text>',
+        bg,
     )
-    return _svg(body, bg)
 
 
-_ICON_COINBASE = _svg('<circle cx="16" cy="16" r="9" fill="#fff"/><rect x="12.5" y="12.5" width="7" height="7" rx="1.6" fill="#0052ff"/>', "#0052ff")
-_ICON_OKX = _svg(
-    '<g fill="#fff">'
-    '<rect x="6" y="6" width="6" height="6"/><rect x="20" y="6" width="6" height="6"/>'
-    '<rect x="13" y="13" width="6" height="6"/>'
-    '<rect x="6" y="20" width="6" height="6"/><rect x="20" y="20" width="6" height="6"/>'
-    '</g>', "#111")
-_ICON_TRUST = _svg('<path d="M16 6l8 3v7c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V9z" fill="#fff"/>', "#3375bb")
-_ICON_TONKEEPER = _svg('<circle cx="16" cy="16" r="10" fill="#fff"/><path d="M11 12h10l-5 12z" fill="#0098ea"/>', "#0098ea")
-
-@dataclass(frozen=True)
-class Wallet:
-    id: str
-    name: str
-    icon: str
-    # "dapp" opens our page inside the wallet's own browser; "uri" hands the
-    # wallet the payment request directly, landing on its send screen.
-    link_kind: str
-    template: str
-
-    def as_dict(self) -> dict[str, str]:
-        return {"id": self.id, "name": self.name, "icon": self.icon,
-                "link_kind": self.link_kind, "template": self.template}
-
-
-# {url} = this page, url-encoded. {host_path} = host + path, unencoded.
-_EVM_WALLETS = (
-    Wallet("metamask", "MetaMask", _mono_icon("M", "#f6851b"), "dapp", "https://metamask.app.link/dapp/{host_path}"),
-    Wallet("trust", "Trust Wallet", _ICON_TRUST, "dapp", "https://link.trustwallet.com/open_url?coin_id=60&url={url}"),
-    Wallet("coinbase", "Coinbase Wallet", _ICON_COINBASE, "dapp", "https://go.cb-w.com/dapp?cb_url={url}"),
-    Wallet("okx", "OKX Wallet", _ICON_OKX, "dapp", "okx://wallet/dapp/url?dappUrl={url}"),
-    Wallet("bitget", "Bitget Wallet", _mono_icon("B", "#00d0d8"), "dapp", "https://bkcode.vip?action=dapp&url={url}"),
-    Wallet("safepal", "SafePal", _mono_icon("S", "#4a21ef"), "dapp", "https://link.safepal.io/dapp?url={url}"),
-    Wallet("imtoken", "imToken", _mono_icon("i", "#11c4d1"), "dapp", "imtokenv2://navigate/DappView?url={url}"),
-)
-
-_TON_WALLETS = (
-    Wallet("tonkeeper", "Tonkeeper", _ICON_TONKEEPER, "uri", "https://app.tonkeeper.com/transfer/{address}?amount={units}"),
-)
-
-# TronLink is driven through its injected tronWeb, and its mobile deep-link
-# format is undocumented enough that a button built on it would misfire more
-# often than it worked — so Tron gets the extension path and a QR, not a
-# button that pretends.
-_TRON_WALLETS: tuple[Wallet, ...] = ()
-
-# Phantom, Solflare and Backpack all consume the same solana: request, so a
-# button per wallet would be theatre: the OS picks whichever is installed.
-# They are named in URI_WALLET_HINTS instead.
-_SOL_WALLETS: tuple[Wallet, ...] = ()
-
-
-def wallet_catalogue() -> dict[str, list[dict[str, str]]]:
-    """Per-chain fallback wallets, keyed by TransferSpec.kind plus the
-    coin-specific groups the page looks up by coin id."""
-    return {
-        "evm": [w.as_dict() for w in _EVM_WALLETS],
-        "tron": [w.as_dict() for w in _TRON_WALLETS],
-        "ton": [w.as_dict() for w in _TON_WALLETS],
-        "sol": [w.as_dict() for w in _SOL_WALLETS],
-        "btc": [],
-    }
-
-
-# Wallets known to open a bitcoin:/solana: request, listed as plain text
-# because they all consume the very same URI — separate buttons would only
-# pretend the choice mattered.
-URI_WALLET_HINTS: dict[str, str] = {
-    "btc": "Trust Wallet, Exodus, BlueWallet, Muun, Electrum, Cake Wallet",
-    "sol": "Phantom, Solflare, Backpack",
-    "ton": "Tonkeeper, MyTonWallet, Tonhub",
+WALLET_ICONS: dict[str, str] = {
+    "metamask": _mono("M", "#f6851b"),
+    "trust": _svg('<path d="M16 6l8 3v7c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V9z" fill="#fff"/>', "#3375bb"),
+    "coinbase": _svg(
+        '<circle cx="16" cy="16" r="9" fill="#fff"/>'
+        '<rect x="12.5" y="12.5" width="7" height="7" rx="1.6" fill="#0052ff"/>', "#0052ff"),
+    "okx": _svg(
+        '<g fill="#fff"><rect x="6" y="6" width="6" height="6"/><rect x="20" y="6" width="6" height="6"/>'
+        '<rect x="13" y="13" width="6" height="6"/><rect x="6" y="20" width="6" height="6"/>'
+        '<rect x="20" y="20" width="6" height="6"/></g>', "#111"),
+    "bitget": _mono("B", "#00d0d8"),
+    "safepal": _mono("S", "#4a21ef"),
+    "tonkeeper": _svg('<circle cx="16" cy="16" r="10" fill="#fff"/><path d="M11 12h10l-5 12z" fill="#0098ea"/>', "#0098ea"),
+    "tonhub": _mono("T", "#1c8fe3"),
+    "mytonwallet": _mono("MT", "#2a6df4"),
+    "phantom": _svg(
+        '<path d="M8 19a8 8 0 0116 0v6l-2.7-2-2.6 2-2.7-2-2.7 2-2.6-2L8 25z" fill="#fff"/>'
+        '<circle cx="13.5" cy="17" r="1.7" fill="#ab9ff2"/><circle cx="19" cy="17" r="1.7" fill="#ab9ff2"/>',
+        "#ab9ff2"),
+    "solflare": _mono("S", "#fc7227"),
+    "backpack": _mono("B", "#e33e3f"),
+    "exodus": _mono("E", "#1f2033"),
+    "bluewallet": _mono("BW", "#1c6bd6"),
+    "muun": _mono("M", "#2474cd"),
 }
+
+# Trust Wallet addresses an asset by SLIP-44 coin id, with "_t<contract>" for
+# a token on that chain.
+_TRUST_ASSET = {1: "c60", 137: "c966", 56: "c20000714"}
+
+
+def wallet_links(coin_id: str, address: str, amount: str) -> list[dict[str, str]]:
+    """Popular wallets for this coin, each as a ready link that opens the
+    wallet on its send screen with this exact transfer filled in."""
+    spec = TRANSFER_SPECS.get(coin_id)
+    if spec is None or not address:
+        return []
+    uri = payment_uri(coin_id, address, amount)
+    units = payment_units(coin_id, amount)
+    if not uri or not units:
+        return []
+    plain = _plain(Decimal(str(amount).replace(",", ".")))
+    addr = quote(address, safe="")
+
+    if spec.kind == "evm":
+        # MetaMask takes the EIP-681 request itself, minus the scheme.
+        deep = uri.split(":", 1)[1]
+        asset = _TRUST_ASSET.get(spec.chain_id or 0)
+        if asset and spec.contract:
+            asset = f"{asset}_t{spec.contract}"
+        links = [_w("metamask", "MetaMask", f"https://metamask.app.link/send/{deep}")]
+        if asset:
+            links.append(_w("trust", "Trust Wallet",
+                            f"https://link.trustwallet.com/send?asset={asset}&address={addr}&amount={plain}"))
+        links += [_w(i, n, uri) for i, n in (
+            ("coinbase", "Coinbase Wallet"), ("okx", "OKX Wallet"),
+            ("bitget", "Bitget Wallet"), ("safepal", "SafePal"))]
+        return links
+
+    if coin_id == "ton":
+        return [
+            _w("tonkeeper", "Tonkeeper", f"https://app.tonkeeper.com/transfer/{addr}?amount={units}"),
+            _w("tonhub", "Tonhub", f"https://tonhub.com/transfer/{addr}?amount={units}"),
+            _w("mytonwallet", "MyTonWallet", uri),
+        ]
+
+    if coin_id == "sol":
+        return [_w(i, n, uri) for i, n in (
+            ("phantom", "Phantom"), ("solflare", "Solflare"), ("backpack", "Backpack"))]
+
+    if coin_id == "btc":
+        return [
+            _w("trust", "Trust Wallet",
+               f"https://link.trustwallet.com/send?asset=c0&address={addr}&amount={plain}"),
+            _w("exodus", "Exodus", uri),
+            _w("bluewallet", "BlueWallet", uri),
+            _w("muun", "Muun", uri),
+        ]
+
+    # Tron: no payment scheme exists and TronLink's mobile link format is
+    # undocumented, so the panel keeps it to the extension plus manual copy.
+    return []
+
+
+def _w(wallet_id: str, name: str, url: str) -> dict[str, str]:
+    return {"id": wallet_id, "name": name, "url": url}

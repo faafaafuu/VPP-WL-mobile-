@@ -252,32 +252,72 @@ class PaymentUriTest(unittest.TestCase):
         self.assertEqual(payment_units("usdt_trc20", "2.50"), "2500000")
 
 
-class WalletCatalogueTest(unittest.TestCase):
-    def test_mobile_fallback_lists_more_than_the_two_it_used_to(self) -> None:
-        from app.domain.wallet_connect import wallet_catalogue
+class WalletLinksTest(unittest.TestCase):
+    def test_metamask_gets_its_own_deep_link_for_tokens(self) -> None:
+        from app.domain.wallet_connect import wallet_links
 
-        self.assertGreaterEqual(len(wallet_catalogue()["evm"]), 7)
+        links = {w["id"]: w["url"] for w in wallet_links("usdt_polygon", "0xTo", "2.54")}
 
-    def test_every_wallet_ships_an_inline_icon(self) -> None:
-        """External icon URLs are exactly what a filtering mobile network
-        drops, leaving a sheet of blank squares — so the marks travel with
-        the page."""
-        from app.domain.wallet_connect import wallet_catalogue
+        self.assertTrue(links["metamask"].startswith("https://metamask.app.link/send/"))
+        self.assertIn("@137/transfer", links["metamask"])
+        self.assertIn("uint256=2540000", links["metamask"])
 
-        for group, wallets in wallet_catalogue().items():
-            for wallet in wallets:
-                with self.subTest(group=group, wallet=wallet["id"]):
-                    self.assertTrue(wallet["icon"].startswith("data:image/svg+xml,"))
+    def test_trust_uses_its_own_asset_notation(self) -> None:
+        from app.domain.wallet_connect import wallet_links
 
-    def test_templates_only_use_known_placeholders(self) -> None:
-        from app.domain.wallet_connect import wallet_catalogue
+        links = {w["id"]: w["url"] for w in wallet_links("usdt_polygon", "0xTo", "2.54")}
 
-        allowed = {"url", "host_path", "address", "units", "pay_uri"}
-        for wallets in wallet_catalogue().values():
-            for wallet in wallets:
-                with self.subTest(wallet=wallet["id"]):
-                    found = set(re.findall(r"\{(\w+)\}", wallet["template"]))
-                    self.assertTrue(found.issubset(allowed), found - allowed)
+        self.assertIn("asset=c966_t0xc2132D05D31c914a87C6611C10748AEb04B58e8F", links["trust"])
+        self.assertIn("amount=2.54", links["trust"])
+
+    def test_native_eth_carries_the_value_in_wei(self) -> None:
+        from app.domain.wallet_connect import wallet_links
+
+        links = {w["id"]: w["url"] for w in wallet_links("eth", "0xTo", "0.001026")}
+
+        self.assertIn("@1?value=1026000000000000", links["metamask"])
+
+    def test_ton_wallets_get_nanoton_amounts(self) -> None:
+        from app.domain.wallet_connect import wallet_links
+
+        links = {w["id"]: w["url"] for w in wallet_links("ton", "UQAld", "1.6650")}
+
+        self.assertEqual(links["tonkeeper"], "https://app.tonkeeper.com/transfer/UQAld?amount=1665000000")
+        self.assertEqual(links["tonhub"], "https://tonhub.com/transfer/UQAld?amount=1665000000")
+
+    def test_every_button_carries_the_amount_somewhere(self) -> None:
+        """A wallet opened on an empty send screen is worse than no button:
+        the buyer retypes the amount and the watcher never matches it."""
+        from app.domain.wallet_connect import wallet_links
+
+        cases = [("usdt_erc20", "0xTo", "2.54"), ("eth", "0xTo", "0.001026"),
+                 ("ton", "UQAld", "1.6650"), ("btc", "bc1qx", "0.00003016"), ("sol", "5tCQ", "0.0226")]
+        for coin_id, address, amount in cases:
+            for wallet in wallet_links(coin_id, address, amount):
+                with self.subTest(coin_id=coin_id, wallet=wallet["id"]):
+                    self.assertRegex(wallet["url"], r"(amount|value|uint256)=")
+
+    def test_every_button_has_an_inline_icon(self) -> None:
+        """An icon fetched over the network is exactly what a filtering
+        mobile connection drops, leaving a sheet of blank squares."""
+        from app.domain.wallet_connect import WALLET_ICONS, wallet_links
+
+        for coin_id in ("usdt_erc20", "eth", "ton", "btc", "sol"):
+            for wallet in wallet_links(coin_id, "0xTo", "1.5"):
+                with self.subTest(coin_id=coin_id, wallet=wallet["id"]):
+                    self.assertTrue(WALLET_ICONS[wallet["id"]].startswith("data:image/svg+xml,"))
+
+    def test_tron_offers_no_buttons(self) -> None:
+        """TRC20 has no payment scheme and TronLink's mobile link format is
+        undocumented — a button there would misfire more often than work."""
+        from app.domain.wallet_connect import wallet_links
+
+        self.assertEqual(wallet_links("usdt_trc20", "TTest", "2.50"), [])
+
+    def test_no_buttons_before_an_amount_is_known(self) -> None:
+        from app.domain.wallet_connect import wallet_links
+
+        self.assertEqual(wallet_links("btc", "bc1qx", "—"), [])
 
 
 class InvoicePaymentQrTest(unittest.TestCase):
@@ -325,21 +365,33 @@ class InvoicePaymentQrTest(unittest.TestCase):
 
 
 class InvoiceSheetLayoutTest(unittest.TestCase):
-    def test_dapp_browser_links_start_collapsed(self) -> None:
-        """They open this page inside the wallet's own browser — a real
-        fallback, but one more step than the payment link above them, so they
-        must not sit in the sheet looking like duplicate payment options."""
+    def test_each_coin_ships_its_wallet_buttons(self) -> None:
         svc = _service()
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
-        html = svc.invoice_html(token)
+        for coin in _coins_from(svc.invoice_html(token)):
+            if coin["pay"]["kind"] == "tron":
+                continue
+            with self.subTest(coin_id=coin["id"]):
+                self.assertTrue(coin["wallets"])
 
-        self.assertIn("открыть сайт внутри приложения кошелька", html)
-        self.assertIn("row.hidden = true;", html)
+    def test_wallet_buttons_are_refreshed_with_the_final_amount(self) -> None:
+        """The page renders an estimate; the amount the watcher waits for is
+        only fixed by /select, so the buttons have to be rebuilt then."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
 
-    def test_injected_wallet_path_skips_the_deep_link_catalogue(self) -> None:
-        """A desktop browser with an extension has nowhere to send a mobile
-        deep link, so that branch returns before the catalogue is added."""
+        result = svc.select_invoice_coin(token, {"coin_id": "btc"})
+
+        self.assertTrue(result["wallets"])
+        for wallet in result["wallets"]:
+            with self.subTest(wallet=wallet["id"]):
+                self.assertIn(result["amount"], wallet["url"])
+
+    def test_injected_wallet_path_skips_the_button_list(self) -> None:
+        """A desktop browser with an extension signs on the page itself and
+        has nowhere to send a mobile deep link."""
         svc = _service()
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
@@ -347,4 +399,4 @@ class InvoiceSheetLayoutTest(unittest.TestCase):
         branch = html.split("function buildEvmSheet")[1].split("function buildTronSheet")[0]
         injected_branch = branch.split("if (wallets.length) {")[1].split("return;")[0]
 
-        self.assertNotIn("addCatalogue", injected_branch)
+        self.assertNotIn("addWalletButtons", injected_branch)

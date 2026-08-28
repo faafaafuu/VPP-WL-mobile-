@@ -21,7 +21,7 @@ from app.api.pages import (
     terms_page,
 )
 from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
-from app.domain.wallet_connect import payment_units, payment_uri, transfer_spec
+from app.domain.wallet_connect import payment_units, payment_uri, transfer_spec, wallet_links
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
 from app.domain.models import AdminAuditEvent, CommercialSubscription, NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
@@ -359,6 +359,9 @@ class ApiService:
             "pay_uri": payment_uri(coin.id, address, amount),
             "pay_units": payment_units(coin.id, amount),
             "pay_qr_url": f"/invoice/{token}/payqr/{coin.id}",
+            # Rebuilt with the final amount so every wallet button carries the
+            # sum the payment watcher is actually waiting for.
+            "wallets": wallet_links(coin.id, address, amount),
         }
 
     def invoice_wallet_qr_svg(self, token: str, coin_id: str | None = None) -> str:
@@ -1296,5 +1299,6 @@ def _build_coin_options(
             "pay": transfer_spec(coin.id),
             "pay_uri": payment_uri(coin.id, addr, amount),
             "pay_units": payment_units(coin.id, amount),
+            "wallets": wallet_links(coin.id, addr, amount),
         })
     return result
