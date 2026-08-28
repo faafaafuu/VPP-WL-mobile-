@@ -960,22 +960,33 @@ _INVOICE_JS = r"""
               .split('{pay_uri}').join(coin.pay_uri || '');
           }
 
-          /* Каталог с иконками — то, что видно, когда браузер не инжектит
-             кошелёк (то есть почти всегда на телефоне). */
+          /* Ссылки, открывающие эту страницу внутри браузера кошелька.
+             Там инжектится провайдер и работает полный сценарий с подписью —
+             но это всегда лишний шаг: сначала грузится сайт. Поэтому список
+             свёрнут и подписан тем, что он реально делает, а не выдаётся за
+             ещё один способ оплаты. */
           function addCatalogue(coin, groupKey) {
             const list = (WALLETS[groupKey] || []);
             if (!list.length) return false;
-            const group = sheetGroup('открыть в кошельке');
+            const group = sheetGroup('если ссылка не открыла кошелёк');
+            const rows = [];
+            walletRow(group, '＋ открыть сайт внутри приложения кошелька', '', function () {
+              rows.forEach(function (r) { r.hidden = !r.hidden; });
+            });
             list.forEach(function (w) {
-              walletRow(group, w.name, w.icon, deepLink(w.template, coin));
+              const row = walletRow(group, w.name, w.icon, deepLink(w.template, coin));
+              row.hidden = true;
+              rows.push(row);
             });
             return true;
           }
 
-          function addPaymentLinkAndQr(coin) {
+          function addTransfer(coin, opts) {
             if (!coin.pay_uri) return;
-            const group = sheetGroup('перевод одной ссылкой');
-            walletRow(group, 'открыть установленный кошелёк', '', coin.pay_uri);
+            const group = sheetGroup(opts.label);
+            if (opts.link) {
+              walletRow(group, 'открыть кошелёк с готовым переводом', '', coin.pay_uri);
+            }
             if (!coin.pay_qr_url) return;
             const qr = document.createElement('div');
             qr.className = 'qr-wrap sheet__qr';
@@ -984,7 +995,7 @@ _INVOICE_JS = r"""
             img.src = coin.pay_qr_url + '?v=' + encodeURIComponent(coin.amount);
             img.alt = 'QR перевода';
             qr.appendChild(img);
-            walletRow(group, 'показать QR для телефона', '', function () { qr.hidden = !qr.hidden; });
+            walletRow(group, 'показать QR — оплатить с телефона', '', function () { qr.hidden = !qr.hidden; });
             group.appendChild(qr);
           }
 
@@ -1005,43 +1016,48 @@ _INVOICE_JS = r"""
           function buildEvmSheet(coin, spec) {
             const wallets = discoverEvmWallets();
             if (wallets.length) {
+              /* Кошелёк прямо здесь — всё остальное было бы шумом: ссылка на
+                 приложение того же кошелька никуда не ведёт с десктопа. */
               const group = sheetGroup('кошелёк в этом браузере');
               wallets.forEach(function (w) {
                 walletRow(group, w.info.name, w.info.icon, function () { evmSend(w.provider, coin, spec); });
               });
-              addCatalogue(coin, 'evm');
-              addPaymentLinkAndQr(coin);
+              addTransfer(coin, {link: false, label: 'оплатить с телефона'});
               walletMsg('Выберите кошелёк — сумма, адрес и сеть подставятся автоматически.', '');
               return;
             }
-            /* Без инжектируемого кошелька (то есть почти всегда на телефоне)
-               прямая ссылка-перевод идёт первой: она открывает экран отправки
-               сразу, тогда как ссылки ниже сначала грузят эту страницу внутри
-               браузера кошелька — лишний шаг, который и падает чаще всего. */
-            addPaymentLinkAndQr(coin);
+            addTransfer(coin, {link: true, label: 'перевод'});
             addCatalogue(coin, 'evm');
-            walletMsg('Ссылка-перевод откроет кошелёк сразу на экране отправки с подставленными суммой и адресом. Ниже — открыть эту страницу внутри приложения кошелька.', '');
+            walletMsg('Ссылка откроет кошелёк сразу на экране отправки — сумма, адрес и сеть уже подставлены.', '');
           }
 
           function buildTronSheet(coin, spec) {
-            const group = sheetGroup('кошелёк в этом браузере');
-            walletRow(group, 'TronLink', '', function () { payViaTron(coin, spec); });
-            addPaymentLinkAndQr(coin);
-            const qrGroup = sheetGroup('перевод вручную');
-            walletRow(qrGroup, 'скопировать адрес', '', function () {
+            const tronReady = !!((window.tronLink && window.tronLink.tronWeb) || window.tronWeb);
+            if (tronReady) {
+              const group = sheetGroup('кошелёк в этом браузере');
+              walletRow(group, 'TronLink', '', function () { payViaTron(coin, spec); });
+            }
+            const group = sheetGroup('перевод вручную');
+            walletRow(group, 'скопировать адрес', '', function () {
               copyText(coin.address);
-              walletMsg('Адрес скопирован. Переводите точную сумму ' + coin.amount + ' ' + coin.label + '.', 'c-green');
+              walletMsg('Адрес скопирован. Переводите ровно ' + coin.amount + ' ' + coin.label + '.', 'c-green');
             });
-            walletMsg('TRC20 подключается через расширение TronLink. С телефона проще перевести вручную — адрес ниже.', '');
+            walletMsg(tronReady
+              ? 'TronLink подставит сумму и адрес сам — останется подтвердить.'
+              : 'У TRC20 нет платёжной ссылки, а TronLink подключается только расширением в браузере. С телефона переведите вручную: адрес ниже, сумма ровно ' + coin.amount + ' ' + coin.label + '.', '');
           }
 
           function buildUriSheet(coin) {
-            const hadCatalogue = addCatalogue(coin, coin.id);
-            addPaymentLinkAndQr(coin);
+            const named = (WALLETS[coin.id] || []);
+            if (named.length) {
+              const group = sheetGroup('кошелёк');
+              named.forEach(function (w) {
+                walletRow(group, w.name, w.icon, deepLink(w.template, coin));
+              });
+            }
+            addTransfer(coin, {link: true, label: named.length ? 'любой другой кошелёк' : 'перевод'});
             const names = WALLET_HINTS[coin.id];
-            walletMsg(
-              (hadCatalogue ? '' : 'Эта сеть не подключается из браузера напрямую. ') +
-              'Ссылка откроет установленный кошелёк с уже подставленными адресом и суммой; QR отсканируйте кошельком на телефоне.' +
+            walletMsg('Ссылка откроет установленный кошелёк с уже подставленными адресом и суммой.' +
               (names ? ' Подходят: ' + names + '.' : ''), '');
           }
 

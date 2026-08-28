@@ -322,3 +322,29 @@ class InvoicePaymentQrTest(unittest.TestCase):
             with self.subTest(coin_id=coin["id"]):
                 self.assertTrue(coin["pay_uri"])
                 self.assertTrue(coin["pay_qr_url"])
+
+
+class InvoiceSheetLayoutTest(unittest.TestCase):
+    def test_dapp_browser_links_start_collapsed(self) -> None:
+        """They open this page inside the wallet's own browser — a real
+        fallback, but one more step than the payment link above them, so they
+        must not sit in the sheet looking like duplicate payment options."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = svc.invoice_html(token)
+
+        self.assertIn("открыть сайт внутри приложения кошелька", html)
+        self.assertIn("row.hidden = true;", html)
+
+    def test_injected_wallet_path_skips_the_deep_link_catalogue(self) -> None:
+        """A desktop browser with an extension has nowhere to send a mobile
+        deep link, so that branch returns before the catalogue is added."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = svc.invoice_html(token)
+        branch = html.split("function buildEvmSheet")[1].split("function buildTronSheet")[0]
+        injected_branch = branch.split("if (wallets.length) {")[1].split("return;")[0]
+
+        self.assertNotIn("addCatalogue", injected_branch)
