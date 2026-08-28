@@ -46,6 +46,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/html:/var/www/html:ro
       - /var/www/decoy:/var/www/decoy:ro
+      - /var/www/probe:/var/www/probe:ro
     depends_on:
       api:
         condition: service_healthy
