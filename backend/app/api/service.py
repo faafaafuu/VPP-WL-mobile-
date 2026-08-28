@@ -21,7 +21,7 @@ from app.api.pages import (
     terms_page,
 )
 from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
-from app.domain.wallet_connect import transfer_spec
+from app.domain.wallet_connect import payment_units, payment_uri, transfer_spec
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
 from app.domain.models import AdminAuditEvent, CommercialSubscription, NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
@@ -354,6 +354,11 @@ class ApiService:
             "amount": amount,
             "address": address,
             "qr_url": f"/invoice/{token}/qr/{coin.id}",
+            # The amount is only final here, so the one-tap link and its QR
+            # have to be rebuilt now rather than at page-render time.
+            "pay_uri": payment_uri(coin.id, address, amount),
+            "pay_units": payment_units(coin.id, amount),
+            "pay_qr_url": f"/invoice/{token}/payqr/{coin.id}",
         }
 
     def invoice_wallet_qr_svg(self, token: str, coin_id: str | None = None) -> str:
@@ -362,6 +367,30 @@ class ApiService:
         if not address:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
         return qr_svg(address)
+
+    def invoice_payment_qr_svg(self, token: str, coin_id: str) -> str:
+        """QR of the full payment request — recipient, network and amount.
+
+        Distinct from invoice_wallet_qr_svg, which stays a bare address: an
+        exchange withdrawal screen scans a QR expecting an address and
+        chokes on a URI. This one is for wallet apps, where it removes the
+        retyping that causes wrong-amount transfers.
+        """
+        subscription = self._commercial_subscription(token)
+        coin = COINS_BY_ID.get(coin_id)
+        if coin is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "unknown coin_id"})
+        address = self.crypto_wallets.get(coin.wallet_key)
+        if not address:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "coin not configured"})
+        amount = subscription.pay_amount if subscription.pay_coin_id == coin_id else None
+        if not amount:
+            tariff = self.tariffs_by_id.get(subscription.tariff_id)
+            amount = self.exchange_rate_service.coin_amount(tariff.price_rub, coin) if tariff else None
+        uri = payment_uri(coin_id, address, amount or "")
+        if not uri:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "coin has no payment uri"})
+        return qr_svg(uri)
 
     def _wallet_address_for_coin(self, coin_id: str | None) -> str | None:
         if coin_id:
@@ -1265,5 +1294,7 @@ def _build_coin_options(
             # Lets the page build the transfer for the buyer's wallet
             # instead of making them retype address and amount by hand.
             "pay": transfer_spec(coin.id),
+            "pay_uri": payment_uri(coin.id, addr, amount),
+            "pay_units": payment_units(coin.id, amount),
         })
     return result

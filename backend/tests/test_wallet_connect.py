@@ -203,3 +203,122 @@ class InvoiceCardErrorTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PaymentUriTest(unittest.TestCase):
+    def test_evm_native_uses_eip681_value(self) -> None:
+        from app.domain.wallet_connect import payment_uri
+
+        uri = payment_uri("eth", "0xAbC0000000000000000000000000000000000001", "0.00095238")
+
+        self.assertEqual(uri, "ethereum:0xAbC0000000000000000000000000000000000001@1?value=952380000000000")
+
+    def test_evm_token_uses_eip681_transfer(self) -> None:
+        from app.domain.wallet_connect import payment_uri
+
+        uri = payment_uri("usdt_polygon", "0xBD13000000000000000000000000000000000002", "10.61")
+
+        self.assertIn("ethereum:0xc2132D05D31c914a87C6611C10748AEb04B58e8F@137/transfer", uri)
+        self.assertIn("uint256=10610000", uri)
+
+    def test_ton_amount_is_scaled_to_nanotons(self) -> None:
+        from app.domain.wallet_connect import payment_uri
+
+        self.assertEqual(payment_uri("ton", "UQAld", "0.0104"), "ton://transfer/UQAld?amount=10400000")
+
+    def test_btc_and_sol_keep_the_decimal_amount(self) -> None:
+        from app.domain.wallet_connect import payment_uri
+
+        self.assertEqual(payment_uri("btc", "bc1qx", "0.00003016"), "bitcoin:bc1qx?amount=0.00003016")
+        self.assertEqual(payment_uri("sol", "5tCQ", "0.0226"), "solana:5tCQ?amount=0.0226")
+
+    def test_tron_has_no_uri_scheme(self) -> None:
+        from app.domain.wallet_connect import payment_uri
+
+        self.assertIsNone(payment_uri("usdt_trc20", "TTest", "2.00"))
+
+    def test_garbage_amounts_produce_no_link(self) -> None:
+        from app.domain.wallet_connect import payment_uri
+
+        for amount in ("—", "", "0", "-1", "abc"):
+            with self.subTest(amount=amount):
+                self.assertIsNone(payment_uri("btc", "bc1qx", amount))
+
+    def test_units_are_exact_integers(self) -> None:
+        from app.domain.wallet_connect import payment_units
+
+        self.assertEqual(payment_units("eth", "0.00095238"), "952380000000000")
+        self.assertEqual(payment_units("ton", "1.6650"), "1665000000")
+        self.assertEqual(payment_units("usdt_trc20", "2.50"), "2500000")
+
+
+class WalletCatalogueTest(unittest.TestCase):
+    def test_mobile_fallback_lists_more_than_the_two_it_used_to(self) -> None:
+        from app.domain.wallet_connect import wallet_catalogue
+
+        self.assertGreaterEqual(len(wallet_catalogue()["evm"]), 7)
+
+    def test_every_wallet_ships_an_inline_icon(self) -> None:
+        """External icon URLs are exactly what a filtering mobile network
+        drops, leaving a sheet of blank squares — so the marks travel with
+        the page."""
+        from app.domain.wallet_connect import wallet_catalogue
+
+        for group, wallets in wallet_catalogue().items():
+            for wallet in wallets:
+                with self.subTest(group=group, wallet=wallet["id"]):
+                    self.assertTrue(wallet["icon"].startswith("data:image/svg+xml,"))
+
+    def test_templates_only_use_known_placeholders(self) -> None:
+        from app.domain.wallet_connect import wallet_catalogue
+
+        allowed = {"url", "host_path", "address", "units", "pay_uri"}
+        for wallets in wallet_catalogue().values():
+            for wallet in wallets:
+                with self.subTest(wallet=wallet["id"]):
+                    found = set(re.findall(r"\{(\w+)\}", wallet["template"]))
+                    self.assertTrue(found.issubset(allowed), found - allowed)
+
+
+class InvoicePaymentQrTest(unittest.TestCase):
+    def test_payment_qr_encodes_the_request_not_the_bare_address(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.set_invoice_contact(token, {"email": "buyer@example.com"})
+        svc.select_invoice_coin(token, {"coin_id": "btc"})
+
+        svg = svc.invoice_payment_qr_svg(token, "btc")
+        address_only = svc.invoice_wallet_qr_svg(token, "btc")
+
+        self.assertIn("<svg", svg)
+        self.assertNotEqual(svg, address_only)
+
+    def test_address_qr_stays_a_bare_address(self) -> None:
+        """Exchange withdrawal screens scan for an address and choke on a
+        URI, so the panel's own QR must not become a payment request."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        self.assertEqual(
+            svc.invoice_wallet_qr_svg(token, "btc"),
+            svc.invoice_wallet_qr_svg(token, "btc"),
+        )
+
+    def test_chain_without_a_uri_scheme_has_no_payment_qr(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        with self.assertRaises(ApiError) as ctx:
+            svc.invoice_payment_qr_svg(token, "usdt_trc20")
+        self.assertEqual(ctx.exception.status, HTTPStatus.SERVICE_UNAVAILABLE)
+
+    def test_invoice_page_carries_a_link_and_qr_for_every_uri_chain(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        for coin in _coins_from(svc.invoice_html(token)):
+            if coin["pay"]["kind"] != "uri":
+                continue
+            with self.subTest(coin_id=coin["id"]):
+                self.assertTrue(coin["pay_uri"])
+                self.assertTrue(coin["pay_qr_url"])

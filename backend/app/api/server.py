@@ -195,6 +195,20 @@ class ApiHandler(BaseHTTPRequestHandler):
             token = path.removeprefix("/invoice/")[: -len("/status")].strip("/")
             self._send_service_response(lambda: API_SERVICE.invoice_status(token))
             return
+        if path.startswith("/invoice/") and "/payqr/" in path:
+            # /invoice/{token}/payqr/{coin_id} — QR of the full payment
+            # request (recipient + network + amount), for wallet apps.
+            rest = path.removeprefix("/invoice/")
+            token, _, coin_id = rest.partition("/payqr/")
+            try:
+                self._send_text(
+                    HTTPStatus.OK,
+                    API_SERVICE.invoice_payment_qr_svg(token.strip("/"), coin_id.strip("/")),
+                    "image/svg+xml",
+                )
+            except ApiError as exc:
+                self._send_json(exc.status, exc.payload)
+            return
         if path.startswith("/invoice/") and "/qr/" in path:
             # /invoice/{token}/qr/{coin_id}
             rest = path.removeprefix("/invoice/")

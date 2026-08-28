@@ -7,6 +7,7 @@ from typing import Any
 
 from app.domain.models import CommercialSubscription
 from app.domain.tariffs import Tariff
+from app.domain.wallet_connect import URI_WALLET_HINTS, wallet_catalogue
 
 # Tariff card variants from design_handoff_vpn_landing v1.1: the default
 # cyan card, a yellow "выгоднее" card, then the green highlighted "лучший
@@ -222,6 +223,9 @@ def invoice_page(
                 "amount": opt["amount"],
                 "address": opt["address"],
                 "pay": opt.get("pay"),
+                "pay_uri": opt.get("pay_uri"),
+                "pay_units": opt.get("pay_units"),
+                "pay_qr_url": f"/invoice/{token}/payqr/{opt['id']}" if opt.get("pay_uri") else None,
             }
             for opt in coin_options
         ],
@@ -796,6 +800,11 @@ _INVOICE_JS = r"""
               if (data.amount) {
                 COINS[idx].amount = data.amount;
                 COINS[idx].address = data.address;
+                /* Ссылка на перевод и её QR зависят от точной суммы, которая
+                   становится известна только здесь. */
+                COINS[idx].pay_uri = data.pay_uri;
+                COINS[idx].pay_units = data.pay_units;
+                COINS[idx].pay_qr_url = data.pay_qr_url;
                 document.getElementById('amount' + idx).textContent = data.amount + ' ' + COINS[idx].label;
                 document.getElementById('addr' + idx).textContent = data.address;
                 state.textContent = 'переведите ровно ' + data.amount + ' ' + COINS[idx].label +
@@ -860,6 +869,9 @@ _INVOICE_JS = r"""
 
           /* ---------- подключение кошелька ---------- */
 
+          const WALLETS = __WALLETS__;
+          const WALLET_HINTS = __WALLET_HINTS__;
+
           /* Десятичная строка -> целое число минимальных единиц сети.
              Через BigInt, а не через Number: сумма вроде 0.00095238 в double
              округляется, и на счёт уходит не та величина, которую ждёт
@@ -888,13 +900,15 @@ _INVOICE_JS = r"""
           }
 
           /* EIP-6963: кошельки сами объявляют о себе, поэтому список получается
-             настоящим — без угадывания window.ethereum и без гонки расширений. */
+             настоящим — с их собственными названиями и логотипами, без
+             угадывания window.ethereum и без гонки расширений. */
           const evmWallets = [];
           window.addEventListener('eip6963:announceProvider', function (event) {
             const detail = event.detail;
             if (!detail || !detail.info || evmWallets.some(w => w.info.uuid === detail.info.uuid)) return;
             evmWallets.push(detail);
           });
+          window.dispatchEvent(new Event('eip6963:requestProvider'));
           function discoverEvmWallets() {
             window.dispatchEvent(new Event('eip6963:requestProvider'));
             const found = evmWallets.slice();
@@ -904,58 +918,134 @@ _INVOICE_JS = r"""
             return found;
           }
 
-          function walletButton(name, icon, onClick) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'wallet';
+          function sheetGroup(label) {
+            const wrap = document.createElement('div');
+            wrap.className = 'sheet__group';
+            const head = document.createElement('div');
+            head.className = 'sheet__grouplabel';
+            head.textContent = label;
+            wrap.appendChild(head);
+            document.getElementById('walletList').appendChild(wrap);
+            return wrap;
+          }
+          function walletRow(parent, name, icon, action) {
+            const el = document.createElement(typeof action === 'string' ? 'a' : 'button');
+            el.className = 'wallet';
+            if (typeof action === 'string') {
+              el.href = action;
+              el.rel = 'noopener';
+            } else {
+              el.type = 'button';
+              el.addEventListener('click', action);
+            }
             if (icon) {
               const img = document.createElement('img');
               img.src = icon;
               img.alt = '';
-              btn.appendChild(img);
+              el.appendChild(img);
             }
             const span = document.createElement('span');
             span.textContent = name;
-            btn.appendChild(span);
-            btn.addEventListener('click', onClick);
-            return btn;
+            el.appendChild(span);
+            parent.appendChild(el);
+            return el;
+          }
+
+          function deepLink(template, coin) {
+            return template
+              .split('{url}').join(encodeURIComponent(location.href))
+              .split('{host_path}').join(location.host + location.pathname)
+              .split('{address}').join(encodeURIComponent(coin.address))
+              .split('{units}').join(coin.pay_units || '')
+              .split('{pay_uri}').join(coin.pay_uri || '');
+          }
+
+          /* Каталог с иконками — то, что видно, когда браузер не инжектит
+             кошелёк (то есть почти всегда на телефоне). */
+          function addCatalogue(coin, groupKey) {
+            const list = (WALLETS[groupKey] || []);
+            if (!list.length) return false;
+            const group = sheetGroup('открыть в кошельке');
+            list.forEach(function (w) {
+              walletRow(group, w.name, w.icon, deepLink(w.template, coin));
+            });
+            return true;
+          }
+
+          function addPaymentLinkAndQr(coin) {
+            if (!coin.pay_uri) return;
+            const group = sheetGroup('перевод одной ссылкой');
+            walletRow(group, 'открыть установленный кошелёк', '', coin.pay_uri);
+            if (!coin.pay_qr_url) return;
+            const qr = document.createElement('div');
+            qr.className = 'qr-wrap sheet__qr';
+            qr.hidden = true;
+            const img = document.createElement('img');
+            img.src = coin.pay_qr_url + '?v=' + encodeURIComponent(coin.amount);
+            img.alt = 'QR перевода';
+            qr.appendChild(img);
+            walletRow(group, 'показать QR для телефона', '', function () { qr.hidden = !qr.hidden; });
+            group.appendChild(qr);
           }
 
           function payWithWallet(idx) {
             const coin = COINS[idx];
             const spec = coin.pay;
-            if (!spec) { walletMsg('Для этой сети автоперевод недоступен — скопируйте адрес вручную.', 'c-red'); openWalletSheet(); return; }
-            if (spec.kind === 'uri') { payViaUri(coin, spec); return; }
-            if (spec.kind === 'tron') { payViaTron(coin, spec); return; }
-            payViaEvm(coin, spec);
+            document.getElementById('walletList').textContent = '';
+            openWalletSheet();
+            if (!spec) {
+              walletMsg('Для этой сети автоперевод недоступен — скопируйте адрес и сумму.', 'c-red');
+              return;
+            }
+            if (spec.kind === 'evm') { buildEvmSheet(coin, spec); return; }
+            if (spec.kind === 'tron') { buildTronSheet(coin, spec); return; }
+            buildUriSheet(coin);
           }
 
-          /* BTC / TON / SOL: инжектируемого стандарта нет, зато есть схема
-             платёжной ссылки, которую регистрирует любой кошелёк — открываем
-             её, и получатель с суммой уже подставлены. */
-          function payViaUri(coin, spec) {
-            let amount = coin.amount;
-            if (spec.uri_decimals) {
-              const units = toUnits(coin.amount, spec.uri_decimals);
-              if (units === null) { walletMsg('Сумма ещё не рассчитана — подождите пару секунд.', 'c-red'); openWalletSheet(); return; }
-              amount = units.toString();
+          function buildEvmSheet(coin, spec) {
+            const wallets = discoverEvmWallets();
+            if (wallets.length) {
+              const group = sheetGroup('кошелёк в этом браузере');
+              wallets.forEach(function (w) {
+                walletRow(group, w.info.name, w.info.icon, function () { evmSend(w.provider, coin, spec); });
+              });
+              addCatalogue(coin, 'evm');
+              addPaymentLinkAndQr(coin);
+              walletMsg('Выберите кошелёк — сумма, адрес и сеть подставятся автоматически.', '');
+              return;
             }
-            const uri = spec.uri_template
-              .replace('{address}', encodeURIComponent(coin.address))
-              .replace('{amount}', encodeURIComponent(amount));
-            const list = document.getElementById('walletList');
-            list.textContent = '';
-            list.appendChild(walletButton('Открыть кошелёк ' + coin.label, '', function () {
-              window.location.href = uri;
-            }));
-            walletMsg('Откроется установленный кошелёк — сумма и адрес уже подставлены. Если ничего не открылось, кошелёк не установлен: переведите вручную.', '');
-            openWalletSheet();
+            /* Без инжектируемого кошелька (то есть почти всегда на телефоне)
+               прямая ссылка-перевод идёт первой: она открывает экран отправки
+               сразу, тогда как ссылки ниже сначала грузят эту страницу внутри
+               браузера кошелька — лишний шаг, который и падает чаще всего. */
+            addPaymentLinkAndQr(coin);
+            addCatalogue(coin, 'evm');
+            walletMsg('Ссылка-перевод откроет кошелёк сразу на экране отправки с подставленными суммой и адресом. Ниже — открыть эту страницу внутри приложения кошелька.', '');
+          }
+
+          function buildTronSheet(coin, spec) {
+            const group = sheetGroup('кошелёк в этом браузере');
+            walletRow(group, 'TronLink', '', function () { payViaTron(coin, spec); });
+            addPaymentLinkAndQr(coin);
+            const qrGroup = sheetGroup('перевод вручную');
+            walletRow(qrGroup, 'скопировать адрес', '', function () {
+              copyText(coin.address);
+              walletMsg('Адрес скопирован. Переводите точную сумму ' + coin.amount + ' ' + coin.label + '.', 'c-green');
+            });
+            walletMsg('TRC20 подключается через расширение TronLink. С телефона проще перевести вручную — адрес ниже.', '');
+          }
+
+          function buildUriSheet(coin) {
+            const hadCatalogue = addCatalogue(coin, coin.id);
+            addPaymentLinkAndQr(coin);
+            const names = WALLET_HINTS[coin.id];
+            walletMsg(
+              (hadCatalogue ? '' : 'Эта сеть не подключается из браузера напрямую. ') +
+              'Ссылка откроет установленный кошелёк с уже подставленными адресом и суммой; QR отсканируйте кошельком на телефоне.' +
+              (names ? ' Подходят: ' + names + '.' : ''), '');
           }
 
           async function payViaTron(coin, spec) {
-            const list = document.getElementById('walletList');
-            list.textContent = '';
-            openWalletSheet();
             walletMsg('Подключаемся к TronLink…', '');
             try {
               if (window.tronLink && window.tronLink.request) {
@@ -963,7 +1053,7 @@ _INVOICE_JS = r"""
               }
               const tronWeb = (window.tronLink && window.tronLink.tronWeb) || window.tronWeb;
               if (!tronWeb || !tronWeb.defaultAddress || !tronWeb.defaultAddress.base58) {
-                walletMsg('TronLink не найден. Установите его или переведите USDT вручную на адрес ниже.', 'c-red');
+                walletMsg('TronLink не найден. Установите расширение или переведите вручную по адресу ниже.', 'c-red');
                 return;
               }
               const units = toUnits(coin.amount, spec.token_decimals);
@@ -975,30 +1065,6 @@ _INVOICE_JS = r"""
             } catch (e) {
               walletMsg(walletError(e), 'c-red');
             }
-          }
-
-          async function payViaEvm(coin, spec) {
-            const list = document.getElementById('walletList');
-            list.textContent = '';
-            const wallets = discoverEvmWallets();
-            openWalletSheet();
-            if (!wallets.length) {
-              const target = encodeURIComponent(location.host + location.pathname);
-              list.appendChild(walletButton('Открыть в MetaMask', '', function () {
-                window.location.href = 'https://metamask.app.link/dapp/' + target;
-              }));
-              list.appendChild(walletButton('Открыть в Trust Wallet', '', function () {
-                window.location.href = 'https://link.trustwallet.com/open_url?url=' + encodeURIComponent(location.href);
-              }));
-              walletMsg('Кошелёк в этом браузере не найден. Откройте страницу внутри приложения кошелька — или переведите вручную по адресу ниже.', '');
-              return;
-            }
-            wallets.forEach(function (w) {
-              list.appendChild(walletButton(w.info.name, w.info.icon, function () {
-                evmSend(w.provider, coin, spec);
-              }));
-            });
-            walletMsg('Выберите кошелёк — сумма, адрес и сеть подставятся автоматически.', '');
           }
 
           async function evmSend(provider, coin, spec) {
@@ -1049,13 +1115,8 @@ _INVOICE_JS = r"""
             const list = document.getElementById('walletList');
             list.textContent = '';
             if (hash && spec.explorer_tx) {
-              const link = document.createElement('a');
-              link.className = 'wallet';
-              link.href = spec.explorer_tx + hash;
-              link.target = '_blank';
-              link.rel = 'noopener';
-              link.textContent = 'посмотреть транзакцию';
-              list.appendChild(link);
+              const group = sheetGroup('транзакция');
+              walletRow(group, 'посмотреть в обозревателе', '', spec.explorer_tx + hash);
             }
             walletMsg('Перевод отправлен. Доступ включится сам, как только сеть подтвердит платёж — страницу можно не закрывать.', 'c-green');
             const state = document.getElementById('watchState');
@@ -1079,6 +1140,8 @@ def _invoice_script(coins_js: str, token: str, default_idx: int, has_contact: bo
     return (
         _INVOICE_JS
         .replace("__COINS__", coins_js)
+        .replace("__WALLETS__", json.dumps(wallet_catalogue(), ensure_ascii=False))
+        .replace("__WALLET_HINTS__", json.dumps(URI_WALLET_HINTS, ensure_ascii=False))
         .replace("__TOKEN__", json.dumps(token))
         .replace("__HAS_CONTACT__", "true" if has_contact else "false")
         .replace("__DEFAULT_IDX__", str(int(default_idx)))
@@ -1357,7 +1420,10 @@ def _page(title: str, body: str) -> str:
       color: var(--green-dim); font: inherit; cursor: pointer;
     }}
     .sheet__x:hover {{ border-color: var(--line-strong); color: var(--green); }}
-    .sheet__list {{ display: flex; flex-direction: column; gap: var(--s2); }}
+    .sheet__list {{ display: flex; flex-direction: column; gap: var(--s4); }}
+    .sheet__group {{ display: flex; flex-direction: column; gap: var(--s2); }}
+    .sheet__grouplabel {{ font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green-faint); }}
+    .sheet__qr {{ width: 100%; margin-top: var(--s2); }}
     .wallet {{
       display: flex; align-items: center; gap: var(--s3); min-height: var(--ctrl); padding: 0 var(--s4);
       border: 1px solid var(--line); background: var(--panel); color: var(--green-dim);
