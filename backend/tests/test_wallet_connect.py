@@ -400,3 +400,27 @@ class InvoiceSheetLayoutTest(unittest.TestCase):
         injected_branch = branch.split("if (wallets.length) {")[1].split("return;")[0]
 
         self.assertNotIn("addWalletButtons", injected_branch)
+
+    def test_wallet_buttons_are_real_links(self) -> None:
+        """Navigating to a scheme like solana: from script is blocked by
+        browsers as an unknown-protocol navigation, so the tap does nothing.
+        A real anchor carrying the user's gesture opens the wallet."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = svc.invoice_html(token)
+        block = html.split("function addWalletButtons")[1].split("function notInstalledLater")[0]
+
+        self.assertIn("walletRow(group, w.name, WALLET_ICONS[w.id] || '', w.url)", block)
+        self.assertNotIn("window.location.href = w.url", block)
+
+    def test_balance_is_left_to_the_wallet(self) -> None:
+        """We only see the account that happens to be connected; refusing on
+        its balance blocks a buyer who meant to pay from another one."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = svc.invoice_html(token)
+
+        self.assertNotIn("evmShortfall", html)
+        self.assertNotIn("0x70a08231", html)

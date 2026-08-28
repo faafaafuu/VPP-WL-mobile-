@@ -882,11 +882,12 @@ _INVOICE_JS = r"""
             if (!list.length) return false;
             const group = sheetGroup('оплатить в кошельке');
             list.forEach(function (w) {
-              walletRow(group, w.name, WALLET_ICONS[w.id] || '', function () {
-                walletMsg('Открываем ' + w.name + '…', '');
-                notInstalledLater(w.name);
-                window.location.href = w.url;
-              });
+              /* Именно <a href>, а не обработчик с location.href: переход на
+                 схему вроде solana: или bitcoin: из скрипта браузеры глушат
+                 как навигацию на неизвестный протокол, и нажатие просто
+                 ничего не делает. По ссылке с жестом пользователя — открывает. */
+              const row = walletRow(group, w.name, WALLET_ICONS[w.id] || '', w.url);
+              row.addEventListener('click', function () { notInstalledLater(w.name); });
             });
             return true;
           }
@@ -1034,6 +1035,10 @@ _INVOICE_JS = r"""
             if (typeof action === 'string') {
               el.href = action;
               el.rel = 'noopener';
+              /* Обычная ссылка кошелька — в новую вкладку, чтобы страница
+                 заказа осталась открытой. Схемы вроде solana: открываем в
+                 текущей: в новой вкладке браузеры их блокируют. */
+              if (/^https?:/i.test(action)) el.target = '_blank';
             } else {
               el.type = 'button';
               el.addEventListener('click', action);
@@ -1105,8 +1110,6 @@ _INVOICE_JS = r"""
               }
               const units = toUnits(coin.amount, spec.token_decimals);
               if (units === null) { walletMsg('Сумма ещё не рассчитана — подождите пару секунд.', 'c-red'); return; }
-              const short = await evmShortfall(provider, from, coin, spec, units);
-              if (short) { walletMsg(short, 'c-red'); return; }
               let tx;
               if (spec.contract) {
                 /* transfer(address,uint256) */
@@ -1120,30 +1123,6 @@ _INVOICE_JS = r"""
               sent(hash, spec);
             } catch (e) {
               walletMsg(walletError(e), 'c-red');
-            }
-          }
-
-          /* Проверяем баланс до подписи. Иначе кошелёк симулирует перевод,
-             тот падает внутри контракта, и наружу выходит вроде
-             "EVM error: InvalidFEOpcode" — по которому невозможно догадаться,
-             что просто не хватает монет. */
-          async function evmShortfall(provider, from, coin, spec, units) {
-            try {
-              let have;
-              if (spec.contract) {
-                const data = '0x70a08231' + padWord(from);  /* balanceOf(address) */
-                const raw = await provider.request({method: 'eth_call', params: [{to: spec.contract, data: data}, 'latest']});
-                have = BigInt(raw && raw !== '0x' ? raw : '0x0');
-              } else {
-                const raw = await provider.request({method: 'eth_getBalance', params: [from, 'latest']});
-                have = BigInt(raw || '0x0');
-              }
-              if (have >= units) return null;
-              return 'На кошельке не хватает ' + coin.label + ' в сети ' + coin.network_label +
-                     '. Нужно ' + coin.amount + ' ' + coin.label + '. Пополните кошелёк или выберите другую валюту.';
-            } catch (e) {
-              /* Узел не ответил — не мешаем платить, кошелёк сам всё проверит. */
-              return null;
             }
           }
 
