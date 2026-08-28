@@ -63,10 +63,18 @@ def _vless_link(node: VpnNode, options: VlessOptions) -> str:
     reality = options.reality or {}
     security = str(options.security or reality.get("security") or "reality").strip().lower() or "reality"
 
+    transport = _transport_type(options)
     query = {
-        "type": _transport_type(options),
+        "type": transport,
+        # Required by the VLESS share-link spec. Lenient clients (V2Box)
+        # default it to "none" and connect anyway; strict ones (Happ,
+        # Hiddify, anything sing-box based) reject the link outright — which
+        # is exactly why the same node worked in one app and not the others.
+        "encryption": "none",
         "security": security,
     }
+    if transport == "tcp":
+        query["headerType"] = str((options.transport or {}).get("headerType") or "none")
     if security == "reality":
         public_key = str(options.public_key or reality.get("public_key") or reality.get("pbk") or "").strip()
         short_id = str(options.short_id or reality.get("short_id") or reality.get("sid") or "").strip()
