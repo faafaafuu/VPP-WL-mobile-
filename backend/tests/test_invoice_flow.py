@@ -33,10 +33,33 @@ def _service() -> ApiService:
     )
 
 
+def _order(svc: ApiService, tariff_id: str = "vpn.1m") -> str:
+    """An order with a contact on file. Picking a coin is gated on knowing
+    where to send the key, so the select tests all need one."""
+    token = svc.checkout({"tariff_id": tariff_id})["token"]
+    svc.set_invoice_contact(token, {"email": "buyer@example.com"})
+    return token
+
+
+class InvoiceHiddenPanelsTest(unittest.TestCase):
+    def test_hidden_elements_stay_hidden_under_flex_and_grid_components(self) -> None:
+        """The theme styles .transfer as flex and .network as grid, which
+        outranks the UA stylesheet's rule for [hidden]. Without an explicit
+        [hidden] rule every coin panel and both network rows rendered at
+        once — the page showed several wallet addresses stacked together."""
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = svc.invoice_html(token)
+        css = html.split("<style>")[1].split("</style>")[0]
+
+        self.assertIn("[hidden] { display: none !important; }", css)
+
+
 class InvoiceSelectTest(unittest.TestCase):
     def test_select_fixes_unique_amount_above_base(self) -> None:
         svc = _service()
-        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        token = _order(svc)
 
         result = svc.select_invoice_coin(token, {"coin_id": "usdt_trc20"})
 
@@ -48,7 +71,7 @@ class InvoiceSelectTest(unittest.TestCase):
 
     def test_select_persists_payment_intent(self) -> None:
         svc = _service()
-        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        token = _order(svc)
 
         result = svc.select_invoice_coin(token, {"coin_id": "usdt_trc20"})
         subscription = svc.repository.get_commercial_subscription(token)
@@ -60,7 +83,7 @@ class InvoiceSelectTest(unittest.TestCase):
 
     def test_select_is_idempotent_for_same_coin(self) -> None:
         svc = _service()
-        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        token = _order(svc)
 
         first = svc.select_invoice_coin(token, {"coin_id": "usdt_trc20"})
         second = svc.select_invoice_coin(token, {"coin_id": "usdt_trc20"})
@@ -69,8 +92,8 @@ class InvoiceSelectTest(unittest.TestCase):
 
     def test_two_pending_orders_get_distinct_amounts(self) -> None:
         svc = _service()
-        token_a = svc.checkout({"tariff_id": "vpn.1m"})["token"]
-        token_b = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        token_a = _order(svc)
+        token_b = _order(svc)
 
         amount_a = svc.select_invoice_coin(token_a, {"coin_id": "usdt_trc20"})["amount"]
         amount_b = svc.select_invoice_coin(token_b, {"coin_id": "usdt_trc20"})["amount"]
@@ -79,7 +102,7 @@ class InvoiceSelectTest(unittest.TestCase):
 
     def test_select_unknown_coin_raises_400(self) -> None:
         svc = _service()
-        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        token = _order(svc)
 
         with self.assertRaises(ApiError) as ctx:
             svc.select_invoice_coin(token, {"coin_id": "dogecoin"})
@@ -88,7 +111,7 @@ class InvoiceSelectTest(unittest.TestCase):
 
     def test_select_unconfigured_coin_raises_503(self) -> None:
         svc = _service()
-        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        token = _order(svc)
 
         with self.assertRaises(ApiError) as ctx:
             svc.select_invoice_coin(token, {"coin_id": "btc"})

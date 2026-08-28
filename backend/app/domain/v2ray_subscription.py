@@ -34,7 +34,7 @@ def hysteria2_link(
     sni: str,
     insecure: bool = False,
     obfs_password: str | None = None,
-    label: str = "⚡ VPN_ROUTER │ H2",
+    label: str = "⚡ Клео │ H2",
 ) -> str:
     """UDP/QUIC node — bypasses RU TSPU traffic-shaping that stalls TCP+TLS Reality.
 

@@ -95,6 +95,34 @@ class XuiProvisioningTest(unittest.TestCase):
         raw = service.raw_v2ray_subscription(token)
         self.assertIn(f"vless://{client_uuid}@203.0.113.50:443", raw)
 
+    def test_crypto_payment_activation_provisions_a_client(self) -> None:
+        """The payment watcher activates orders straight through the
+        repository, bypassing checkout. Without provisioning wired into that
+        path a paid crypto order went "active" with no xui_uuid, so the
+        customer's subscription link was empty and they got nothing."""
+        service = self._service()
+        self.repository.create_commercial_subscription("paid-token", "vpn.1m")
+        self.repository.activate_commercial_subscription("paid-token", 30, paid_tx="0xabc")
+        self.assertEqual(self.xui_client.added, [])
+
+        service.provision_paid_subscription("paid-token")
+
+        self.assertEqual(len(self.xui_client.added), 1)
+        subscription = self.repository.commercial_subscriptions_by_token["paid-token"]
+        self.assertTrue(subscription.xui_uuid)
+        self.assertIn(f"vless://{subscription.xui_uuid}@", service.raw_v2ray_subscription("paid-token"))
+
+    def test_provisioning_a_paid_subscription_twice_reuses_the_client(self) -> None:
+        service = self._service()
+        self.repository.create_commercial_subscription("paid-token", "vpn.1m")
+        self.repository.activate_commercial_subscription("paid-token", 30)
+
+        service.provision_paid_subscription("paid-token")
+        service.provision_paid_subscription("paid-token")
+
+        self.assertEqual(len(self.xui_client.added), 1)
+        self.assertEqual(len(self.xui_client.updated), 1)
+
     def test_admin_activate_renews_expiry_on_existing_xui_client(self) -> None:
         service = self._service()
         token = service.checkout({"tariff_id": "vpn.1m"})["token"]

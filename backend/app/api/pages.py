@@ -3,50 +3,70 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from html import escape
-from urllib.parse import quote
+from typing import Any
 
 from app.domain.models import CommercialSubscription
 from app.domain.tariffs import Tariff
 
-# Design tokens from design_handoff_vpn_landing (variant 2a "hacker terminal").
-_ACCENTS = (
-    ("#00d4ff", "rgba(0,212,255,.35)", "rgba(0,212,255,.05)"),
-    ("#ffd60a", "#ffd60a", "rgba(255,214,10,.08)"),
-    ("#ff2b4d", "#ff2b4d", "rgba(255,43,77,.08)"),
-)
+# Tariff card variants from design_handoff_vpn_landing v1.1: the default
+# cyan card, a yellow "выгоднее" card, then the green highlighted "лучший
+# выбор" card. A fourth tariff falls back to the default card again.
+_TARIFF_VARIANTS = ("", "tariff--warn", "tariff--best", "")
 
 
 def landing_page(tariffs: tuple[Tariff, ...]) -> str:
     base_monthly = _base_monthly_price(tariffs)
     rows = "\n".join(_tariff_row(i, tariff, base_monthly) for i, tariff in enumerate(tariffs))
-    steps = """
-      <div class="steps">
-        <span class="c-cyan">01.</span> оплата криптовалютой<br>
-        <span class="c-yellow">02.</span> установка v2rayN / v2rayNG / Hiddify<br>
-        <span class="c-red">03.</span> ссылка после подтверждения
-      </div>
-    """
     return _page(
         "Быстрый VPN-доступ",
         f"""
-        <div class="syslog">
-          <div class="dim">root@core:~$ nmap -sV target.net</div>
-          <div class="c-cyan">[+] host up <span class="dim2">0.014s latency</span></div>
-          <div class="c-cyan">[+] 443/tcp <span class="c-green">open</span> encrypted</div>
-          <div class="c-red">[!] traffic obfuscation <span class="c-green">ENABLED</span></div>
-          <div class="dim">root@core:~$ ./vpn_router --start</div>
+        <section class="section" style="gap:var(--s6)">
+          <div class="log">
+            <div class="dim">root@core:~$ nmap -sV target.net</div>
+            <div class="c-cyan">[+] host up <span class="dim">0.014s latency</span></div>
+            <div class="c-cyan">[+] 443/tcp <span class="c-green">open</span> <span class="dim">encrypted</span></div>
+            <div class="c-red">[!] traffic obfuscation <span class="c-green">ENABLED</span></div>
+            <div class="dim">root@core:~$ ./vpn_router --start</div>
+          </div>
+          <div class="hero">
+            <h1>БЫСТРЫЙ_VPN<br>_ДОСТУП<span class="cursor"></span></h1>
+            <div class="subhead">
+              <div>// YouTube · Telegram · Instagram · ChatGPT</div>
+              <div>// подключение — 60 сек., без логов</div>
+            </div>
+            <a class="cta" href="#pricing">$ выбрать_тариф --run</a>
+          </div>
+        </section>
+
+        <section class="section" id="pricing">
+          <div class="section__label">// тарифы</div>
+          <div class="tariffs">
+            {rows}
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section__label">// как это работает</div>
+          <div class="steps">
+            <div class="step">
+              <div class="step__n c-cyan">01.</div>
+              <div class="step__text">оплата криптовалютой или картой</div>
+            </div>
+            <div class="step">
+              <div class="step__n c-yellow">02.</div>
+              <div class="step__text">установка v2rayN / v2rayNG / Hiddify</div>
+            </div>
+            <div class="step">
+              <div class="step__n c-red">03.</div>
+              <div class="step__text">ссылка приходит после подтверждения</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="notes">
+          <div>// уже оплатили, но потеряли ссылку? <a href="/recover">восстановить доступ</a></div>
+          <div>// оплачивая тариф, вы принимаете <a href="/terms">публичную оферту</a> и <a href="/privacy">политику конфиденциальности</a></div>
         </div>
-        <div class="hero">
-          <h1>БЫСТРЫЙ_VPN<br>_ДОСТУП<span class="cursor"></span></h1>
-          <div class="subhead">// YouTube · Telegram · Instagram · ChatGPT<br>// подключение — 60 сек., без логов</div>
-          <a class="cta" href="#pricing">$ выбрать_тариф --run</a>
-        </div>
-        <div class="tariffs" id="pricing">
-          {rows}
-        </div>
-        {steps}
-        <div class="dim" style="padding-bottom:6px">// уже оплатили, но потеряли ссылку? <a href="/recover">восстановить доступ</a></div>
-        <div class="footer-links">Оплачивая тариф, вы принимаете <a href="/terms">публичную оферту</a> и <a href="/privacy">политику конфиденциальности</a>.</div>
         <div class="payment-badge">
           <a href="https://freekassa.net" title="big-dark-1" target="_blank" rel="noopener"><img src="https://cdn.freekassa.net/images/logos/banners/f/big-dark-1.png" alt="big-dark-1" loading="lazy"></a>
         </div>
@@ -68,11 +88,6 @@ def connect_page(
             <a class="btn" href="{escape(telegram_link)}" target="_blank" rel="noopener">✈ привязать Telegram</a>
             <p class="hint dim2">// {escape(tg_hint)}</p>
         """
-    tariff_map = {t.id: t for t in tariffs}
-    current_tariff = tariff_map.get(subscription.tariff_id)
-    max_devices = current_tariff.max_devices if current_tariff else 3
-    traffic_gb = current_tariff.traffic_gb if current_tariff else 0
-    traffic_note = f"{traffic_gb} ГБ трафика" if traffic_gb else "трафик без ограничений"
     renew_base_monthly = _base_monthly_price(tariffs)
     renew_rows = "\n".join(_tariff_row(i, tariff, renew_base_monthly) for i, tariff in enumerate(tariffs))
     if subscription.is_active():
@@ -81,7 +96,7 @@ def connect_page(
           <div class="block block-green">
             <div class="dim">root@core:~$ ./vpn_router --status</div>
             <h1 class="small">Ваш VPN активен<span class="cursor"></span></h1>
-            <div class="subhead">// действует до {escape(expires)}<br>// до {max_devices} устройств, {escape(traffic_note)}<br>// сохраните адрес этой страницы — потеряли? <a href="/recover">восстановить по email</a></div>
+            <div class="subhead">// действует до {escape(expires)}<br>// сохраните адрес этой страницы — потеряли? <a href="/recover">восстановить по email</a></div>
             <div class="actions">
               <button class="cta" type="button" onclick="connectClient()">$ подключить --run</button>
               <button class="btn" type="button" onclick="copySub()">Скопировать ссылку</button>
@@ -188,29 +203,13 @@ def connect_page(
 def invoice_page(
     subscription: CommercialSubscription,
     tariff: Tariff,
-    coin_options: list[dict[str, str]],
+    coin_options: list[dict[str, Any]],
     telegram_link: str | None = None,
+    card_error: str | None = None,
 ) -> str:
-    tg_block = ""
-    if telegram_link:
-        tg_block = f"""
-        <div class="actions">
-          <a class="btn" href="{escape(telegram_link)}" target="_blank" rel="noopener">✈ привязать Telegram</a>
-        </div>
-        <p class="hint dim2">// бот пришлёт ссылку сразу после подтверждения оплаты — и вы её никогда не потеряете</p>
-        """
     saved_email = subscription.customer_email or ""
-    contact_block = f"""
-        <div class="block">
-          <div class="dim">root@core:~$ ./vpn_router --bind email</div>
-          <div class="subhead">// нет доступа к Telegram? оставьте email —<br>// по нему вы всегда восстановите ссылку на <a href="/recover">/recover</a></div>
-          <input class="field" type="email" id="contactEmail" placeholder="you@example.com" value="{escape(saved_email)}" autocomplete="email">
-          <div class="actions">
-            <button class="btn" type="button" onclick="saveEmail()">сохранить email</button>
-          </div>
-          <p class="hint" id="emailHint" hidden></p>
-        </div>
-    """
+    tg_bound = bool((subscription.tg_chat_id or "").strip())
+    has_contact = bool(saved_email.strip()) or tg_bound
     token = subscription.token
     order_ref = token[:12].upper()
     price_rub = _price(tariff.price_rub)
@@ -222,161 +221,139 @@ def invoice_page(
                 "network_label": opt["network_label"],
                 "amount": opt["amount"],
                 "address": opt["address"],
+                "pay": opt.get("pay"),
             }
             for opt in coin_options
         ],
         ensure_ascii=False,
     )
     coin_blocks = "\n".join(_coin_block(i, opt, token) for i, opt in enumerate(coin_options))
-    card_row = ""
-    if tariff.id == "vpn.1m":
-        freekassa_url = (
-            "https://widgets.freekassa.net?type=payment-button&currency=RUB"
-            "&destination=" + quote("Оплата услуги доступа согласно выбранному тарифу", safe="")
-            + "&theme=dark&default_amount=200&button_text=" + quote("Оплатить", safe="")
-            + "&button_size=36px&shopId=75677&s=63a0733bfe0e55968296cd13605db891"
-        )
-        card_row = f"""
-          <div class="coin-group">
-            <div class="coin-group-label"><span class="coin-dot" style="background:#f5b301"></span>Карта РФ</div>
-            <div class="coin-group-chips">
-              <a class="coin-tab" href="{escape(freekassa_url)}" target="_blank" rel="noopener">Оплатить картой</a>
-            </div>
-          </div>
-        """
-    return _page(
-        "Оплата криптовалютой",
-        f"""
-        <div class="block block-green">
-          <div class="dim">root@core:~$ ./vpn_router --pay</div>
-          <div class="footer-links" style="margin:0 0 10px"><a href="/#pricing">&larr; сменить тариф</a></div>
-          <h1 class="small">{escape(tariff.title)}<span class="cursor"></span></h1>
-          <div class="subhead">// стоимость: <span class="c-white">{escape(price_rub)}</span> · заказ: <code>{escape(order_ref)}</code><br>// выберите валюту и переведите точную сумму</div>
-          <div class="coin-tabs" id="coinTabs">
-            {_coin_tab_buttons(coin_options)}
-            {card_row}
-          </div>
-          {coin_blocks}
-          <p class="hint c-yellow" id="watchState">ожидание выбора валюты…</p>
-        </div>
-        <div class="guides">
-          <details open>
-            <summary>Как оплатить</summary>
-            <ol>
-              <li>Выберите валюту, которая удобна вам.</li>
-              <li>Откройте ваш кошелёк (Binance, OKX, Bybit, Trust Wallet и др.).</li>
-              <li>Убедитесь, что выбрали правильную <strong>сеть</strong> (TRC20, BSC и т.д.).</li>
-              <li>Переведите <strong>точную сумму</strong> — без округления, до последнего знака.</li>
-              <li>После подтверждения в сети доступ включится автоматически — страница обновится сама.</li>
-            </ol>
-          </details>
-        </div>
-        <div class="actions">
-          <a class="btn" href="/connect/{escape(token)}">Проверить статус доступа</a>
-        </div>
-        {tg_block}
-        {contact_block}
-        <p class="dim" style="margin-top:14px">// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу.<br>// потеряли? <a href="/recover">восстановить доступ по email</a></p>
-        <script>
-          const COINS = {coins_js};
-          const TOKEN = {token!r};
-          let selectedIdx = null;
-          let pollTimer = null;
+    payment_methods, default_idx = _payment_method_section(coin_options)
 
-          async function selectCoin(idx) {{
-            selectedIdx = idx;
-            document.querySelectorAll('.coin-panel').forEach((p, i) => p.hidden = i !== idx);
-            document.querySelectorAll('.coin-tab').forEach(b => b.classList.toggle('active', parseInt(b.dataset.idx) === idx));
-            document.querySelectorAll('.coin-select').forEach(s => {{
-              if ([...s.options].some(o => parseInt(o.value) === idx)) s.value = idx;
-            }});
-            const state = document.getElementById('watchState');
-            try {{
-              const resp = await fetch('/invoice/' + TOKEN + '/select', {{
-                method: 'POST',
-                headers: {{'Content-Type': 'application/json'}},
-                body: JSON.stringify({{coin_id: COINS[idx].id}}),
-              }});
-              const data = await resp.json();
-              if (data.status === 'active') {{ window.location = data.connect_url; return; }}
-              if (data.amount) {{
-                COINS[idx].amount = data.amount;
-                COINS[idx].address = data.address;
-                document.getElementById('amount' + idx).textContent = data.amount + ' ' + COINS[idx].label;
-                document.getElementById('addr' + idx).textContent = data.address;
-                state.textContent = 'переведите ровно ' + data.amount + ' ' + COINS[idx].label +
-                  ' — доступ включится автоматически после подтверждения сети';
-                startPolling();
-              }}
-            }} catch (e) {{
-              state.textContent = 'не удалось получить сумму — обновите страницу';
-            }}
-          }}
-          function startPolling() {{
-            if (pollTimer) return;
-            pollTimer = setInterval(async () => {{
-              try {{
-                const resp = await fetch('/invoice/' + TOKEN + '/status');
-                const data = await resp.json();
-                if (data.status === 'active') {{
-                  clearInterval(pollTimer);
-                  window.location = data.connect_url;
-                }}
-              }} catch (e) {{}}
-            }}, 5000);
-          }}
-          async function copyText(text) {{
-            if (navigator.clipboard && window.isSecureContext) {{
-              try {{ await navigator.clipboard.writeText(text); return true; }} catch (e) {{}}
-            }}
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            let ok = false;
-            try {{ ok = document.execCommand('copy'); }} catch (e) {{}}
-            document.body.removeChild(ta);
-            return ok;
-          }}
-          async function copyAddr(idx) {{
-            await copyText(COINS[idx].address);
-            const hint = document.getElementById('copyHint' + idx);
-            if (hint) hint.hidden = false;
-          }}
-          async function copyAmount(idx) {{
-            await copyText(COINS[idx].amount);
-          }}
-          function toggleQr(idx) {{
-            const qr = document.getElementById('addrQr' + idx);
-            if (qr) qr.hidden = !qr.hidden;
-          }}
-          async function saveEmail() {{
-            const input = document.getElementById('contactEmail');
-            const hint = document.getElementById('emailHint');
-            hint.hidden = false;
-            try {{
-              const resp = await fetch('/invoice/' + TOKEN + '/contact', {{
-                method: 'POST',
-                headers: {{'Content-Type': 'application/json'}},
-                body: JSON.stringify({{email: input.value}}),
-              }});
-              if (resp.ok) {{
-                hint.className = 'hint c-green';
-                hint.textContent = 'Email сохранён — по нему можно восстановить ссылку.';
-              }} else {{
-                hint.className = 'hint c-red';
-                hint.textContent = 'Проверьте адрес — похоже, в нём опечатка.';
-              }}
-            }} catch (e) {{
-              hint.className = 'hint c-red';
-              hint.textContent = 'Не удалось сохранить — попробуйте ещё раз.';
-            }}
-          }}
-          selectCoin(0);
-          startPolling();
+    tg_button = (
+        f'<a class="btn btn--cyan" id="tgBind" href="{escape(telegram_link)}" target="_blank" rel="noopener">'
+        f'✈ привязать Telegram</a>'
+        if telegram_link
+        else ""
+    )
+    card_note = (
+        f'<div class="callout callout--red" id="cardError">{escape(card_error)}</div>'
+        if card_error
+        else ""
+    )
+    contact_state = (
+        '<p class="hint c-green" id="contactState">'
+        + ("Telegram привязан — ссылку пришлём в чат." if tg_bound else f"Email сохранён: {escape(saved_email)}")
+        + "</p>"
+        if has_contact
+        else '<p class="hint" id="contactState" hidden></p>'
+    )
+    locked_attr = "" if has_contact else " hidden"
+
+    return _page(
+        "Оплата заказа",
+        f"""
+        <section class="section" style="gap:var(--s4)">
+          <div class="log">
+            <div class="dim">root@core:~$ ./vpn_router --pay</div>
+            <a class="order__back" href="/#pricing">&larr; сменить тариф</a>
+          </div>
+          <div class="order__head">
+            <h1 class="small">{escape(tariff.title)}</h1>
+            <dl class="order__meta">
+              <dt>стоимость</dt><dd>{escape(price_rub)}</dd>
+              <dt>заказ</dt><dd class="code">{escape(order_ref)}</dd>
+            </dl>
+          </div>
+        </section>
+
+        <section class="section" id="contactStep">
+          <div class="section__head">
+            <div class="section__label">// шаг 1 — куда прислать доступ</div>
+            <div class="section__hint">без этого ключ будет некому отдать</div>
+          </div>
+          <div class="panel contact">
+            <div class="log">
+              <div class="dim">root@core:~$ ./vpn_router --bind contact</div>
+              <div class="dim">// оплата анонимна, но получатель ключа должен быть известен —
+                иначе после оплаты вернуть доступ можно будет только по этой вкладке</div>
+            </div>
+            <div class="contact__row">
+              <input class="field" type="email" id="contactEmail" placeholder="you@example.com"
+                     value="{escape(saved_email)}" autocomplete="email" inputmode="email">
+              <button class="btn" type="button" onclick="saveEmail()">сохранить email</button>
+            </div>
+            <div class="contact__or">— или —</div>
+            <div class="actions">{tg_button}</div>
+            {contact_state}
+          </div>
+        </section>
+
+        <div id="paySteps"{locked_attr}>
+          <section class="section">
+            <div class="section__head">
+              <div class="section__label">// шаг 2 — способ оплаты</div>
+              <div class="section__hint">выберите валюту и сеть</div>
+            </div>
+            <div class="payment-methods" id="coinTabs">
+              {payment_methods}
+              <div class="paygroup">
+                <div class="paygroup__label">банковская карта</div>
+                {card_note}
+                <div class="card-pay">
+                  <a class="btn btn--cyan" href="/invoice/{escape(token)}/freekassa/pay">оплатить картой</a>
+                  <div class="card-brands"><span>VISA</span><span>MASTERCARD</span><span>МИР</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__label">// шаг 3 — перевод</div>
+            {coin_blocks}
+            <div class="callout" id="watchState">ожидание выбора валюты…</div>
+          </section>
+
+          <section class="section">
+            <div class="section__label">// инструкция</div>
+            <div class="panel howto">
+              <ol>
+                <li>Нажмите <b>$ подключить_кошелёк</b> — сумма, адрес и сеть подставятся сами,
+                    вам останется подтвердить перевод в кошельке.</li>
+                <li>Нет подключаемого кошелька? Скопируйте адрес и переведите вручную с биржи
+                    (Binance, OKX, Bybit) — обязательно в той же <b>сети</b>.</li>
+                <li>Переводите <b>точную сумму</b> — без округления, до последнего знака.</li>
+                <li>После подтверждения в сети доступ включится автоматически — страница обновится сама.</li>
+              </ol>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__label">// после оплаты</div>
+            <div class="actions">
+              <a class="btn" href="/connect/{escape(token)}">проверить статус доступа</a>
+            </div>
+            <div class="section__hint">// ссылка придёт на указанный контакт сразу после подтверждения оплаты</div>
+          </section>
+        </div>
+
+        <div class="sheet" id="walletSheet" hidden>
+          <div class="sheet__box">
+            <div class="sheet__head">
+              <span>выберите кошелёк</span>
+              <button class="sheet__x" type="button" onclick="closeWalletSheet()" aria-label="закрыть">&#10005;</button>
+            </div>
+            <div class="sheet__list" id="walletList"></div>
+            <p class="hint" id="walletHint" hidden></p>
+          </div>
+        </div>
+
+        <div class="notes">
+          <div>// сохраните ссылку на эту страницу — по ней вы всегда вернётесь к заказу</div>
+          <div>// потеряли? <a href="/recover">восстановить доступ по email</a></div>
+        </div>
+        <script>
+{_invoice_script(coins_js, token, default_idx if default_idx is not None else 0, has_contact)}
         </script>
         """,
     )
@@ -590,15 +567,15 @@ def _base_monthly_price(tariffs: tuple[Tariff, ...]) -> Decimal | None:
 
 
 def _tariff_row(idx: int, tariff: Tariff, base_monthly: Decimal | None = None) -> str:
-    accent, border, background = _ACCENTS[idx % len(_ACCENTS)]
+    variant = _TARIFF_VARIANTS[idx % len(_TARIFF_VARIANTS)]
+    variant_cls = f" {variant}" if variant else ""
     months = max(tariff.duration_days // 30, 1)
     badge = f' <span class="badge">// {escape(tariff.badge)}</span>' if tariff.badge else ""
     price = Decimal(tariff.price_rub)
     per_month = f"{escape(_price(f'{(price / months):.2f}'))}/мес"
-    traffic_note = f"{tariff.traffic_gb} ГБ" if tariff.traffic_gb else "безлимит"
-    per_month += f" · {tariff.max_devices} устр. · {escape(traffic_note)}"
 
     price_block = f'<span class="price">{escape(_price(tariff.price_rub))}</span>'
+    badge_block = "<span></span>"
     if base_monthly is not None and months > 1:
         full_price = base_monthly * months
         if full_price > price:
@@ -606,81 +583,123 @@ def _tariff_row(idx: int, tariff: Tariff, base_monthly: Decimal | None = None) -
             price_block = (
                 f'<span class="price-old">{escape(_price(f"{full_price:.2f}"))}</span>'
                 f'<span class="price">{escape(_price(tariff.price_rub))}</span>'
-                f'<span class="discount-tag">-{discount_pct}%</span>'
             )
+            badge_block = f'<span class="tariff-badge">-{discount_pct}%</span>'
 
     return f"""
       <form method="post" action="/checkout" class="tariff-form">
         <input type="hidden" name="tariff_id" value="{escape(tariff.id)}">
-        <button class="tariff" type="submit" style="border-color:{border};background:{background}">
+        <button class="tariff{variant_cls}" type="submit">
           <span class="tariff-info">
-            <span style="color:{accent}">[{months:02d}] {escape(tariff.title)}{badge}</span>
+            <span class="tariff-name">[{months:02d}] {escape(tariff.title)}{badge}</span>
             <span class="tariff-permo">{per_month}</span>
           </span>
           <span class="tariff-price-block">{price_block}</span>
+          {badge_block}
         </button>
       </form>
     """
 
 
-def _coin_tab_buttons(coin_options: list[dict[str, str]]) -> str:
-    """Groups consecutive options that share a label (e.g. every USDT network)
-    under one asset header with network-only chips underneath, instead of
-    repeating "USDT" on every chip — coin_options is already asset-grouped by
-    ALL_COINS's declaration order. An asset with multiple networks (USDT/USDC)
-    gets one row with a network dropdown (defaulting to ERC20, changing it
-    selects that coin right away); an asset with only one network (TON/SOL/
-    ETH/BTC) is a plain chip. All the single-network chips share one row at
-    the end so the picker reads as a couple of neat rows, not one column."""
-    groups: list[tuple[str, list[tuple[int, dict[str, str]]]]] = []
-    for i, opt in enumerate(coin_options):
-        if groups and groups[-1][0] == opt["label"]:
-            groups[-1][1].append((i, opt))
-        else:
-            groups.append((opt["label"], [(i, opt)]))
+def _payment_method_section(coin_options: list[dict[str, Any]]) -> tuple[str, int | None]:
+    """Payment-method picker matching the cyberpunk-theme handoff: a
+    stablecoin toggle (USDT/USDC) with one shared "сеть" dropdown that
+    switches to whichever stablecoin is active, a separate grid for
+    single-network coins (ETH/BTC/TON/SOL), and the card-payment row.
+    Returns (html, default selected index) — the default prefers USDT's
+    ERC20 network, falling back to the first coin option available."""
+    indexed = list(enumerate(coin_options))
+    by_id = {opt["id"]: (i, opt) for i, opt in indexed}
 
-    parts = []
-    singles: list[tuple[int, dict[str, str]]] = []
-    for label, entries in groups:
-        if len(entries) == 1:
-            singles.append(entries[0])
-            continue
+    def network_select(prefix: str, elem_id: str, visible: bool) -> tuple[str, int | None]:
+        entries = [(i, opt) for i, opt in indexed if opt["id"].startswith(prefix)]
+        if not entries:
+            return "", None
         default_i = next((i for i, opt in entries if opt["network_label"].startswith("ERC20")), entries[0][0])
         options = "\n".join(
             f'<option value="{i}"{" selected" if i == default_i else ""}>{escape(opt["network_label"])}</option>'
             for i, opt in entries
         )
-        parts.append(
-            f'<div class="coin-group">'
-            f'<div class="coin-group-label"><span class="coin-dot" style="background:{escape(entries[0][1]["color"])}"></span>{escape(label)}</div>'
-            f'<select class="coin-select" onchange="selectCoin(parseInt(this.value))">{options}</select>'
+        hidden_attr = "" if visible else " hidden"
+        color = entries[0][1]["color"]
+        label = "USDT" if prefix.startswith("usdt") else "USDC"
+        html = (
+            f'<div class="coin-group-dropdown" id="{elem_id}"{hidden_attr}>'
+            f'<div class="coin-group-label"><span class="coin-dot" style="background:{escape(color)}"></span>{escape(label)}</div>'
+            f'<select class="coin-select network-select" id="{elem_id}Select" onchange="selectCoin(parseInt(this.value))">{options}</select>'
             f'</div>'
         )
-    if singles:
-        chips = "\n".join(
-            f'<button class="coin-tab" type="button" data-idx="{i}" onclick="selectCoin({i})">'
+        return html, default_i
+
+    def stable_button(prefix: str, label: str, active: bool) -> str:
+        entries = [opt for opt in coin_options if opt["id"].startswith(prefix)]
+        color = entries[0]["color"] if entries else "#fff"
+        active_cls = " is-active" if active else ""
+        return (
+            f'<button type="button" class="coin{active_cls}" data-stable="{prefix.rstrip("_")}" onclick="selectStable(\'{prefix.rstrip("_")}\')">'
+            f'<span class="coin-dot" style="background:{escape(color)}"></span>{escape(label)}'
+            f'</button>'
+        )
+
+    def chip_html(coin_id: str) -> str:
+        entry = by_id.get(coin_id)
+        if entry is None:
+            return ""
+        i, opt = entry
+        return (
+            f'<button type="button" class="coin" data-idx="{i}" onclick="selectCoin({i})">'
             f'<span class="coin-dot" style="background:{escape(opt["color"])}"></span>'
             f'{escape(opt["label"])}'
             f'</button>'
-            for i, opt in singles
         )
-        parts.append(f'<div class="coin-group-chips">{chips}</div>')
-    return "\n".join(parts)
 
+    usdt_select, usdt_default = network_select("usdt_", "networkRowUsdt", visible=True)
+    usdc_select, usdc_default = network_select("usdc_", "networkRowUsdc", visible=False)
+    default_idx = usdt_default if usdt_default is not None else usdc_default
 
-def _coin_block(idx: int, opt: dict[str, str], token: str) -> str:
-    return f"""
-      <div class="coin-panel" id="coinPanel{idx}" hidden>
-        <div class="crypto-meta">
-          <span class="coin-dot" style="background:{escape(opt['color'])}"></span>
-          <span class="c-white">{escape(opt['label'])}</span>
-          <span class="coin-net">{escape(opt['network_label'])}</span>
+    other_chips = "".join(chip_html(c) for c in ("eth", "btc", "ton", "sol"))
+
+    html = f"""
+      <div class="paygroup">
+        <div class="paygroup__label">стейблкоины</div>
+        <div class="coins coins--2" id="stableCoins">
+          {stable_button("usdt_", "USDT", True)}
+          {stable_button("usdc_", "USDC", False)}
         </div>
-        <p class="crypto-amount" id="amount{idx}" onclick="copyAmount({idx})">{escape(opt['amount'])} {escape(opt['label'])}</p>
-        <p class="crypto-label">адрес кошелька</p>
-        <p class="crypto-addr" id="addr{idx}">{escape(opt['address'])}</p>
-        <div class="actions">
-          <button class="cta" type="button" onclick="copyAddr({idx})">$ скопировать_адрес</button>
+      </div>
+      {usdt_select}
+      {usdc_select}
+      <div class="paygroup">
+        <div class="paygroup__label">другая криптовалюта</div>
+        <div class="coins coins--4">{other_chips}</div>
+      </div>
+    """
+    return html, default_idx
+
+
+def _coin_block(idx: int, opt: dict[str, Any], token: str) -> str:
+    connect_btn = (
+        f'<button class="cta" type="button" onclick="payWithWallet({idx})">$ подключить_кошелёк</button>'
+        if opt.get("pay")
+        else ""
+    )
+    return f"""
+      <div class="coin-panel transfer" id="coinPanel{idx}" hidden>
+        <div>
+          <div class="transfer__coin">
+            <span class="coin-dot" style="background:{escape(opt['color'])}"></span>
+            <span class="c-white">{escape(opt['label'])}</span>
+            <span class="net">{escape(opt['network_label'])}</span>
+          </div>
+          <p class="transfer__amount" id="amount{idx}" onclick="copyAmount({idx})">{escape(opt['amount'])} {escape(opt['label'])}</p>
+        </div>
+        <div class="field-group">
+          <p class="field__label">адрес кошелька</p>
+          <p class="field__value" id="addr{idx}">{escape(opt['address'])}</p>
+        </div>
+        <div class="transfer__actions">
+          {connect_btn}
+          <button class="btn" type="button" onclick="copyAddr({idx})">скопировать адрес</button>
           <button class="btn" type="button" onclick="toggleQr({idx})">QR-код</button>
         </div>
         <div class="qr-wrap" id="addrQr{idx}" hidden>
@@ -689,6 +708,381 @@ def _coin_block(idx: int, opt: dict[str, str], token: str) -> str:
         <p class="hint c-green" id="copyHint{idx}" hidden>Адрес скопирован.</p>
       </div>
     """
+
+
+# The invoice page's client script. Kept out of the f-string above so the JS
+# can use ordinary braces instead of doubling every one of them.
+_INVOICE_JS = r"""
+          const COINS = __COINS__;
+          const TOKEN = __TOKEN__;
+          let hasContact = __HAS_CONTACT__;
+          let selectedIdx = null;
+          let pollTimer = null;
+
+          /* ---------- контакт ---------- */
+
+          function unlockPayment() {
+            hasContact = true;
+            const steps = document.getElementById('paySteps');
+            if (steps && steps.hidden) {
+              steps.hidden = false;
+              selectCoin(selectedIdx === null ? __DEFAULT_IDX__ : selectedIdx);
+            }
+          }
+          function setContactState(text, cls) {
+            const el = document.getElementById('contactState');
+            if (!el) return;
+            el.hidden = false;
+            el.className = 'hint ' + cls;
+            el.textContent = text;
+          }
+          async function saveEmail() {
+            const input = document.getElementById('contactEmail');
+            try {
+              const resp = await fetch('/invoice/' + TOKEN + '/contact', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: input.value}),
+              });
+              if (resp.ok) {
+                setContactState('Email сохранён — сюда придёт ссылка, по нему же работает восстановление.', 'c-green');
+                unlockPayment();
+              } else {
+                setContactState('Проверьте адрес — похоже, в нём опечатка.', 'c-red');
+              }
+            } catch (e) {
+              setContactState('Не удалось сохранить — попробуйте ещё раз.', 'c-red');
+            }
+          }
+
+          /* ---------- выбор монеты ---------- */
+
+          function selectStable(stable) {
+            const select = document.getElementById('networkRow' + (stable === 'usdt' ? 'Usdt' : 'Usdc') + 'Select');
+            if (select) selectCoin(parseInt(select.value));
+          }
+
+          async function selectCoin(idx) {
+            selectedIdx = idx;
+            const coin = COINS[idx];
+            const isStable = coin.id.startsWith('usdt_') || coin.id.startsWith('usdc_');
+            document.querySelectorAll('.coin-panel').forEach((p, i) => p.hidden = i !== idx);
+            document.querySelectorAll('.coin[data-stable]').forEach(b => {
+              b.classList.toggle('is-active', isStable && coin.id.startsWith(b.dataset.stable + '_'));
+            });
+            document.querySelectorAll('.coin[data-idx]').forEach(b => {
+              b.classList.toggle('is-active', !isStable && parseInt(b.dataset.idx) === idx);
+            });
+            document.querySelectorAll('.network-select').forEach(s => {
+              if ([...s.options].some(o => parseInt(o.value) === idx)) s.value = idx;
+            });
+            const rowUsdt = document.getElementById('networkRowUsdt');
+            const rowUsdc = document.getElementById('networkRowUsdc');
+            if (rowUsdt) rowUsdt.hidden = !coin.id.startsWith('usdt_');
+            if (rowUsdc) rowUsdc.hidden = !coin.id.startsWith('usdc_');
+            const state = document.getElementById('watchState');
+            if (!hasContact) {
+              state.textContent = 'сначала укажите email или привяжите Telegram — иначе ссылку будет некуда прислать';
+              return;
+            }
+            try {
+              const resp = await fetch('/invoice/' + TOKEN + '/select', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({coin_id: COINS[idx].id}),
+              });
+              const data = await resp.json();
+              if (data.status === 'active') { window.location = data.connect_url; return; }
+              if (data.amount) {
+                COINS[idx].amount = data.amount;
+                COINS[idx].address = data.address;
+                document.getElementById('amount' + idx).textContent = data.amount + ' ' + COINS[idx].label;
+                document.getElementById('addr' + idx).textContent = data.address;
+                state.textContent = 'переведите ровно ' + data.amount + ' ' + COINS[idx].label +
+                  ' — доступ включится автоматически после подтверждения сети';
+                startPolling();
+              }
+            } catch (e) {
+              state.textContent = 'не удалось получить сумму — обновите страницу';
+            }
+          }
+
+          function startPolling() {
+            if (pollTimer) return;
+            pollTimer = setInterval(async () => {
+              try {
+                const resp = await fetch('/invoice/' + TOKEN + '/status');
+                const data = await resp.json();
+                if (data.status === 'active') {
+                  clearInterval(pollTimer);
+                  window.location = data.connect_url;
+                  return;
+                }
+                /* Telegram могли привязать в другой вкладке — открываем оплату сразу. */
+                if (data.contact && !hasContact) {
+                  setContactState(data.contact_telegram
+                    ? 'Telegram привязан — ссылку пришлём в чат.'
+                    : 'Email сохранён: ' + data.contact_email, 'c-green');
+                  unlockPayment();
+                }
+              } catch (e) {}
+            }, 5000);
+          }
+
+          /* ---------- копирование ---------- */
+
+          async function copyText(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+              try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+            }
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+            return ok;
+          }
+          async function copyAddr(idx) {
+            await copyText(COINS[idx].address);
+            const hint = document.getElementById('copyHint' + idx);
+            if (hint) hint.hidden = false;
+          }
+          async function copyAmount(idx) { await copyText(COINS[idx].amount); }
+          function toggleQr(idx) {
+            const qr = document.getElementById('addrQr' + idx);
+            if (qr) qr.hidden = !qr.hidden;
+          }
+
+          /* ---------- подключение кошелька ---------- */
+
+          /* Десятичная строка -> целое число минимальных единиц сети.
+             Через BigInt, а не через Number: сумма вроде 0.00095238 в double
+             округляется, и на счёт уходит не та величина, которую ждёт
+             сверщик платежей. */
+          function toUnits(amountStr, decimals) {
+            const s = String(amountStr).trim().replace(',', '.');
+            if (!/^\d+(\.\d+)?$/.test(s)) return null;
+            const parts = s.split('.');
+            const frac = ((parts[1] || '') + '0'.repeat(decimals)).slice(0, decimals);
+            return BigInt(parts[0] + frac);
+          }
+          function padWord(hex) {
+            return hex.replace(/^0x/, '').toLowerCase().padStart(64, '0');
+          }
+
+          function walletMsg(text, cls) {
+            const hint = document.getElementById('walletHint');
+            hint.hidden = false;
+            hint.className = 'hint ' + (cls || '');
+            hint.textContent = text;
+          }
+          function openWalletSheet() { document.getElementById('walletSheet').hidden = false; }
+          function closeWalletSheet() {
+            document.getElementById('walletSheet').hidden = true;
+            document.getElementById('walletHint').hidden = true;
+          }
+
+          /* EIP-6963: кошельки сами объявляют о себе, поэтому список получается
+             настоящим — без угадывания window.ethereum и без гонки расширений. */
+          const evmWallets = [];
+          window.addEventListener('eip6963:announceProvider', function (event) {
+            const detail = event.detail;
+            if (!detail || !detail.info || evmWallets.some(w => w.info.uuid === detail.info.uuid)) return;
+            evmWallets.push(detail);
+          });
+          function discoverEvmWallets() {
+            window.dispatchEvent(new Event('eip6963:requestProvider'));
+            const found = evmWallets.slice();
+            if (!found.length && window.ethereum) {
+              found.push({info: {uuid: 'injected', name: 'Кошелёк в браузере', icon: ''}, provider: window.ethereum});
+            }
+            return found;
+          }
+
+          function walletButton(name, icon, onClick) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'wallet';
+            if (icon) {
+              const img = document.createElement('img');
+              img.src = icon;
+              img.alt = '';
+              btn.appendChild(img);
+            }
+            const span = document.createElement('span');
+            span.textContent = name;
+            btn.appendChild(span);
+            btn.addEventListener('click', onClick);
+            return btn;
+          }
+
+          function payWithWallet(idx) {
+            const coin = COINS[idx];
+            const spec = coin.pay;
+            if (!spec) { walletMsg('Для этой сети автоперевод недоступен — скопируйте адрес вручную.', 'c-red'); openWalletSheet(); return; }
+            if (spec.kind === 'uri') { payViaUri(coin, spec); return; }
+            if (spec.kind === 'tron') { payViaTron(coin, spec); return; }
+            payViaEvm(coin, spec);
+          }
+
+          /* BTC / TON / SOL: инжектируемого стандарта нет, зато есть схема
+             платёжной ссылки, которую регистрирует любой кошелёк — открываем
+             её, и получатель с суммой уже подставлены. */
+          function payViaUri(coin, spec) {
+            let amount = coin.amount;
+            if (spec.uri_decimals) {
+              const units = toUnits(coin.amount, spec.uri_decimals);
+              if (units === null) { walletMsg('Сумма ещё не рассчитана — подождите пару секунд.', 'c-red'); openWalletSheet(); return; }
+              amount = units.toString();
+            }
+            const uri = spec.uri_template
+              .replace('{address}', encodeURIComponent(coin.address))
+              .replace('{amount}', encodeURIComponent(amount));
+            const list = document.getElementById('walletList');
+            list.textContent = '';
+            list.appendChild(walletButton('Открыть кошелёк ' + coin.label, '', function () {
+              window.location.href = uri;
+            }));
+            walletMsg('Откроется установленный кошелёк — сумма и адрес уже подставлены. Если ничего не открылось, кошелёк не установлен: переведите вручную.', '');
+            openWalletSheet();
+          }
+
+          async function payViaTron(coin, spec) {
+            const list = document.getElementById('walletList');
+            list.textContent = '';
+            openWalletSheet();
+            walletMsg('Подключаемся к TronLink…', '');
+            try {
+              if (window.tronLink && window.tronLink.request) {
+                await window.tronLink.request({method: 'tron_requestAccounts'});
+              }
+              const tronWeb = (window.tronLink && window.tronLink.tronWeb) || window.tronWeb;
+              if (!tronWeb || !tronWeb.defaultAddress || !tronWeb.defaultAddress.base58) {
+                walletMsg('TronLink не найден. Установите его или переведите USDT вручную на адрес ниже.', 'c-red');
+                return;
+              }
+              const units = toUnits(coin.amount, spec.token_decimals);
+              if (units === null) { walletMsg('Сумма ещё не рассчитана — подождите пару секунд.', 'c-red'); return; }
+              const contract = await tronWeb.contract().at(spec.contract);
+              walletMsg('Подтвердите перевод в TronLink…', '');
+              const txid = await contract.transfer(coin.address, units.toString()).send();
+              sent(txid, spec);
+            } catch (e) {
+              walletMsg(walletError(e), 'c-red');
+            }
+          }
+
+          async function payViaEvm(coin, spec) {
+            const list = document.getElementById('walletList');
+            list.textContent = '';
+            const wallets = discoverEvmWallets();
+            openWalletSheet();
+            if (!wallets.length) {
+              const target = encodeURIComponent(location.host + location.pathname);
+              list.appendChild(walletButton('Открыть в MetaMask', '', function () {
+                window.location.href = 'https://metamask.app.link/dapp/' + target;
+              }));
+              list.appendChild(walletButton('Открыть в Trust Wallet', '', function () {
+                window.location.href = 'https://link.trustwallet.com/open_url?url=' + encodeURIComponent(location.href);
+              }));
+              walletMsg('Кошелёк в этом браузере не найден. Откройте страницу внутри приложения кошелька — или переведите вручную по адресу ниже.', '');
+              return;
+            }
+            wallets.forEach(function (w) {
+              list.appendChild(walletButton(w.info.name, w.info.icon, function () {
+                evmSend(w.provider, coin, spec);
+              }));
+            });
+            walletMsg('Выберите кошелёк — сумма, адрес и сеть подставятся автоматически.', '');
+          }
+
+          async function evmSend(provider, coin, spec) {
+            try {
+              walletMsg('Подтвердите подключение в кошельке…', '');
+              const accounts = await provider.request({method: 'eth_requestAccounts'});
+              const from = accounts && accounts[0];
+              if (!from) { walletMsg('Кошелёк не выдал адрес — попробуйте ещё раз.', 'c-red'); return; }
+              const current = await provider.request({method: 'eth_chainId'});
+              if (String(current).toLowerCase() !== spec.chain_hex) {
+                walletMsg('Переключаем сеть на ' + spec.add_chain.chainName + '…', '');
+                try {
+                  await provider.request({method: 'wallet_switchEthereumChain', params: [{chainId: spec.chain_hex}]});
+                } catch (switchError) {
+                  /* 4902 — сеть кошельку неизвестна; добавляем и повторяем. */
+                  if (switchError && switchError.code === 4902) {
+                    await provider.request({method: 'wallet_addEthereumChain', params: [spec.add_chain]});
+                  } else {
+                    throw switchError;
+                  }
+                }
+              }
+              const units = toUnits(coin.amount, spec.token_decimals);
+              if (units === null) { walletMsg('Сумма ещё не рассчитана — подождите пару секунд.', 'c-red'); return; }
+              let tx;
+              if (spec.contract) {
+                /* transfer(address,uint256) */
+                tx = {from: from, to: spec.contract,
+                      data: '0xa9059cbb' + padWord(coin.address) + padWord(units.toString(16))};
+              } else {
+                tx = {from: from, to: coin.address, value: '0x' + units.toString(16)};
+              }
+              walletMsg('Подтвердите перевод в кошельке…', '');
+              const hash = await provider.request({method: 'eth_sendTransaction', params: [tx]});
+              sent(hash, spec);
+            } catch (e) {
+              walletMsg(walletError(e), 'c-red');
+            }
+          }
+
+          function walletError(e) {
+            if (e && (e.code === 4001 || e.code === 'ACTION_REJECTED')) return 'Перевод отменён в кошельке.';
+            const msg = (e && (e.message || e.reason)) ? String(e.message || e.reason) : '';
+            return 'Кошелёк вернул ошибку' + (msg ? ': ' + msg : '') + '. Можно перевести вручную по адресу ниже.';
+          }
+
+          function sent(hash, spec) {
+            const list = document.getElementById('walletList');
+            list.textContent = '';
+            if (hash && spec.explorer_tx) {
+              const link = document.createElement('a');
+              link.className = 'wallet';
+              link.href = spec.explorer_tx + hash;
+              link.target = '_blank';
+              link.rel = 'noopener';
+              link.textContent = 'посмотреть транзакцию';
+              list.appendChild(link);
+            }
+            walletMsg('Перевод отправлен. Доступ включится сам, как только сеть подтвердит платёж — страницу можно не закрывать.', 'c-green');
+            const state = document.getElementById('watchState');
+            if (state) state.textContent = 'платёж отправлен — ждём подтверждения сети…';
+            startPolling();
+          }
+
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeWalletSheet();
+          });
+          document.getElementById('walletSheet').addEventListener('click', function (e) {
+            if (e.target === this) closeWalletSheet();
+          });
+
+          selectCoin(__DEFAULT_IDX__);
+          startPolling();
+"""
+
+
+def _invoice_script(coins_js: str, token: str, default_idx: int, has_contact: bool) -> str:
+    return (
+        _INVOICE_JS
+        .replace("__COINS__", coins_js)
+        .replace("__TOKEN__", json.dumps(token))
+        .replace("__HAS_CONTACT__", "true" if has_contact else "false")
+        .replace("__DEFAULT_IDX__", str(int(default_idx)))
+    )
 
 
 def _price(raw: str) -> str:
@@ -704,183 +1098,387 @@ def _page(title: str, body: str) -> str:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{escape(title)}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%23050705%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2300ff41%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%2210.5%22%2F%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%2216%22%20rx%3D%224.6%22%20ry%3D%2210.5%22%2F%3E%3Cpath%20d%3D%22M5.5%2016h21M7.6%2010.2h16.8M7.6%2021.8h16.8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {{
       color-scheme: dark;
       --bg: #050705;
       --green: #00ff41;
-      --green-dim: rgba(0,255,65,.45);
+      --green-dim: rgba(0,255,65,.55);
       --green-dim2: rgba(0,255,65,.55);
       --green-mute: rgba(0,255,65,.35);
+      --green-faint: rgba(0,255,65,.3);
+      --line: rgba(0,255,65,.18);
+      --line-soft: rgba(0,255,65,.12);
+      --line-strong: rgba(0,255,65,.35);
       --green-line: rgba(0,255,65,.3);
+      --panel: rgba(0,255,65,.02);
       --cyan: #00d4ff;
       --yellow: #ffd60a;
       --red: #ff2b4d;
       --white: #fff;
+      --ink-on-green: #020402;
+
+      --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+      --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px;
+
+      --ctrl: 52px;
+      --page: 840px;
+      --pad: 40px;
+      --font: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     }}
-    * {{ box-sizing: border-box; }}
+    *, *::before, *::after {{ box-sizing: border-box; }}
+    /* Components below set display: flex/grid, which outranks the UA rule
+       for [hidden] — without this every coin panel and both network rows
+       render at once instead of only the selected one. */
+    [hidden] {{ display: none !important; }}
     body {{
       margin: 0;
-      min-height: 100vh;
-      font-family: 'Share Tech Mono', monospace;
-      color: var(--green);
       background: var(--bg);
       background-image:
-        linear-gradient(rgba(0,255,65,.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,65,.03) 1px, transparent 1px);
-      background-size: 22px 22px;
-      display: flex;
-      justify-content: center;
-      padding: 24px 12px 48px;
+        linear-gradient(rgba(0,255,65,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,65,.028) 1px, transparent 1px);
+      background-size: 24px 24px;
+      color: var(--green);
+      font: 400 14px/1.5 var(--font);
+      -webkit-font-smoothing: antialiased;
     }}
-    a {{ color: inherit; }}
-    .term {{ width: min(560px, 100%); border: 1px solid var(--green-line); background: rgba(5,7,5,.75); }}
-    .term-bar {{
-      padding: 14px 22px; border-bottom: 1px solid var(--green-line);
-      display: flex; justify-content: space-between; align-items: center;
+    a {{ color: var(--cyan); text-decoration: none; }}
+    a:hover {{ color: var(--green); }}
+
+    .shell {{
+      max-width: var(--page); margin: 0 auto; min-height: 100vh;
+      border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+      display: flex; flex-direction: column;
     }}
-    .term-dots {{ display: flex; gap: 6px; }}
-    .term-dots span {{ width: 9px; height: 9px; border-radius: 50%; display: inline-block; }}
-    .term-title {{ font-size: 11px; color: rgba(0,255,65,.5); }}
-    .term-body {{ padding: 20px 22px 24px; }}
-    .syslog {{ font-size: 12px; line-height: 1.7; margin-bottom: 18px; }}
-    .dim {{ color: var(--green-dim); font-size: 12px; line-height: 1.7; }}
+    .chrome {{
+      display: flex; align-items: center; justify-content: space-between; height: 48px;
+      padding: 0 var(--s5); border-bottom: 1px solid rgba(0,255,65,.2);
+      background: rgba(0,255,65,.03); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(4px);
+    }}
+    .chrome__dots {{ display: flex; gap: var(--s2); }}
+    .chrome__dots i {{ width: 10px; height: 10px; border-radius: 50%; display: block; }}
+    .chrome__dots i:nth-child(1) {{ background: var(--red); }}
+    .chrome__dots i:nth-child(2) {{ background: var(--yellow); }}
+    .chrome__dots i:nth-child(3) {{ background: var(--green); }}
+    .chrome__title {{ font-size: 11px; letter-spacing: .5px; color: rgba(0,255,65,.4); }}
+    .main {{ flex: 1; padding: var(--pad); display: flex; flex-direction: column; gap: var(--s8); }}
+    .statusbar {{
+      display: flex; align-items: center; height: 44px; padding: 0 var(--pad);
+      border-top: 1px dashed rgba(0,255,65,.2); font-size: 11px; letter-spacing: .5px; color: var(--green-faint);
+    }}
+    .statusbar b {{ color: var(--green); font-weight: 400; margin: 0 var(--s1); }}
+
+    .section {{ display: flex; flex-direction: column; gap: 14px; }}
+    .section__label {{ font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--green-faint); }}
+    .section__head {{ display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); }}
+    .section__hint {{ font-size: 11.5px; color: var(--green-faint); }}
+    .panel {{ padding: var(--s6) 28px; border: 1px solid rgba(0,255,65,.14); background: var(--panel); }}
+
+    .syslog, .log {{ display: flex; flex-direction: column; gap: var(--s1); font-size: 12.5px; line-height: 1.7; }}
+    .dim {{ color: rgba(0,255,65,.4); font-size: 12.5px; line-height: 1.7; }}
     .dim2 {{ color: rgba(0,255,65,.5); }}
     .c-cyan {{ color: var(--cyan); }}
     .c-yellow {{ color: var(--yellow); }}
     .c-red {{ color: var(--red); }}
     .c-green {{ color: var(--green); }}
     .c-white {{ color: var(--white); }}
+
+    .hero {{ display: flex; flex-direction: column; gap: var(--s5); }}
     h1 {{
-      margin: 0; font-size: 27px; line-height: 1.3; font-weight: 800;
-      color: var(--green); text-shadow: 0 0 10px rgba(0,255,65,.6); letter-spacing: 0;
+      margin: 0; font-size: 44px; line-height: 1.15; letter-spacing: -.5px; font-weight: 700;
+      color: var(--green); text-shadow: 0 0 14px rgba(0,255,65,.45);
     }}
-    h1.small {{ font-size: 22px; }}
+    h1.small {{ font-size: 32px; line-height: 1; }}
     .cursor {{
-      display: inline-block; width: 12px; height: 22px; background: var(--green);
-      margin-left: 4px; vertical-align: middle; animation: blink 1s step-end infinite;
+      display: inline-block; width: 14px; height: .82em; background: var(--green);
+      margin-left: 4px; vertical-align: -.06em; animation: blink 1s steps(1) infinite;
     }}
     @keyframes blink {{ 50% {{ opacity: 0; }} }}
-    .subhead {{ margin-top: 14px; font-size: 12px; line-height: 1.8; color: var(--green-dim2); overflow-wrap: anywhere; }}
+    .subhead {{ display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; line-height: 1.6; color: var(--green-dim); overflow-wrap: anywhere; }}
+
+    .btn, .cta {{
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
+      height: var(--ctrl); padding: 0 28px; font: inherit; font-size: 13.5px; line-height: 1;
+      border: 1px solid var(--line-strong); background: rgba(0,255,65,.03); color: var(--green);
+      cursor: pointer; text-decoration: none; text-align: center;
+      transition: background .15s, box-shadow .15s, filter .15s;
+    }}
+    .btn:hover {{ background: rgba(0,255,65,.08); color: var(--green); }}
     .cta {{
-      display: inline-block; margin-top: 20px; padding: 12px 22px; min-height: 44px;
-      background: var(--green); color: #020402; font: inherit; font-size: 13px; font-weight: 800;
-      text-decoration: none; border: 0; cursor: pointer;
-      box-shadow: 0 0 18px rgba(0,255,65,.45); transition: filter .15s, box-shadow .15s;
+      background: var(--green); border-color: var(--green); color: var(--ink-on-green);
+      font-weight: 700; box-shadow: 0 0 20px rgba(0,255,65,.3); align-self: flex-start;
     }}
-    .cta:hover {{ filter: brightness(1.25); box-shadow: 0 0 26px rgba(0,255,65,.45); }}
-    .btn {{
-      display: inline-block; margin-top: 20px; padding: 12px 22px; min-height: 44px;
-      background: transparent; color: var(--green); font: inherit; font-size: 13px; font-weight: 700;
-      text-decoration: none; border: 1px solid var(--green-line); cursor: pointer; transition: filter .15s;
-    }}
-    .btn:hover {{ filter: brightness(1.25); background: rgba(0,255,65,.06); }}
-    .hero {{ padding: 18px 0 24px; }}
-    .tariffs {{ display: flex; flex-direction: column; gap: 8px; padding: 0 0 20px; font-size: 12px; }}
+    .cta:hover {{ filter: brightness(1.15); box-shadow: 0 0 28px rgba(0,255,65,.5); color: var(--ink-on-green); }}
+    .btn--cyan {{ border-color: rgba(0,212,255,.45); background: rgba(0,212,255,.06); color: var(--cyan); }}
+    .btn--cyan:hover {{ background: rgba(0,212,255,.14); color: var(--cyan); }}
+    .actions {{ display: flex; flex-wrap: wrap; gap: var(--s3); }}
+
+    .tariffs {{ display: flex; flex-direction: column; gap: var(--s3); }}
     .tariff-form {{ margin: 0; }}
     .tariff {{
-      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
-      padding: 12px 14px; min-height: 44px; border: 1px solid; font: inherit; font-size: 12px;
-      cursor: pointer; text-align: left; transition: filter .15s;
+      width: 100%; display: grid; grid-template-columns: 1fr 110px 64px; align-items: center;
+      gap: var(--s4); min-height: 64px; padding: 14px var(--s5);
+      border: 1px solid rgba(0,212,255,.3); background: rgba(0,212,255,.04);
+      font: inherit; text-align: left; cursor: pointer; color: inherit;
+      transition: background .15s, box-shadow .15s;
     }}
-    .tariff:hover {{ filter: brightness(1.3); }}
-    .badge {{ opacity: .7; }}
-    .tariff-info {{ display: flex; flex-direction: column; gap: 3px; }}
-    .tariff-permo {{ font-size: 11px; color: var(--green-dim2); }}
-    .tariff-price-block {{ display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }}
-    .price {{ color: var(--white); font-weight: 700; white-space: nowrap; }}
-    .price-old {{ color: var(--green-mute); text-decoration: line-through; font-size: 11px; font-weight: 400; }}
-    .discount-tag {{
-      background: var(--red); color: var(--white); font-weight: 800; font-size: 10px;
-      padding: 2px 6px; border-radius: 3px; letter-spacing: .02em;
+    .tariff:hover {{ background: rgba(0,212,255,.1); }}
+    .tariff-info {{ display: flex; flex-direction: column; gap: 5px; }}
+    .tariff-name {{ font-size: 14px; color: var(--cyan); }}
+    .badge {{ color: var(--green-mute); }}
+    .tariff-permo {{ font-size: 11.5px; color: rgba(0,255,65,.4); }}
+    .tariff-price-block {{ display: flex; align-items: baseline; justify-content: flex-end; gap: var(--s2); text-align: right; }}
+    .price {{ font-size: 17px; font-weight: 700; color: var(--white); white-space: nowrap; }}
+    .price-old {{ font-size: 12px; color: var(--green-faint); text-decoration: line-through; }}
+    .tariff-badge {{
+      justify-self: end; display: inline-flex; align-items: center; justify-content: center;
+      width: 52px; height: 24px; background: rgba(255,43,77,.14);
+      border: 1px solid rgba(255,43,77,.5); font-size: 11.5px; color: var(--red);
     }}
-    .steps {{ padding: 0 0 26px; font-size: 12px; line-height: 2; color: var(--green-dim2); }}
-    .status-bar {{
-      padding: 10px 22px 18px; border-top: 1px dashed rgba(0,255,65,.25);
-      font-size: 11px; color: var(--green-mute);
+    .tariff--warn {{ border-color: rgba(255,214,10,.55); background: rgba(255,214,10,.05); }}
+    .tariff--warn:hover {{ background: rgba(255,214,10,.1); }}
+    .tariff--warn .tariff-name {{ color: var(--yellow); }}
+    .tariff--best {{ border-color: var(--green); background: rgba(0,255,65,.07); box-shadow: 0 0 18px rgba(0,255,65,.12); }}
+    .tariff--best:hover {{ background: rgba(0,255,65,.12); }}
+    .tariff--best .tariff-name {{ color: var(--green); }}
+
+    .steps {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); }}
+    .step {{ display: flex; flex-direction: column; gap: var(--s3); padding: 18px; border: 1px solid rgba(0,255,65,.14); background: var(--panel); }}
+    .step__n {{ font-size: 12px; }}
+    .step__text {{ font-size: 13px; line-height: 1.5; color: rgba(0,255,65,.6); }}
+
+    .notes {{
+      display: flex; flex-direction: column; gap: var(--s2); padding-top: var(--s5);
+      border-top: 1px solid var(--line-soft); font-size: 12px; line-height: 1.7; color: var(--green-mute);
     }}
-    .block {{ border: 1px solid var(--green-line); padding: 16px; margin-bottom: 18px; }}
-    .block-green {{ background: rgba(0,255,65,.04); }}
+    .footer-links {{ font-size: 12px; color: var(--green-mute); }}
+    .footer-links a {{ color: rgba(0,255,65,.6); text-decoration: underline; }}
+
+    .order__head {{
+      display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s6);
+      padding-bottom: var(--s5); border-bottom: 1px solid rgba(0,255,65,.14);
+    }}
+    .order__meta {{ display: grid; grid-template-columns: auto auto; gap: 6px var(--s5); font-size: 12px; text-align: right; }}
+    .order__meta dt {{ color: var(--green-faint); margin: 0; }}
+    .order__meta dd {{ margin: 0; color: var(--white); }}
+    .order__meta dd.code {{ color: var(--cyan); }}
+    .order__back {{ color: var(--yellow); font-size: 12px; }}
+    .order__back:hover {{ color: var(--yellow); text-decoration: underline; }}
+
+    .paygroup {{ display: flex; flex-direction: column; gap: var(--s3); }}
+    .paygroup__label {{ font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green-faint); }}
+    .payment-methods {{ display: flex; flex-direction: column; gap: var(--s4); }}
+    .coins {{ display: grid; gap: var(--s3); }}
+    .coins--2 {{ grid-template-columns: repeat(2, 1fr); }}
+    .coins--4 {{ grid-template-columns: repeat(4, 1fr); }}
+    .coin {{
+      display: flex; align-items: center; gap: var(--s3); height: var(--ctrl); padding: 0 var(--s4);
+      border: 1px solid var(--line); background: var(--panel); color: var(--green-dim);
+      font: inherit; font-size: 13.5px; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }}
+    .coin:hover {{ border-color: var(--line-strong); background: rgba(0,255,65,.05); color: var(--green); }}
+    .coin.is-active {{ border-color: var(--green); background: rgba(0,255,65,.08); color: var(--green); }}
+    .coin-dot {{ width: 8px; height: 8px; border-radius: 50%; flex: none; display: block; }}
+
+    .coin-group-dropdown {{ display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }}
+    .coin-group-label {{
+      display: flex; align-items: center; gap: var(--s2); min-width: 62px;
+      font-size: 13.5px; color: var(--white);
+    }}
+    .coin-select {{
+      appearance: none; flex: 1; min-width: 0; height: var(--ctrl); padding: 0 var(--s5) 0 var(--s4);
+      border: 1px solid var(--line); background: rgba(0,0,0,.35); color: var(--green);
+      font: inherit; font-size: 13.5px; cursor: pointer;
+      background-image: linear-gradient(45deg, transparent 50%, rgba(0,255,65,.5) 50%),
+                        linear-gradient(135deg, rgba(0,255,65,.5) 50%, transparent 50%);
+      background-position: calc(100% - 14px) center, calc(100% - 9px) center;
+      background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+    }}
+    .coin-select:hover {{ border-color: var(--line-strong); }}
+    .coin-select:focus {{ outline: none; border-color: var(--cyan); }}
+
+    .card-pay {{
+      display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--s4);
+      padding: var(--s4) var(--s5); border: 1px solid rgba(0,255,65,.14); background: var(--panel);
+    }}
+    .card-pay .btn {{ justify-self: start; }}
+    .card-brands {{ display: flex; gap: var(--s2); }}
+    .card-brands span {{
+      display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 10px;
+      border: 1px solid rgba(0,212,255,.35); font-size: 10.5px; letter-spacing: .5px; color: rgba(0,212,255,.8);
+    }}
+
+    .transfer {{
+      display: flex; flex-direction: column; gap: var(--s6); padding: 28px;
+      border: 1px solid var(--green); background: rgba(0,255,65,.05); box-shadow: 0 0 24px rgba(0,255,65,.1);
+    }}
+    .transfer__coin {{ display: flex; align-items: center; gap: var(--s3); font-size: 11.5px; }}
+    .transfer__coin .net {{ color: var(--green-faint); }}
+    .transfer__amount {{ font-size: 34px; line-height: 1; font-weight: 700; color: var(--white); letter-spacing: -.5px; margin: 10px 0 0; cursor: pointer; }}
+    .field-group {{ display: flex; flex-direction: column; gap: var(--s2); }}
+    .field__label {{ font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green-faint); margin: 0; }}
+    .field__value {{
+      display: flex; align-items: center; min-height: 48px; padding: 12px var(--s4); margin: 0;
+      border: 1px solid rgba(0,255,65,.2); background: rgba(0,0,0,.4);
+      font-size: 13px; color: var(--cyan); word-break: break-all;
+    }}
+    .transfer__actions {{ display: grid; grid-template-columns: 1fr auto auto; gap: var(--s3); }}
+    .callout {{
+      padding: 14px var(--s4); border-left: 2px solid var(--yellow); background: rgba(255,214,10,.06);
+      font-size: 12.5px; line-height: 1.6; color: var(--yellow);
+    }}
+    .callout--red {{ border-left-color: var(--red); background: rgba(255,43,77,.07); color: var(--red); }}
+
+    #paySteps {{ display: flex; flex-direction: column; gap: var(--s8); }}
+    .contact {{ display: flex; flex-direction: column; gap: var(--s4); }}
+    .contact__row {{ display: grid; grid-template-columns: 1fr auto; gap: var(--s3); }}
+    .contact__or {{ font-size: 11px; letter-spacing: 1px; color: var(--green-faint); text-align: center; }}
+
+    .sheet {{
+      position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+      padding: var(--s5); background: rgba(2,4,2,.82); backdrop-filter: blur(3px);
+    }}
+    .sheet__box {{
+      width: min(420px, 100%); max-height: 80vh; overflow-y: auto;
+      display: flex; flex-direction: column; gap: var(--s4); padding: var(--s6);
+      border: 1px solid var(--green); background: #060a06; box-shadow: 0 0 32px rgba(0,255,65,.18);
+    }}
+    .sheet__head {{
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green-faint);
+    }}
+    .sheet__x {{
+      width: 28px; height: 28px; border: 1px solid var(--line); background: transparent;
+      color: var(--green-dim); font: inherit; cursor: pointer;
+    }}
+    .sheet__x:hover {{ border-color: var(--line-strong); color: var(--green); }}
+    .sheet__list {{ display: flex; flex-direction: column; gap: var(--s2); }}
+    .wallet {{
+      display: flex; align-items: center; gap: var(--s3); min-height: var(--ctrl); padding: 0 var(--s4);
+      border: 1px solid var(--line); background: var(--panel); color: var(--green-dim);
+      font: inherit; font-size: 13.5px; text-align: left; cursor: pointer; text-decoration: none;
+    }}
+    .wallet:hover {{ border-color: var(--green); background: rgba(0,255,65,.06); color: var(--green); }}
+    .wallet img {{ width: 22px; height: 22px; flex: none; }}
+
+    .block {{ border: 1px solid var(--line); background: var(--panel); padding: var(--s6) 28px; display: flex; flex-direction: column; gap: 14px; }}
+    .block-green {{ border-color: var(--green); background: rgba(0,255,65,.05); }}
     .block-red {{ border-color: rgba(255,43,77,.5); background: rgba(255,43,77,.05); }}
     .block-yellow {{ border-color: rgba(255,214,10,.5); background: rgba(255,214,10,.05); }}
-    .actions {{ display: flex; flex-wrap: wrap; gap: 10px; }}
-    .actions .cta, .actions .btn {{ margin-top: 14px; }}
     .mono-box {{
-      overflow-wrap: anywhere; color: var(--green-dim2); border: 1px solid var(--green-line);
-      padding: 12px; background: rgba(0,0,0,.35); font-size: 12px; margin: 16px 0 0;
+      overflow-wrap: anywhere; color: var(--cyan); border: 1px solid rgba(0,255,65,.2);
+      padding: 12px var(--s4); background: rgba(0,0,0,.4); font-size: 13px; margin: 0;
     }}
-    .hint {{ font-size: 12px; margin: 10px 0 0; }}
-    .qr-wrap {{ width: min(280px, 100%); margin-top: 14px; padding: 12px; background: #fff; }}
+    .hint {{ font-size: 12px; margin: 0; }}
+    .qr-wrap {{ width: min(280px, 100%); padding: 12px; background: #fff; }}
     .qr-wrap img {{ display: block; width: 100%; height: auto; }}
-    .guides {{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }}
-    .guides details {{ border: 1px solid var(--green-line); background: rgba(0,255,65,.03); }}
-    .guides summary {{ padding: 12px 14px; cursor: pointer; font-size: 12px; font-weight: 700; }}
-    .guides ol {{ margin: 0; padding: 0 18px 14px 32px; font-size: 12px; line-height: 1.9; color: var(--green-dim2); }}
+
+    .guides {{ display: flex; flex-direction: column; gap: var(--s2); }}
+    .guides details {{ border: 1px solid rgba(0,255,65,.14); background: var(--panel); }}
+    .guides summary {{ padding: 14px 18px; cursor: pointer; font-size: 13px; }}
+    .guides ol {{ margin: 0; padding: 0 18px 16px 40px; font-size: 13px; line-height: 1.9; color: rgba(0,255,65,.6); }}
+    .howto li b {{ color: var(--green); font-weight: 400; }}
     code {{ color: var(--cyan); }}
-    .coin-tabs {{ display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }}
-    .coin-group {{ display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }}
-    .coin-group-label {{
-      display: flex; align-items: center; gap: 6px; min-width: 52px;
-      font-size: 12px; font-weight: 700; color: var(--white);
-    }}
-    .coin-group-chips {{ display: flex; flex-wrap: wrap; gap: 8px; }}
-    .coin-select {{
-      padding: 10px 12px; min-height: 40px; border: 1px solid var(--green-line); background: rgba(0,0,0,.35);
-      font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--green);
-    }}
-    .coin-select:focus {{ outline: none; border-color: var(--cyan); }}
-    .coin-tab {{
-      padding: 10px 14px; min-height: 40px; border: 1px solid var(--green-line); background: transparent;
-      font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--green);
-    }}
-    .coin-tab.active {{ border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,.08); }}
-    .coin-panel {{ margin-top: 14px; border: 1px solid var(--green-line); padding: 14px; background: rgba(0,0,0,.3); }}
-    .coin-dot {{ width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; margin-right: 6px; }}
-    .coin-net {{ color: var(--green-mute); font-size: 11px; }}
-    .crypto-meta {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }}
-    .crypto-amount {{ font-size: 24px; font-weight: 800; margin: 0 0 12px; color: var(--white); cursor: pointer; }}
-    .crypto-label {{ margin: 0 0 4px; color: var(--green-mute); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }}
-    .crypto-addr {{ margin: 0; font-size: 12px; word-break: break-all; color: var(--cyan); }}
+
     .field {{
-      width: 100%; margin-top: 20px; padding: 12px 14px; min-height: 44px;
-      background: rgba(0,0,0,.35); border: 1px solid var(--green-line); color: var(--green);
-      font: inherit; font-size: 13px;
+      width: 100%; height: var(--ctrl); padding: 0 var(--s4);
+      background: rgba(0,0,0,.4); border: 1px solid rgba(0,255,65,.2); color: var(--green);
+      font: inherit; font-size: 13.5px;
     }}
-    .field:focus {{ outline: none; border-color: var(--green); }}
-    .table-wrap {{ overflow-x: auto; border: 1px solid var(--green-line); }}
+    .field::placeholder {{ color: var(--green-faint); }}
+    .field:focus {{ outline: 1px solid var(--line-strong); outline-offset: 2px; }}
+
+    .table-wrap {{ overflow-x: auto; border: 1px solid var(--line); }}
     .orders {{ width: 100%; border-collapse: collapse; font-size: 11px; }}
-    .orders th, .orders td {{ border: 1px solid var(--green-line); padding: 6px 8px; text-align: left; white-space: nowrap; }}
-    .orders th {{ color: var(--green-mute); font-weight: 700; }}
+    .orders th, .orders td {{ border: 1px solid var(--line); padding: 8px 10px; text-align: left; white-space: nowrap; }}
+    .orders th {{ color: var(--green-faint); font-weight: 400; }}
     .orders .tx {{ max-width: 140px; overflow: hidden; text-overflow: ellipsis; }}
-    .legal-text {{ font-size: 13px; line-height: 1.8; color: var(--green-dim2); }}
-    .legal-text h2 {{ color: var(--green); font-size: 14px; margin: 22px 0 8px; }}
+
+    .legal-text {{ font-size: 13px; line-height: 1.8; color: rgba(0,255,65,.6); }}
+    .legal-text h2 {{ color: var(--green); font-size: 14px; margin: 22px 0 8px; font-weight: 400; }}
     .legal-text p {{ margin: 0 0 12px; }}
     .legal-text ul {{ margin: 0 0 12px; padding-left: 20px; }}
     .legal-text li {{ margin-bottom: 4px; }}
-    .legal-text a {{ color: var(--cyan); }}
-    .footer-links {{ margin-top: 18px; font-size: 11px; color: var(--green-mute); }}
-    .footer-links a {{ color: var(--green-mute); text-decoration: underline; }}
-    .payment-badge {{ display: none; margin-top: 14px; opacity: .85; transition: opacity .15s; }}
+
+    .payment-badge {{ display: none; opacity: .85; transition: opacity .15s; }}
     .payment-badge:hover {{ opacity: 1; }}
-    .payment-badge img {{ display: block; max-width: 100%; height: auto; border: 1px solid var(--green-line); }}
-    @media (max-width: 480px) {{
-      body {{ padding: 0 0 32px; }}
-      .term {{ border-left: 0; border-right: 0; }}
-      .actions {{ flex-direction: column; }}
-      .actions .cta, .actions .btn, .cta, .btn {{ width: 100%; text-align: center; }}
+    .payment-badge img {{ display: block; max-width: 100%; height: auto; border: 1px solid var(--line); }}
+
+    @media (max-width: 720px) {{
+      :root {{ --pad: 18px; }}
+      .shell {{ border: 0; }}
+      .chrome {{ height: 44px; padding: 0 var(--s4); }}
+      .chrome__title {{ font-size: 10px; }}
+      .main {{ gap: var(--s6); padding: var(--s6) var(--pad); }}
+      .statusbar {{ height: 40px; padding: 0 var(--pad); font-size: 10px; }}
+
+      h1 {{ font-size: 30px; line-height: 1.2; }}
+      h1.small {{ font-size: 26px; }}
+      .subhead {{ font-size: 12.5px; }}
+      .cta {{ width: 100%; align-self: stretch; }}
+      .syslog, .log {{ font-size: 11.5px; }}
+
+      .tariff {{ grid-template-columns: 1fr auto; gap: var(--s2) var(--s3); padding: var(--s4); }}
+      .tariff-price-block {{ grid-column: 2; grid-row: 1; }}
+      .tariff-badge {{ grid-column: 2; grid-row: 2; width: 48px; height: 22px; font-size: 11px; }}
+      .tariff-name {{ font-size: 13.5px; }}
+      .tariff-info {{ grid-column: 1; grid-row: 1 / span 2; }}
+
+      .steps {{ grid-template-columns: 1fr; gap: var(--s2); }}
+      .step {{ flex-direction: row; align-items: center; gap: var(--s3); padding: 14px var(--s4); }}
+      .step__n {{ min-width: 28px; }}
+      .step__text {{ font-size: 12.5px; }}
+
+      .order__head {{ flex-direction: column; align-items: flex-start; gap: var(--s4); }}
+      .order__meta {{ grid-template-columns: auto 1fr; text-align: left; width: 100%; font-size: 11.5px; }}
+
+      .coins--4 {{ grid-template-columns: repeat(2, 1fr); }}
+      .coins {{ gap: var(--s2); }}
+      .coin {{ gap: 9px; padding: 0 14px; font-size: 13px; }}
+      .coin-group-dropdown {{ gap: var(--s2); }}
+      .coin-group-label {{ min-width: 52px; font-size: 13px; }}
+
+      .card-pay {{ grid-template-columns: 1fr; gap: var(--s3); padding: var(--s4); }}
+      .card-pay .btn {{ justify-self: stretch; width: 100%; }}
+      .card-brands {{ display: grid; grid-template-columns: repeat(3, 1fr); }}
+      .card-brands span {{ padding: 0; font-size: 9.5px; }}
+
+      .contact__row {{ grid-template-columns: 1fr; }}
+      .contact__row .btn {{ width: 100%; }}
+      .sheet {{ align-items: flex-end; padding: 0; }}
+      .sheet__box {{ width: 100%; max-height: 88vh; }}
+
+      .transfer {{ padding: var(--s5) 18px; gap: var(--s5); }}
+      .transfer__amount {{ font-size: 28px; }}
+      .field__value {{ font-size: 11.5px; line-height: 1.5; }}
+      .transfer__actions {{ grid-template-columns: 1fr; gap: var(--s2); }}
+      .callout {{ font-size: 12px; padding: 12px 14px; }}
+
+      .block, .panel {{ padding: 18px; }}
+      .actions {{ flex-direction: column; align-items: stretch; }}
+      .actions .btn, .actions .cta {{ width: 100%; }}
+      .guides ol {{ padding-left: 32px; }}
+      .notes {{ font-size: 11.5px; }}
+    }}
+    @media (prefers-reduced-motion: reduce) {{
+      .cursor {{ animation: none; }}
+      * {{ transition: none !important; }}
     }}
   </style>
 </head>
 <body>
-  <div class="term">
-    <div class="term-bar">
-      <div class="term-dots"><span style="background:#ff2b4d"></span><span style="background:#ffd60a"></span><span style="background:#00ff41"></span></div>
-      <span class="term-title">vpn-router — bash — 80×24</span>
-    </div>
-    <div class="term-body">{body}</div>
-    <div class="status-bar">STATUS: <span class="c-green">CONNECTED</span> · UPTIME 99.98% · ENCRYPTION AES-256</div>
+  <div class="shell">
+    <header class="chrome">
+      <div class="chrome__dots"><i></i><i></i><i></i></div>
+      <span class="chrome__title">vpn-router — bash — 80×24</span>
+    </header>
+    <main class="main">{body}</main>
+    <footer class="statusbar">STATUS: <b>CONNECTED</b> · UPTIME 99.98% · ENCRYPTION AES-256</footer>
   </div>
 </body>
 </html>"""

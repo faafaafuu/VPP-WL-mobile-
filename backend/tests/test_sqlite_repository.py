@@ -233,5 +233,63 @@ class SqliteRepositoryTest(unittest.TestCase):
         self.assertEqual([event.id for event in events], [new_event.id])
 
 
+class SqliteConcurrencyTest(unittest.TestCase):
+    """Regression guard: ThreadingHTTPServer runs every request on its own
+    thread. A single sqlite3.Connection shared across threads (even with
+    check_same_thread=False) intermittently raised "sqlite3.InterfaceError:
+    bad parameter or other API misuse" under real concurrent traffic in
+    production. Hammering the repository from many threads at once should
+    no longer raise anything."""
+
+    def setUp(self) -> None:
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.repo = SqliteRepository(Path(self.tempdir.name) / "test.db")
+
+    def tearDown(self) -> None:
+        self.repo.close()
+        self.tempdir.cleanup()
+
+    def test_concurrent_reads_and_writes_do_not_raise(self) -> None:
+        import threading
+
+        errors: list[BaseException] = []
+
+        def worker(i: int) -> None:
+            try:
+                token = f"tok-{i}"
+                self.repo.create_commercial_subscription(token, "vpn.1m")
+                for _ in range(20):
+                    self.repo.get_commercial_subscription(token)
+            except BaseException as exc:  # noqa: BLE001 - captured for the assertion below
+                errors.append(exc)
+
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(30)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(errors, [])
+
+    def test_each_thread_gets_its_own_connection(self) -> None:
+        import threading
+
+        connections: list[int] = []
+        lock = threading.Lock()
+
+        def worker() -> None:
+            conn_id = id(self.repo.connection)
+            with lock:
+                connections.append(conn_id)
+
+        threads = [threading.Thread(target=worker) for _ in range(5)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(len(set(connections)), 5)
+
+
 if __name__ == "__main__":
     unittest.main()

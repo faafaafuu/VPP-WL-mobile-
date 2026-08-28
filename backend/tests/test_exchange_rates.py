@@ -184,51 +184,62 @@ class BuildCoinOptionsTest(unittest.TestCase):
             self.assertEqual(addr, "0xShared")
 
 
-class CoinTabButtonsTest(unittest.TestCase):
-    def test_multi_network_asset_gets_one_header_and_a_chip_per_network(self) -> None:
-        from app.api.pages import _coin_tab_buttons
+class PaymentMethodSectionTest(unittest.TestCase):
+    def test_multi_network_asset_gets_one_toggle_button_and_a_dropdown_option_per_network(self) -> None:
+        from app.api.pages import _payment_method_section
 
         wallets = {"trc20": "T1", "eth": "0x1"}
         svc = make_fixed_rate_service({"tether": Decimal("90.00")})
         from app.api.service import _build_coin_options
         opts = [o for o in _build_coin_options("200.00", wallets, svc) if o["label"] == "USDT"]
 
-        html = _coin_tab_buttons(opts)
+        html, default_idx = _payment_method_section(opts)
 
-        self.assertEqual(html.count(">USDT<"), 1)  # one group header, not one per network
+        # One stablecoin toggle button, not one per network — the networks
+        # live in that asset's dropdown (which repeats the asset name as its
+        # own label, hence two ">USDT<" occurrences in total).
+        self.assertEqual(html.count('data-stable="usdt"'), 1)
+        self.assertEqual(html.count(">USDT<"), 2)
         self.assertIn("TRC20 (Tron)", html)
         self.assertIn("BEP20 (BSC)", html)
         self.assertIn("ERC20 (Ethereum)", html)
+        self.assertIsNotNone(default_idx)
 
-    def test_multi_network_asset_renders_a_dropdown_defaulting_to_erc20(self) -> None:
-        from app.api.pages import _coin_tab_buttons
+    def test_dropdown_defaults_to_erc20(self) -> None:
+        from app.api.pages import _payment_method_section
         from app.api.service import _build_coin_options
 
         wallets = {"trc20": "T1", "eth": "0x1"}
         svc = make_fixed_rate_service({"tether": Decimal("90.00")})
         opts = [o for o in _build_coin_options("200.00", wallets, svc) if o["label"] == "USDT"]
 
-        html = _coin_tab_buttons(opts)
+        html, default_idx = _payment_method_section(opts)
 
-        self.assertIn('<select class="coin-select"', html)
+        self.assertIn('<select class="coin-select network-select"', html)
         # the ERC20 <option> carries `selected`; TRC20's must not
         erc20_option = next(line for line in html.splitlines() if "ERC20 (Ethereum)" in line)
         trc20_option = next(line for line in html.splitlines() if "TRC20 (Tron)" in line)
         self.assertIn("selected", erc20_option)
         self.assertNotIn("selected", trc20_option)
+        self.assertIn(str(default_idx), erc20_option)
 
-    def test_single_network_assets_share_one_row(self) -> None:
-        from app.api.pages import _coin_tab_buttons
+    def test_single_network_coins_all_land_in_the_other_crypto_grid(self) -> None:
+        """ETH/BTC/TON/SOL have no per-asset network choice, so they're all
+        plain chips in the shared coins--4 grid, regardless of which
+        stablecoin wallets happen to be configured."""
+        from app.api.pages import _payment_method_section
 
         wallets = {"ton": "UQ1", "eth": "0x1", "btc": "bc1"}
         svc = make_fixed_rate_service({"the-open-network": Decimal("600.00"), "ethereum": Decimal("310000.00"), "bitcoin": Decimal("9000000.00")})
         from app.api.service import _build_coin_options
         opts = [o for o in _build_coin_options("200.00", wallets, svc) if o["label"] in {"TON", "ETH", "BTC"}]
 
-        html = _coin_tab_buttons(opts)
+        html, _ = _payment_method_section(opts)
+        grid = html.split('<div class="coins coins--4">')[1]
 
-        self.assertEqual(html.count('class="coin-group-chips"'), 1)
-        self.assertEqual(html.count('class="coin-group"'), 0)  # no asset header for singles
+        self.assertIn(">ETH<", grid)
+        self.assertIn(">BTC<", grid)
+        self.assertIn(">TON<", grid)
 
 
 class SettingsCryptoWalletsTest(unittest.TestCase):

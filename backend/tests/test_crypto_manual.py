@@ -39,6 +39,61 @@ def _service(
     )
 
 
+class WatchableCoinFilterTest(unittest.TestCase):
+    """The invoice page used to offer every coin with a configured wallet —
+    16 options — while only a handful had an on-chain watcher behind them.
+    Paying with any of the rest left the order "pending" forever, because
+    nothing ever looked for that transfer."""
+
+    def _svc(self, watchable: frozenset[str] | None) -> ApiService:
+        rate_svc = make_fixed_rate_service({
+            "tether": Decimal("100.00"),
+            "usd-coin": Decimal("100.00"),
+            "the-open-network": Decimal("650.00"),
+            "bitcoin": Decimal("9000000.00"),
+            "ethereum": Decimal("320000.00"),
+        })
+        return ApiService(
+            InMemoryRepository(),
+            TokenService("test-secret-with-length"),
+            ConfigBuilder(),
+            admin_token="test-admin-token-xx",
+            checkout_mode="crypto_manual",
+            crypto_wallets={"trc20": _WALLET, "eth": "0xWallet", "btc": "bc1wallet", "ton": "UQwallet"},
+            exchange_rate_service=rate_svc,
+            watchable_coin_ids=watchable,
+        )
+
+    def test_unwatchable_coins_are_not_offered(self) -> None:
+        svc = self._svc(frozenset({"usdt_trc20", "eth"}))
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = svc.invoice_html(token)
+
+        self.assertIn("USDT", html)
+        self.assertIn("ETH", html)
+        self.assertNotIn(">BTC<", html)
+        self.assertNotIn(">TON<", html)
+
+    def test_no_filter_offers_every_configured_coin(self) -> None:
+        svc = self._svc(None)
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        html = svc.invoice_html(token)
+
+        self.assertIn(">BTC<", html)
+        self.assertIn(">TON<", html)
+
+    def test_invoice_fails_cleanly_when_nothing_is_watchable(self) -> None:
+        svc = self._svc(frozenset())
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        with self.assertRaises(ApiError) as ctx:
+            svc.invoice_html(token)
+
+        self.assertEqual(ctx.exception.status, HTTPStatus.SERVICE_UNAVAILABLE)
+
+
 class CryptoManualCheckoutTest(unittest.TestCase):
     def test_checkout_redirects_to_invoice(self) -> None:
         svc = _service()

@@ -135,6 +135,28 @@ class InMemoryRepository:
         self.commercial_subscriptions_by_token[token] = updated
         return updated
 
+    def cancel_commercial_subscription(self, token: str) -> CommercialSubscription | None:
+        """Mark a pending order cancelled. Paid orders are never touched, so
+        an accidental cancel can't take away access somebody paid for."""
+        subscription = self.commercial_subscriptions_by_token.get(token)
+        if subscription is None or subscription.status != "pending":
+            return None
+        updated = replace(subscription, status="cancelled", updated_at=datetime.now(timezone.utc))
+        self.commercial_subscriptions_by_token[token] = updated
+        return updated
+
+    def cancel_stale_pending_subscriptions(self, cutoff: datetime) -> list[str]:
+        """Cancel pending orders created before `cutoff`, returning their tokens."""
+        now = datetime.now(timezone.utc)
+        tokens = []
+        for token, subscription in list(self.commercial_subscriptions_by_token.items()):
+            if subscription.status == "pending" and subscription.created_at < cutoff:
+                self.commercial_subscriptions_by_token[token] = replace(
+                    subscription, status="cancelled", updated_at=now
+                )
+                tokens.append(token)
+        return tokens
+
     def set_payment_intent(
         self,
         token: str,

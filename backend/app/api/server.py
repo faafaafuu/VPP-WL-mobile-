@@ -20,6 +20,7 @@ from app.core.settings import load_settings
 from app.domain.config_builder import ConfigBuilder
 from app.repositories.factory import create_repository
 from app.security.tokens import TokenService
+from app.services.chain_providers import build_providers
 from app.services.exchange_rates import get_exchange_rate_service
 from app.services.receipt_verifier import MvpReceiptVerifier
 from app.services.xui_client import DisabledXuiClient, HttpXuiClient, XuiPanelConfig
@@ -61,6 +62,23 @@ if SETTINGS.crypto_rate_provider == "fixed":
 
     _fixed_rate = _Decimal(SETTINGS.crypto_usdt_rate_rub)
     EXCHANGE_RATE_SERVICE.seed_rates({"tether": _fixed_rate, "usd-coin": _fixed_rate})
+# Shown on the invoice page after a card-payment attempt bounced back, so
+# the button reports why instead of silently reloading the same page.
+_CARD_ERRORS = {
+    "unavailable": (
+        "Оплата картой временно недоступна — эквайринг ещё не активирован. "
+        "Оплатите криптовалютой выше: доступ включится автоматически."
+    ),
+    "contact": "Сначала укажите email или привяжите Telegram — иначе ссылку будет некуда прислать.",
+}
+
+WATCHABLE_COIN_IDS = frozenset(
+    build_providers(
+        SETTINGS.crypto_trongrid_api_key,
+        SETTINGS.crypto_etherscan_api_key,
+        bep20_enabled=SETTINGS.crypto_bep20_enabled,
+    )
+)
 API_SERVICE = ApiService(
     REPOSITORY,
     TOKEN_SERVICE,
@@ -86,6 +104,10 @@ API_SERVICE = ApiService(
     xui_client=XUI_CLIENT,
     xui_node_template=SETTINGS.xui_node_template,
     support_email=SETTINGS.smtp_from or SETTINGS.smtp_user,
+    freekassa_shop_id=SETTINGS.freekassa_shop_id,
+    freekassa_api_key=SETTINGS.freekassa_api_key,
+    freekassa_payment_system_i=SETTINGS.freekassa_payment_system_i,
+    watchable_coin_ids=WATCHABLE_COIN_IDS,
 )
 
 
@@ -137,8 +159,9 @@ class ApiHandler(BaseHTTPRequestHandler):
                 self._send_admin_cookie_redirect(query_token)
                 return
             admin_token = self._cookie_value("admin_token")
+            show_all = (parse_qs(urlparse(self.path).query).get("all") or [""])[0] == "1"
             try:
-                self._send_html(HTTPStatus.OK, API_SERVICE.admin_orders_html(admin_token))
+                self._send_html(HTTPStatus.OK, API_SERVICE.admin_orders_html(admin_token, show_all))
             except ApiError as exc:
                 self._send_json(exc.status, exc.payload)
             return
@@ -190,10 +213,31 @@ class ApiHandler(BaseHTTPRequestHandler):
             except ApiError as exc:
                 self._send_json(exc.status, exc.payload)
             return
+        if path.startswith("/invoice/") and path.endswith("/freekassa/pay"):
+            token = path.removeprefix("/invoice/")[: -len("/freekassa/pay")].strip("/")
+            client_ip = (
+                self.headers.get("X-Real-IP", "").strip()
+                or (self.client_address[0] if self.client_address else "127.0.0.1")
+            )
+            try:
+                self._send_redirect(API_SERVICE.freekassa_pay_redirect_url(token, client_ip))
+            except ApiError as exc:
+                # Bouncing back to a visually unchanged invoice page read as a
+                # dead button. Every failure now returns with a reason to show.
+                if exc.status == HTTPStatus.SERVICE_UNAVAILABLE:
+                    self._send_redirect(f"/invoice/{token}?card=unavailable")
+                elif exc.status == HTTPStatus.CONFLICT:
+                    self._send_redirect(f"/invoice/{token}?card=contact")
+                else:
+                    self._send_json(exc.status, exc.payload)
+            return
         if path.startswith("/invoice/"):
             token = path.removeprefix("/invoice/").strip("/")
+            card_error = _CARD_ERRORS.get(
+                (parse_qs(urlparse(self.path).query).get("card") or [""])[0]
+            )
             try:
-                self._send_html(HTTPStatus.OK, API_SERVICE.invoice_html(token))
+                self._send_html(HTTPStatus.OK, API_SERVICE.invoice_html(token, card_error=card_error))
             except ApiError as exc:
                 if exc.status == HTTPStatus.NOT_FOUND:
                     self._send_html(HTTPStatus.NOT_FOUND, not_found_page())
@@ -240,7 +284,8 @@ class ApiHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/admin/orders":
             admin_token = self.headers.get("X-Admin-Token", "")
-            self._send_service_response(lambda: API_SERVICE.admin_orders(admin_token))
+            show_all = (parse_qs(urlparse(self.path).query).get("all") or [""])[0] == "1"
+            self._send_service_response(lambda: API_SERVICE.admin_orders(admin_token, show_all))
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not found"})
@@ -370,6 +415,15 @@ class ApiHandler(BaseHTTPRequestHandler):
             )
             return
 
+        cancel_suffix = "/cancel"
+        if path.startswith(admin_prefix) and path.endswith(cancel_suffix):
+            token = path[len(admin_prefix) : -len(cancel_suffix)]
+            admin_token = self.headers.get("X-Admin-Token", "")
+            self._send_service_response(
+                lambda: API_SERVICE.admin_cancel_commercial_subscription(admin_token, token)
+            )
+            return
+
         if path in {"/api/webhook/apple", "/api/webhook/google"}:
             self._send_json(HTTPStatus.ACCEPTED, {"status": "accepted"})
             return
@@ -438,7 +492,7 @@ class ApiHandler(BaseHTTPRequestHandler):
         raw_body = self.rfile.read(content_length)
         try:
             payload = json.loads(raw_body.decode("utf-8") or "{}")
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, UnicodeDecodeError):
             self._send_json(HTTPStatus.BAD_REQUEST, {"error": "invalid JSON"})
             return None
         if not isinstance(payload, dict):
@@ -453,7 +507,11 @@ class ApiHandler(BaseHTTPRequestHandler):
         content_length = self._content_length()
         if content_length is None:
             return None
-        raw_body = self.rfile.read(content_length).decode("utf-8")
+        try:
+            raw_body = self.rfile.read(content_length).decode("utf-8")
+        except UnicodeDecodeError:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "invalid encoding"})
+            return None
         parsed = parse_qs(raw_body, keep_blank_values=True)
         return {key: values[-1] if values else "" for key, values in parsed.items()}
 
@@ -474,7 +532,7 @@ class ApiHandler(BaseHTTPRequestHandler):
             f"admin_token={quote(token, safe='')}; Path=/admin/orders; "
             "HttpOnly; SameSite=Strict; Max-Age=86400"
         )
-        if SETTINGS.hsts_enabled:
+        if SETTINGS.public_base_url.startswith("https://"):
             cookie += "; Secure"
         self.send_response(HTTPStatus.SEE_OTHER.value)
         self.send_header("Location", "/admin/orders")
@@ -667,18 +725,33 @@ def _start_payment_watcher(on_activated: Any = None) -> None:
     from time import sleep
 
     from app.domain.tariffs import tariffs_by_id
-    from app.services.chain_providers import build_providers
     from app.services.payment_watcher import PaymentWatcher
 
-    providers = build_providers(SETTINGS.crypto_trongrid_api_key, SETTINGS.crypto_etherscan_api_key)
+    providers = build_providers(
+        SETTINGS.crypto_trongrid_api_key,
+        SETTINGS.crypto_etherscan_api_key,
+        bep20_enabled=SETTINGS.crypto_bep20_enabled,
+    )
     if not providers:
         return
+
+    def activated(subscription: Any) -> None:
+        # The watcher activates through the repository directly, so it has to
+        # provision the VPN client itself — otherwise a paid order goes
+        # "active" with no client, and the customer never gets a link.
+        try:
+            API_SERVICE.provision_paid_subscription(subscription.token)
+        except Exception as exc:
+            print(f"payment-watcher provisioning error: {exc}")
+        if on_activated is not None:
+            on_activated(subscription)
+
     watcher = PaymentWatcher(
         REPOSITORY,
         providers,
         tariffs_by_id(SETTINGS.tariffs),
         min_confirmations=SETTINGS.crypto_min_confirmations,
-        on_activated=on_activated,
+        on_activated=activated,
     )
 
     def loop() -> None:
@@ -689,6 +762,12 @@ def _start_payment_watcher(on_activated: Any = None) -> None:
                     print(f"payment-watcher activated={summary.activated}")
             except Exception as exc:  # the watcher must never kill the server
                 print(f"payment-watcher error: {exc}")
+            try:
+                cancelled = API_SERVICE.cancel_stale_pending_orders(SETTINGS.pending_order_ttl_hours)
+                if cancelled:
+                    print(f"payment-watcher cancelled_stale={cancelled}")
+            except Exception as exc:
+                print(f"stale-order sweep error: {exc}")
             sleep(max(SETTINGS.crypto_watch_interval_seconds, 10))
 
     Thread(target=loop, name="payment-watcher", daemon=True).start()

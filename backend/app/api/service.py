@@ -5,7 +5,7 @@ import hmac
 import re
 import uuid as uuid_module
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import ROUND_UP, Decimal
 from http import HTTPStatus
 from typing import Any
@@ -21,9 +21,10 @@ from app.api.pages import (
     terms_page,
 )
 from app.domain.coins import ALL_COINS, COINS_BY_ID, Coin
+from app.domain.wallet_connect import transfer_spec
 from app.domain.config_builder import ConfigBuilder
 from app.domain.config_validation import ConfigValidationError, validate_config_shape
-from app.domain.models import AdminAuditEvent, NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
+from app.domain.models import AdminAuditEvent, CommercialSubscription, NodeHealth, NodeStatus, Platform, Protocol, ReceiptClaim, VlessOptions, VpnNode, new_id, new_subscription_token
 from app.domain.node_scoring import node_score
 from app.domain.node_selection import choose_preferred_nodes
 from app.domain.qr_svg import qr_svg
@@ -33,9 +34,11 @@ from app.domain.v2ray_subscription import encoded_subscription, hysteria2_link, 
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
 from app.services.exchange_rates import ExchangeRateService
+from app.services.freekassa_client import FreekassaError, create_order as freekassa_create_order
 from app.services.receipt_verifier import MvpReceiptVerifier, ReceiptVerifier
 from app.services.xui_client import DisabledXuiClient, XuiClient, XuiClientError
 from app.services.yookassa import DisabledYooKassaProvider, YooKassaError, YooKassaProvider
+
 
 
 @dataclass(frozen=True)
@@ -66,6 +69,10 @@ class ApiService:
         xui_client: XuiClient | None = None,
         xui_node_template: VpnNode | None = None,
         support_email: str | None = None,
+        freekassa_shop_id: str | None = None,
+        freekassa_api_key: str | None = None,
+        freekassa_payment_system_i: str = "36",
+        watchable_coin_ids: frozenset[str] | None = None,
     ) -> None:
         if not admin_token:
             raise ValueError("admin token is required")
@@ -94,6 +101,11 @@ class ApiService:
         self.xui_client = xui_client or DisabledXuiClient()
         self.xui_node_template = xui_node_template
         self.support_email = support_email
+        self.freekassa_shop_id = freekassa_shop_id
+        self.freekassa_api_key = freekassa_api_key
+        self.freekassa_payment_system_i = freekassa_payment_system_i
+        # None = no filtering (tests and setups without a payment watcher).
+        self.watchable_coin_ids = watchable_coin_ids
 
     def auth_init(self, payload: dict[str, Any]) -> dict[str, Any]:
         device_id = str(payload.get("device_id", "")).strip()
@@ -135,6 +147,58 @@ class ApiService:
 
     def freekassa_failure_html(self) -> str:
         return freekassa_result_page(success=False, support_email=self.support_email)
+
+    def freekassa_pay_redirect_url(self, token: str, client_ip: str) -> str:
+        """Where the "Оплатить картой" button should send the browser.
+
+        Creates a real per-order FreeKassa payment form via the signed REST
+        API (POST /orders/create), so the amount always matches the tariff
+        the customer actually picked and the payment carries our order token.
+
+        There is deliberately no static-widget fallback: that widget is
+        hardcoded to one amount and carries no order reference, so for every
+        tariff but one it charged the wrong sum, and even for that one there
+        was no way to tell whose order the money belonged to. When the API
+        call fails the caller gets 503 and every tariff behaves identically.
+        """
+        subscription = self._commercial_subscription(token)
+        tariff = self.tariffs_by_id.get(subscription.tariff_id)
+        if tariff is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "tariff not found"})
+        if not self._contact_known(subscription):
+            raise ApiError(HTTPStatus.CONFLICT, {"error": "contact required"})
+
+        def unavailable(reason: str) -> str:
+            self.repository.add_admin_audit_event(
+                AdminAuditEvent(
+                    id=new_id("aae"),
+                    occurred_at=datetime.now(timezone.utc),
+                    action="freekassa.order_create_failed",
+                    target_type="commercial_subscription",
+                    target_id=_mask_token(token),
+                    result="unavailable",
+                    details={"error": reason, "tariff_id": tariff.id},
+                )
+            )
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "card payment temporarily unavailable"})
+
+        if not (self.freekassa_shop_id and self.freekassa_api_key):
+            return unavailable("freekassa API credentials not configured")
+        email = subscription.customer_email or f"guest-{token[:10]}@cleohop.ru"
+        try:
+            order = freekassa_create_order(
+                shop_id=self.freekassa_shop_id,
+                api_key=self.freekassa_api_key,
+                i=self.freekassa_payment_system_i,
+                email=email,
+                ip=client_ip or "127.0.0.1",
+                amount=tariff.price_rub,
+                currency="RUB",
+                payment_id=token,
+            )
+        except FreekassaError as exc:
+            return unavailable(str(exc))
+        return str(order["location"])
 
     def checkout(self, payload: dict[str, Any]) -> dict[str, Any]:
         tariff = self._tariff_from_payload(payload)
@@ -178,7 +242,7 @@ class ApiService:
             telegram_link=self._telegram_link(token),
         )
 
-    def invoice_html(self, token: str) -> str:
+    def invoice_html(self, token: str, card_error: str | None = None) -> str:
         subscription = self._commercial_subscription(token)
         tariff = self.tariffs_by_id.get(subscription.tariff_id)
         if tariff is None:
@@ -186,9 +250,19 @@ class ApiService:
         if not self.crypto_wallets:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "crypto payments not configured"})
         coin_options = _build_coin_options(tariff.price_rub, self.crypto_wallets, self.exchange_rate_service)
+        if self.watchable_coin_ids is not None:
+            # Never offer a coin whose incoming payment nothing can confirm —
+            # the customer would pay and the order would sit "pending" forever.
+            coin_options = [opt for opt in coin_options if opt["id"] in self.watchable_coin_ids]
         if not coin_options:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "no configured crypto wallets"})
-        return invoice_page(subscription, tariff, coin_options, telegram_link=self._telegram_link(token))
+        return invoice_page(
+            subscription,
+            tariff,
+            coin_options,
+            telegram_link=self._telegram_link(token),
+            card_error=card_error,
+        )
 
     def _telegram_link(self, token: str) -> str | None:
         if not self.telegram_bot_username:
@@ -196,6 +270,14 @@ class ApiService:
         from app.services.telegram_bot import telegram_deep_link
 
         return telegram_deep_link(self.telegram_bot_username, token)
+
+    @staticmethod
+    def _contact_known(subscription: CommercialSubscription) -> bool:
+        """Whether we have any way to reach this buyer other than the order
+        URL itself. Without one, a payment that lands after the customer has
+        closed the tab leaves us holding a key with nobody to hand it to —
+        so payment is gated on this, not merely nudged."""
+        return bool((subscription.customer_email or "").strip() or (subscription.tg_chat_id or "").strip())
 
     def set_invoice_contact(self, token: str, payload: dict[str, Any]) -> dict[str, Any]:
         self._commercial_subscription(token)
@@ -205,7 +287,7 @@ class ApiService:
         subscription = self.repository.set_customer_email(token, email)
         if subscription is None:
             raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
-        return {"status": "saved", "email": email}
+        return {"status": "saved", "email": email, "contact": True}
 
     def select_invoice_coin(self, token: str, payload: dict[str, Any]) -> dict[str, Any]:
         subscription = self._commercial_subscription(token)
@@ -218,6 +300,8 @@ class ApiService:
         address = self.crypto_wallets.get(coin.wallet_key)
         if not address:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "coin not configured"})
+        if not self._contact_known(subscription):
+            raise ApiError(HTTPStatus.CONFLICT, {"error": "contact required"})
         tariff = self.tariffs_by_id.get(subscription.tariff_id)
         if tariff is None:
             raise ApiError(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "tariff not found"})
@@ -254,6 +338,11 @@ class ApiService:
             "paid": bool(subscription.paid_tx) or active,
             "connect_url": f"/connect/{token}",
             "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
+            # The invoice page polls this to unlock the payment step the
+            # moment the buyer finishes binding Telegram in another tab.
+            "contact": self._contact_known(subscription),
+            "contact_email": subscription.customer_email or "",
+            "contact_telegram": bool((subscription.tg_chat_id or "").strip()),
         }
 
     def _payment_intent_response(self, token: str, coin: Coin, amount: str, address: str) -> dict[str, Any]:
@@ -335,6 +424,17 @@ class ApiService:
             nodes = [per_user_node] + nodes
         return nodes
 
+    def provision_paid_subscription(self, token: str) -> None:
+        """Create this subscription's VPN client after an off-request payment.
+
+        The crypto payment watcher activates orders straight through the
+        repository, so unlike the checkout and admin paths it never went
+        through provisioning — orders came out "active" with no xui_uuid and
+        therefore no subscription link for the customer. Idempotent: an
+        already-provisioned subscription just gets its expiry resynced.
+        """
+        self._provision_xui_client(token)
+
     def _provision_xui_client(self, token: str) -> None:
         """Best-effort: create (or, on renewal, resync the expiry/device-limit of)
         this subscription's own 3x-ui client, so it stays individually revocable
@@ -385,7 +485,7 @@ class ApiService:
 
     def subscription_headers(self, token: str) -> dict[str, str]:
         """Branding headers understood by v2rayN / v2rayNG / Hiddify."""
-        title = base64.b64encode("⚡ VPN_ROUTER".encode("utf-8")).decode("ascii")
+        title = base64.b64encode("⚡ Клео".encode("utf-8")).decode("ascii")
         headers = {
             "profile-title": f"base64:{title}",
             "profile-update-interval": "12",
@@ -403,6 +503,57 @@ class ApiService:
             return qr_svg(self.subscription_url(token))
         except ValueError as exc:
             raise ApiError(HTTPStatus.BAD_REQUEST, {"error": str(exc)}) from exc
+
+    def admin_cancel_commercial_subscription(self, admin_token: str, token: str) -> dict[str, Any]:
+        """Cancel one pending order. Paid orders are refused, not silently
+        ignored, so a mistyped token can't quietly revoke someone's access."""
+        self._require_admin(admin_token)
+        subscription = self.repository.get_commercial_subscription(token)
+        if subscription is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, {"error": "subscription not found"})
+        if subscription.status != "pending":
+            raise ApiError(
+                HTTPStatus.CONFLICT,
+                {"error": f"only pending orders can be cancelled (status: {subscription.status})"},
+            )
+        cancelled = self.repository.cancel_commercial_subscription(token)
+        if cancelled is None:
+            raise ApiError(HTTPStatus.CONFLICT, {"error": "order is no longer pending"})
+        self.repository.add_admin_audit_event(
+            AdminAuditEvent(
+                id=new_id("aae"),
+                occurred_at=datetime.now(timezone.utc),
+                action="commercial_subscription.cancel",
+                target_type="commercial_subscription",
+                target_id=_mask_token(token),
+                result="success",
+                details={"reason": "admin"},
+            )
+        )
+        return {"token": token, "status": cancelled.status}
+
+    def cancel_stale_pending_orders(self, ttl_hours: int) -> int:
+        """Cancel abandoned invoices so they stop piling up in the order list.
+
+        Returns the number cancelled. A zero/negative TTL disables the sweep.
+        """
+        if ttl_hours <= 0:
+            return 0
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=ttl_hours)
+        tokens = self.repository.cancel_stale_pending_subscriptions(cutoff)
+        if tokens:
+            self.repository.add_admin_audit_event(
+                AdminAuditEvent(
+                    id=new_id("aae"),
+                    occurred_at=datetime.now(timezone.utc),
+                    action="commercial_subscription.cancel_stale",
+                    target_type="commercial_subscription",
+                    target_id=f"{len(tokens)} orders",
+                    result="success",
+                    details={"ttl_hours": ttl_hours, "cancelled": len(tokens)},
+                )
+            )
+        return len(tokens)
 
     def admin_activate_commercial_subscription(
         self,
@@ -454,13 +605,15 @@ class ApiService:
             "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
         }
 
-    def admin_orders(self, admin_token: str) -> dict[str, Any]:
+    def admin_orders(self, admin_token: str, include_cancelled: bool = False) -> dict[str, Any]:
         self._require_admin(admin_token)
-        return {"orders": [_admin_order(subscription) for subscription in self._orders_newest_first()]}
+        orders = self._orders_newest_first(include_cancelled)
+        return {"orders": [_admin_order(subscription) for subscription in orders]}
 
-    def admin_orders_html(self, admin_token: str) -> str:
+    def admin_orders_html(self, admin_token: str, include_cancelled: bool = False) -> str:
         self._require_admin(admin_token)
-        return admin_orders_page([_admin_order(subscription) for subscription in self._orders_newest_first()])
+        orders = self._orders_newest_first(include_cancelled)
+        return admin_orders_page([_admin_order(subscription) for subscription in orders])
 
     def recover_html(self, error: str | None = None) -> str:
         return recover_page(error, telegram_bot=self.telegram_bot_username)
@@ -488,9 +641,14 @@ class ApiService:
         latest = max(matches, key=lambda subscription: subscription.created_at)
         return {"redirect_url": f"/connect/{latest.token}", "token": latest.token}
 
-    def _orders_newest_first(self) -> list[Any]:
+    def _orders_newest_first(self, include_cancelled: bool = False) -> list[Any]:
+        subscriptions = self.repository.list_commercial_subscriptions()
+        if not include_cancelled:
+            # Abandoned invoices are the bulk of the table and carry no money;
+            # hide them by default so real orders stay readable.
+            subscriptions = [s for s in subscriptions if s.status != "cancelled"]
         return sorted(
-            self.repository.list_commercial_subscriptions(),
+            subscriptions,
             key=lambda subscription: subscription.created_at,
             reverse=True,
         )
@@ -620,12 +778,16 @@ class ApiService:
         """Records an incoming FreeKassa notification for manual review.
 
         Deliberately does NOT verify the signature or activate anything yet —
-        we don't have FreeKassa's notification signing scheme confirmed, and
-        this specific button (a fixed-amount quick-pay widget, not our own
-        /checkout flow) carries no order token to activate against anyway.
-        Trusting an unverified POST to grant access would let anyone "pay"
-        for free. Visible in /admin/orders audit log for manual activation
-        until the signature check is wired up.
+        we don't have FreeKassa's notification signing scheme confirmed.
+        Orders created via freekassa_pay_redirect_url's real orders/create
+        call DO carry a matchable token (payment_id=token, echoed back as
+        MERCHANT_ORDER_ID), so a verified auto-activation path is buildable
+        later — e.g. treating this notify as a hint and confirming status via
+        FreeKassa's authoritative signed GET /orders rather than trusting
+        this POST's own signature. Until that's built, trusting an
+        unverified POST to grant access would let anyone "pay" for free, so
+        this stays a no-op. Visible in /admin/orders audit log for manual
+        activation in the meantime.
         """
         self.repository.add_admin_audit_event(
             AdminAuditEvent(
@@ -1079,7 +1241,7 @@ def _build_coin_options(
     price_rub: str,
     wallets: dict[str, str],
     rate_svc: ExchangeRateService,
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     """Return list of {id, label, network_label, amount, address, color} for configured coins.
 
     Distinct networks legitimately share one wallet_key (e.g. ERC20 and BEP20
@@ -1087,7 +1249,7 @@ def _build_coin_options(
     (wallet_key, coingecko_id) — that pair would otherwise hide every network
     past the first for a coin whose networks share an address.
     """
-    result: list[dict[str, str]] = []
+    result: list[dict[str, Any]] = []
     for coin in ALL_COINS:
         addr = wallets.get(coin.wallet_key)
         if not addr:
@@ -1100,5 +1262,8 @@ def _build_coin_options(
             "amount": amount,
             "address": addr,
             "color": coin.color,
+            # Lets the page build the transfer for the buyer's wallet
+            # instead of making them retype address and amount by hand.
+            "pay": transfer_spec(coin.id),
         })
     return result

@@ -28,6 +28,28 @@ class ServerHardeningTest(unittest.TestCase):
         self.assertIn("SameSite=Strict", server)
         self.assertIn('self._cookie_value("admin_token")', server)
 
+    def test_admin_cookie_secure_flag_follows_https_base_url(self) -> None:
+        """The Secure flag used to be gated on VPN_ROUTER_HSTS_ENABLED — an
+        unrelated setting that's off in production even though the site is
+        HTTPS-only, so the admin cookie shipped without Secure. It must be
+        tied to whether the deployment actually serves over HTTPS instead."""
+        server = SERVER.read_text(encoding="utf-8")
+
+        self.assertIn('SETTINGS.public_base_url.startswith("https://")', server)
+        self.assertNotIn("if SETTINGS.hsts_enabled:\n            cookie", server)
+
+    def test_body_decoders_handle_malformed_utf8_without_crashing(self) -> None:
+        """Regression guard: both request-body readers used to call
+        .decode("utf-8") unguarded (or outside the try/except that only
+        caught JSONDecodeError), so a malformed-encoding POST body crashed
+        the request thread with an unhandled UnicodeDecodeError instead of
+        returning a clean 400."""
+        server = SERVER.read_text(encoding="utf-8")
+
+        self.assertIn("except (json.JSONDecodeError, UnicodeDecodeError):", server)
+        self.assertIn("except UnicodeDecodeError:", server)
+        self.assertEqual(server.count("UnicodeDecodeError"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

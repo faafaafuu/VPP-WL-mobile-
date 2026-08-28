@@ -197,7 +197,7 @@ class SubscriptionLinkMvpTest(unittest.TestCase):
         headers = self.service.subscription_headers(token)
 
         title = base64.b64decode(headers["profile-title"].removeprefix("base64:")).decode("utf-8")
-        self.assertEqual(title, "\u26a1 VPN_ROUTER")
+        self.assertEqual(title, "\u26a1 \u041a\u043b\u0435\u043e")  # ⚡ Клео — имя, которое видит клиент
         self.assertEqual(headers["profile-web-page-url"], f"http://203.0.113.10:8080/connect/{token}")
         self.assertIn("expire=", headers["subscription-userinfo"])
 

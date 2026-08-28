@@ -16,6 +16,21 @@ from app.services.chain_providers import (
 )
 
 
+# Relative tolerance applied when matching an incoming transfer's amount
+# against a pending order's quoted amount. The quote is generated from our
+# own exchange-rate snapshot; the buyer's wallet converts at its own
+# real-time rate a little later, so a small drift between the two is normal
+# and not a sign of the wrong order. Observed in production: a real payment
+# landed 1.05% above its quote and sat unmatched — and therefore never
+# activated — for over an hour before this was added.
+#
+# 2% is comfortably above ordinary rate drift while staying far below the
+# per-coin unique-amount tail spacing (domain/unique_amount.py caps the tail
+# at 20-99 minor units), so it practically never lets a transfer match a
+# *different* pending order's amount by coincidence.
+_AMOUNT_TOLERANCE = Decimal("0.02")
+
+
 @dataclass(frozen=True)
 class WatchSummary:
     checked: int = 0
@@ -112,6 +127,9 @@ class PaymentWatcher:
             expected_amount = Decimal(subscription.pay_amount or "")
         except InvalidOperation:
             return None
+        if expected_amount <= 0:
+            return None
+        tolerance = expected_amount * _AMOUNT_TOLERANCE
         address = (subscription.pay_address or "").lower()
         for transfer in transfers:
             if transfer.tx_id in used_txs:
@@ -120,7 +138,7 @@ class PaymentWatcher:
                 continue
             if transfer.symbol not in accepted_symbols:
                 continue
-            if transfer.amount != expected_amount:
+            if abs(transfer.amount - expected_amount) > tolerance:
                 continue
             if transfer.confirmations < self.min_confirmations:
                 continue

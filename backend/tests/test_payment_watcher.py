@@ -210,7 +210,7 @@ class PaymentWatcherTest(unittest.TestCase):
     def test_wrong_amount_does_not_activate(self) -> None:
         repository = InMemoryRepository()
         token = _pending_subscription(repository, amount="2.03")
-        watcher = _watcher(repository, FakeProvider([_transfer("2.04")]))
+        watcher = _watcher(repository, FakeProvider([_transfer("2.60")]))  # +28%, well outside tolerance
 
         summary = watcher.run_once()
 
@@ -218,6 +218,46 @@ class PaymentWatcherTest(unittest.TestCase):
         subscription = repository.get_commercial_subscription(token)
         assert subscription is not None
         self.assertEqual(subscription.status, "pending")
+
+    def test_amount_within_tolerance_activates_subscription(self) -> None:
+        """Regression guard: a real production payment landed at 0.000962
+        ETH against a 0.000952 ETH quote (+1.05%, the buyer's wallet priced
+        it a little later than our quote) and sat unmatched for over an hour
+        because the match required byte-for-byte equality."""
+        repository = InMemoryRepository()
+        token = _pending_subscription(repository, amount="2.03")
+        watcher = _watcher(repository, FakeProvider([_transfer("2.05")]))  # +0.99%
+
+        summary = watcher.run_once()
+
+        self.assertEqual(summary.activated, 1)
+        subscription = repository.get_commercial_subscription(token)
+        assert subscription is not None
+        self.assertTrue(subscription.is_active())
+
+    def test_amount_just_outside_tolerance_does_not_activate(self) -> None:
+        repository = InMemoryRepository()
+        token = _pending_subscription(repository, amount="2.03")
+        watcher = _watcher(repository, FakeProvider([_transfer("2.08")]))  # +2.46%, past the 2% band
+
+        summary = watcher.run_once()
+
+        self.assertEqual(summary.activated, 0)
+        subscription = repository.get_commercial_subscription(token)
+        assert subscription is not None
+        self.assertEqual(subscription.status, "pending")
+
+    def test_underpayment_within_tolerance_still_activates(self) -> None:
+        repository = InMemoryRepository()
+        token = _pending_subscription(repository, amount="2.03")
+        watcher = _watcher(repository, FakeProvider([_transfer("2.01")]))  # -0.98%
+
+        summary = watcher.run_once()
+
+        self.assertEqual(summary.activated, 1)
+        subscription = repository.get_commercial_subscription(token)
+        assert subscription is not None
+        self.assertTrue(subscription.is_active())
 
     def test_wrong_symbol_does_not_activate(self) -> None:
         repository = InMemoryRepository()

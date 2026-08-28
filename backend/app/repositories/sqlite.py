@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -32,12 +33,32 @@ class SqliteRepository:
     def __init__(self, database_path: str | Path, nodes: list[VpnNode] | None = None) -> None:
         self.database_path = Path(database_path)
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
-        self.connection = sqlite3.connect(self.database_path, check_same_thread=False)
-        self.connection.row_factory = sqlite3.Row
-        self.connection.execute("PRAGMA foreign_keys = ON")
+        self._local = threading.local()
         self._initial_nodes = nodes
         self.migrate()
         self.seed_nodes_if_empty()
+
+    def _connect(self) -> sqlite3.Connection:
+        connection = sqlite3.connect(self.database_path)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
+        connection.execute("PRAGMA journal_mode = WAL")
+        return connection
+
+    @property
+    def connection(self) -> sqlite3.Connection:
+        """One sqlite3.Connection per thread. ThreadingHTTPServer runs every
+        request on its own thread, and a single shared connection (even with
+        check_same_thread=False) isn't safe under concurrent execute() calls —
+        this produced intermittent "sqlite3.InterfaceError: bad parameter or
+        other API misuse" in production. Each thread lazily opens its own
+        connection to the same file instead; WAL mode keeps concurrent reads
+        from blocking on writers."""
+        connection = getattr(self._local, "connection", None)
+        if connection is None:
+            connection = self._connect()
+            self._local.connection = connection
+        return connection
 
     def migrate(self) -> None:
         schema_path = Path(__file__).resolve().parents[2] / "migrations" / "001_initial.sql"
@@ -46,7 +67,10 @@ class SqliteRepository:
         self.connection.commit()
 
     def close(self) -> None:
-        self.connection.close()
+        connection = getattr(self._local, "connection", None)
+        if connection is not None:
+            connection.close()
+            del self._local.connection
 
     def get_or_create_user(self, device_id: str) -> User:
         existing = self.connection.execute(
@@ -222,6 +246,36 @@ class SqliteRepository:
         )
         self.connection.commit()
         return self.get_commercial_subscription(token)
+
+    def cancel_commercial_subscription(self, token: str) -> CommercialSubscription | None:
+        """Mark a pending order cancelled. Paid orders are never touched, so
+        an accidental cancel can't take away access somebody paid for."""
+        subscription = self.get_commercial_subscription(token)
+        if subscription is None or subscription.status != "pending":
+            return None
+        self.connection.execute(
+            "UPDATE commercial_subscriptions SET status = 'cancelled', updated_at = ? WHERE token = ? AND status = 'pending'",
+            (_dt_to_text(datetime.now(timezone.utc)), token),
+        )
+        self.connection.commit()
+        return self.get_commercial_subscription(token)
+
+    def cancel_stale_pending_subscriptions(self, cutoff: datetime) -> list[str]:
+        """Cancel pending orders created before `cutoff`, returning their tokens."""
+        rows = self.connection.execute(
+            "SELECT token FROM commercial_subscriptions WHERE status = 'pending' AND created_at < ?",
+            (_dt_to_text(cutoff),),
+        ).fetchall()
+        tokens = [row["token"] for row in rows]
+        if not tokens:
+            return []
+        self.connection.execute(
+            "UPDATE commercial_subscriptions SET status = 'cancelled', updated_at = ? "
+            "WHERE status = 'pending' AND created_at < ?",
+            (_dt_to_text(datetime.now(timezone.utc)), _dt_to_text(cutoff)),
+        )
+        self.connection.commit()
+        return tokens
 
     def set_payment_intent(
         self,

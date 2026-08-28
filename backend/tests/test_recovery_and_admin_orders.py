@@ -161,3 +161,103 @@ class AdminOrdersTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CancelOrderTest(unittest.TestCase):
+    def test_admin_can_cancel_a_pending_order(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        result = svc.admin_cancel_commercial_subscription(_ADMIN, token)
+
+        self.assertEqual(result["status"], "cancelled")
+        subscription = svc.repository.get_commercial_subscription(token)
+        assert subscription is not None
+        self.assertEqual(subscription.status, "cancelled")
+
+    def test_paid_order_cannot_be_cancelled(self) -> None:
+        """Cancelling is for clearing abandoned invoices — it must never be
+        able to revoke access somebody actually paid for."""
+        svc = _service()
+        token = _paid_order(svc)
+
+        with self.assertRaises(ApiError) as ctx:
+            svc.admin_cancel_commercial_subscription(_ADMIN, token)
+
+        self.assertEqual(ctx.exception.status, HTTPStatus.CONFLICT)
+        subscription = svc.repository.get_commercial_subscription(token)
+        assert subscription is not None
+        self.assertEqual(subscription.status, "active")
+
+    def test_cancel_requires_admin_token(self) -> None:
+        svc = _service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        with self.assertRaises(ApiError):
+            svc.admin_cancel_commercial_subscription("wrong-token", token)
+
+    def test_unknown_token_is_404(self) -> None:
+        svc = _service()
+
+        with self.assertRaises(ApiError) as ctx:
+            svc.admin_cancel_commercial_subscription(_ADMIN, "no-such-token")
+
+        self.assertEqual(ctx.exception.status, HTTPStatus.NOT_FOUND)
+
+
+class StaleOrderSweepTest(unittest.TestCase):
+    def _aged_pending(self, svc: ApiService, hours: int) -> str:
+        from dataclasses import replace
+        from datetime import datetime, timedelta, timezone
+
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        subscription = svc.repository.commercial_subscriptions_by_token[token]
+        svc.repository.commercial_subscriptions_by_token[token] = replace(
+            subscription, created_at=datetime.now(timezone.utc) - timedelta(hours=hours)
+        )
+        return token
+
+    def test_orders_older_than_the_ttl_are_cancelled(self) -> None:
+        svc = _service()
+        old = self._aged_pending(svc, hours=48)
+        fresh = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        cancelled = svc.cancel_stale_pending_orders(ttl_hours=24)
+
+        self.assertEqual(cancelled, 1)
+        self.assertEqual(svc.repository.get_commercial_subscription(old).status, "cancelled")
+        self.assertEqual(svc.repository.get_commercial_subscription(fresh).status, "pending")
+
+    def test_paid_orders_survive_the_sweep(self) -> None:
+        from dataclasses import replace
+        from datetime import datetime, timedelta, timezone
+
+        svc = _service()
+        token = _paid_order(svc)
+        subscription = svc.repository.commercial_subscriptions_by_token[token]
+        svc.repository.commercial_subscriptions_by_token[token] = replace(
+            subscription, created_at=datetime.now(timezone.utc) - timedelta(days=30)
+        )
+
+        svc.cancel_stale_pending_orders(ttl_hours=24)
+
+        self.assertEqual(svc.repository.get_commercial_subscription(token).status, "active")
+
+    def test_zero_ttl_disables_the_sweep(self) -> None:
+        svc = _service()
+        old = self._aged_pending(svc, hours=999)
+
+        self.assertEqual(svc.cancel_stale_pending_orders(ttl_hours=0), 0)
+        self.assertEqual(svc.repository.get_commercial_subscription(old).status, "pending")
+
+    def test_cancelled_orders_are_hidden_from_the_order_list(self) -> None:
+        svc = _service()
+        cancelled_token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+        svc.admin_cancel_commercial_subscription(_ADMIN, cancelled_token)
+        live_token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        visible = svc.admin_orders(_ADMIN)["orders"]
+        everything = svc.admin_orders(_ADMIN, include_cancelled=True)["orders"]
+
+        self.assertEqual([o["order_ref"] for o in visible], [live_token[:12].upper()])
+        self.assertEqual(len(everything), 2)

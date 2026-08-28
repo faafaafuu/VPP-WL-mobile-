@@ -47,7 +47,9 @@ class Settings:
     crypto_rate_provider: str = "coingecko"
     crypto_trongrid_api_key: str | None = None
     crypto_etherscan_api_key: str | None = None
+    crypto_bep20_enabled: bool = False
     crypto_min_confirmations: int = 1
+    pending_order_ttl_hours: int = 24
     crypto_watch_interval_seconds: int = 60
     telegram_bot_token: str | None = None
     telegram_bot_username: str | None = None
@@ -70,6 +72,9 @@ class Settings:
     xui_verify_tls: bool = True
     xui_node_template: VpnNode | None = None
     telegram_stars_rate_rub: str | None = None  # RUB value of 1 Telegram Star; unset = Stars checkout disabled
+    freekassa_shop_id: str | None = None
+    freekassa_api_key: str | None = None
+    freekassa_payment_system_i: str = "36"  # "Card RUB API" — see docs.freekassa.net section 1.8
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -133,6 +138,13 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         raise SettingsError("CRYPTO_RATE_PROVIDER must be coingecko or fixed")
     crypto_trongrid_api_key = source.get("CRYPTO_TRONGRID_API_KEY", "").strip() or None
     crypto_etherscan_api_key = source.get("CRYPTO_ETHERSCAN_API_KEY", "").strip() or None
+    crypto_bep20_enabled = source.get("CRYPTO_BEP20_ENABLED", "").strip().lower() in {"1", "true", "yes"}
+    # 0 disables the sweep. The window has to stay comfortably longer than any
+    # chain's confirmation time: once an order is cancelled the watcher stops
+    # looking for its transfer, so a very late payment would go unnoticed.
+    pending_order_ttl_hours = _non_negative_int(
+        source.get("PENDING_ORDER_TTL_HOURS", "24"), "PENDING_ORDER_TTL_HOURS"
+    )
     crypto_min_confirmations = _non_negative_int(
         source.get("CRYPTO_MIN_CONFIRMATIONS", "1"), "CRYPTO_MIN_CONFIRMATIONS"
     )
@@ -143,6 +155,11 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     telegram_bot_username = source.get("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@") or None
     telegram_stars_rate_rub_raw = source.get("TELEGRAM_STARS_RATE_RUB", "").strip()
     telegram_stars_rate_rub = _decimal_str(telegram_stars_rate_rub_raw, "TELEGRAM_STARS_RATE_RUB") if telegram_stars_rate_rub_raw else None
+    freekassa_shop_id = source.get("FREEKASSA_SHOP_ID", "").strip() or None
+    freekassa_api_key = source.get("FREEKASSA_API_KEY", "").strip() or None
+    if bool(freekassa_shop_id) != bool(freekassa_api_key):
+        raise SettingsError("FREEKASSA_SHOP_ID and FREEKASSA_API_KEY must be set together")
+    freekassa_payment_system_i = source.get("FREEKASSA_PAYMENT_SYSTEM_I", "36").strip() or "36"
     twenty_api_url = source.get("TWENTY_API_URL", "").strip().rstrip("/") or None
     twenty_api_key = source.get("TWENTY_API_KEY", "").strip() or None
     smtp_host = source.get("SMTP_HOST", "").strip() or None
@@ -205,6 +222,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         crypto_rate_provider=crypto_rate_provider_raw,
         crypto_trongrid_api_key=crypto_trongrid_api_key,
         crypto_etherscan_api_key=crypto_etherscan_api_key,
+        crypto_bep20_enabled=crypto_bep20_enabled,
+        pending_order_ttl_hours=pending_order_ttl_hours,
         crypto_min_confirmations=crypto_min_confirmations,
         crypto_watch_interval_seconds=crypto_watch_interval_seconds,
         telegram_bot_token=telegram_bot_token,
@@ -228,6 +247,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         xui_verify_tls=xui_verify_tls,
         xui_node_template=xui_node_template,
         telegram_stars_rate_rub=telegram_stars_rate_rub,
+        freekassa_shop_id=freekassa_shop_id,
+        freekassa_api_key=freekassa_api_key,
+        freekassa_payment_system_i=freekassa_payment_system_i,
     )
 
 
