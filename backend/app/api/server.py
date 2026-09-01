@@ -185,6 +185,12 @@ class ApiHandler(BaseHTTPRequestHandler):
             token = path.removeprefix("/sub/")[: -len("/raw")].strip("/")
             self._send_text_response(lambda: API_SERVICE.raw_v2ray_subscription(token), "text/plain")
             return
+        if path.startswith("/sub/") and path.endswith("/singbox"):
+            token = path.removeprefix("/sub/")[: -len("/singbox")].strip("/")
+            self._send_text_response(
+                lambda: API_SERVICE.singbox_subscription(token), "application/json"
+            )
+            return
         if path.startswith("/sub/") and path.endswith("/qr"):
             token = path.removeprefix("/sub/")[: -len("/qr")].strip("/")
             self._send_text_response(lambda: API_SERVICE.subscription_qr_svg(token), "image/svg+xml")

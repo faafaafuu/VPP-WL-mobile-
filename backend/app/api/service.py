@@ -32,6 +32,7 @@ from app.domain.node_selection import choose_preferred_nodes
 from app.domain.qr_svg import fits as qr_fits, qr_svg
 from app.domain.tariffs import Tariff, parse_tariffs, tariffs_by_id
 from app.domain.unique_amount import AmountCollisionError, unique_coin_amount
+from app.domain.singbox_config import singbox_config_json
 from app.domain.v2ray_subscription import encoded_subscription, hysteria2_link, raw_subscription
 from app.repositories.factory import Repository
 from app.security.tokens import TokenError, TokenService
@@ -508,6 +509,19 @@ class ApiService:
         self._require_active_commercial_subscription(token)
         try:
             return raw_subscription(self._subscription_nodes(token), extra_links=self._extra_subscription_links())
+        except ValueError as exc:
+            raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
+
+    def singbox_subscription(self, token: str) -> str:
+        """Full sing-box profile, DNS resolved over DoH inside the tunnel.
+
+        Offered alongside the vless:// list rather than replacing it: the plain
+        list is what V2Box and older clients understand, while this is the only
+        form that takes name resolution away from the carrier.
+        """
+        self._require_active_commercial_subscription(token)
+        try:
+            return singbox_config_json(self._subscription_nodes(token))
         except ValueError as exc:
             raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}) from exc
 

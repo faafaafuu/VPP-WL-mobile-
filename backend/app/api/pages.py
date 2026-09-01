@@ -102,8 +102,10 @@ def connect_page(
               <button class="cta" type="button" onclick="connectClient()">$ подключить --run</button>
               <button class="btn" type="button" onclick="copySub()">Скопировать ссылку</button>
               <button class="btn" type="button" onclick="toggleQr()">Показать QR</button>
+              <button class="btn" type="button" onclick="copySingbox()">Ссылка для мобильного</button>
             </div>
             <p class="mono-box" id="subUrl">{escape(subscription_url)}</p>
+            <p class="hint dim2">// «Ссылка для мобильного» — профиль с собственным DNS внутри туннеля. Берите её, если на мобильном интернете сайты не открываются или грузятся через раз.</p>
             <p class="hint c-green" id="connectHint" hidden>Если клиент не открылся, скопируйте ссылку или отсканируйте QR.</p>
             <div class="qr-wrap" id="qrWrap" hidden><img src="/sub/{escape(subscription.token)}/qr" alt="QR код подписки"></div>
             {tg_block}
@@ -162,6 +164,7 @@ def connect_page(
         </div>
         <script>
           const subUrl = {subscription_url!r};
+          const singboxUrl = subUrl + '/singbox';
           async function copyText(text) {{
             if (navigator.clipboard && window.isSecureContext) {{
               try {{ await navigator.clipboard.writeText(text); return true; }} catch (e) {{}}
@@ -185,6 +188,14 @@ def connect_page(
             hint.textContent = ok
               ? 'Ссылка скопирована. Вставьте её в ваш VPN-клиент.'
               : 'Не удалось скопировать — выделите ссылку ниже и скопируйте вручную.';
+          }}
+          async function copySingbox() {{
+            const ok = await copyText(singboxUrl);
+            const hint = document.getElementById('connectHint');
+            hint.hidden = false;
+            hint.textContent = ok
+              ? 'Скопировано. Добавьте как новый профиль в Hiddify или sing-box — DNS пойдёт внутри туннеля.'
+              : 'Не удалось скопировать. Откройте вручную: ' + singboxUrl;
           }}
           function toggleQr() {{
             const wrap = document.getElementById('qrWrap');
