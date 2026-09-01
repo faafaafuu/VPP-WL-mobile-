@@ -189,7 +189,14 @@ def _scale(value: Decimal, decimals: int) -> str:
 
 
 def _plain(value: Decimal) -> str:
-    return format(value.normalize(), "f")
+    """The amount exactly as the invoice states it, in positional notation.
+
+    No normalize(): it strips trailing zeros, so an invoice for 0.00002260
+    produced a link carrying 0.0000226. The two are the same number, but the
+    buyer comparing the wallet sheet against the invoice sees two amounts,
+    and the watcher waits on the string it was given.
+    """
+    return format(value, "f")
 
 
 def payment_units(coin_id: str, amount: str) -> str | None:

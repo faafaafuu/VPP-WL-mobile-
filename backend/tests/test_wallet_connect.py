@@ -314,6 +314,16 @@ class WalletLinksTest(unittest.TestCase):
 
         self.assertEqual(wallet_links("usdt_trc20", "TTest", "2.50"), [])
 
+    def test_a_trailing_zero_in_the_amount_survives_into_the_link(self) -> None:
+        """The anti-collision surcharge lands on a trailing zero roughly one
+        invoice in ten. The link has to carry the amount the buyer was quoted,
+        digit for digit, or the wallet sheet and the invoice disagree."""
+        from app.domain.wallet_connect import wallet_links
+
+        links = {w["id"]: w["url"] for w in wallet_links("btc", "bc1qx", "0.00002260")}
+
+        self.assertIn("amount=0.00002260", links["trust"])
+
     def test_no_buttons_before_an_amount_is_known(self) -> None:
         from app.domain.wallet_connect import wallet_links
 
