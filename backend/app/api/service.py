@@ -474,7 +474,16 @@ class ApiService:
         return f"{self.public_base_url}/sub/{token}"
 
     def _extra_subscription_links(self) -> list[str]:
+        """Extra non-VLESS links prepended to the subscription.
+
+        Off by default: the only such node is hysteria2 on the German box,
+        which RU mobile carriers drop (see hysteria2_link). Clients dial
+        subscription entries in order, so shipping a dead first entry made
+        every subscription look broken on mobile.
+        """
         hy = self.hysteria2
+        if not hy.get("in_subscription"):
+            return []
         if hy.get("host") and hy.get("password"):
             return [
                 hysteria2_link(

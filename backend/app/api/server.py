@@ -99,6 +99,7 @@ API_SERVICE = ApiService(
         "sni": SETTINGS.hysteria2_sni,
         "insecure": SETTINGS.hysteria2_insecure,
         "obfs_password": SETTINGS.hysteria2_obfs_password,
+        "in_subscription": SETTINGS.hysteria2_in_subscription,
     },
     xui_client=XUI_CLIENT,
     xui_node_template=SETTINGS.xui_node_template,

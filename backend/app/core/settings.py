@@ -66,6 +66,7 @@ class Settings:
     hysteria2_sni: str | None = None
     hysteria2_insecure: bool = False
     hysteria2_obfs_password: str | None = None
+    hysteria2_in_subscription: bool = False
     xui_base_url: str | None = None
     xui_api_token: str | None = None
     xui_inbound_id: int | None = None
@@ -175,6 +176,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     hysteria2_sni = source.get("HYSTERIA2_SNI", "").strip() or hysteria2_host
     hysteria2_insecure = _bool(source.get("HYSTERIA2_INSECURE", "false"), "HYSTERIA2_INSECURE")
     hysteria2_obfs_password = source.get("HYSTERIA2_OBFS_PASSWORD", "").strip() or None
+    hysteria2_in_subscription = _bool(
+        source.get("HYSTERIA2_IN_SUBSCRIPTION", "false"), "HYSTERIA2_IN_SUBSCRIPTION"
+    )
     xui_base_url = source.get("VPN_ROUTER_XUI_BASE_URL", "").strip().rstrip("/") or None
     xui_api_token = source.get("VPN_ROUTER_XUI_API_TOKEN", "").strip() or None
     xui_inbound_id_raw = source.get("VPN_ROUTER_XUI_INBOUND_ID", "").strip()
@@ -241,6 +245,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         hysteria2_sni=hysteria2_sni,
         hysteria2_insecure=hysteria2_insecure,
         hysteria2_obfs_password=hysteria2_obfs_password,
+        hysteria2_in_subscription=hysteria2_in_subscription,
         xui_base_url=xui_base_url,
         xui_api_token=xui_api_token,
         xui_inbound_id=xui_inbound_id,

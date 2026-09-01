@@ -36,10 +36,17 @@ def hysteria2_link(
     obfs_password: str | None = None,
     label: str = "⚡ Клео │ H2",
 ) -> str:
-    """UDP/QUIC node — bypasses RU TSPU traffic-shaping that stalls TCP+TLS Reality.
+    """UDP/QUIC node on the German box.
 
     Salamander obfs (obfs_password) scrambles every packet into random bytes so
-    DPI sees no QUIC/TLS/SNI fingerprint at all — the strongest camouflage here.
+    DPI sees no QUIC/TLS/SNI fingerprint at all.
+
+    Measured 2026-08-29: unusable from RU mobile carriers. UDP to a foreign IP
+    on a non-standard port is dropped outright, and 84.247.166.53 is separately
+    throttled there — anything encrypted to it stalls at ~4 KB while plain HTTP
+    carries 64 KB fine. Clients try this node first and hang on it, which is why
+    subscriptions felt "flaky" even where the Reality node worked. Kept behind
+    HYSTERIA2_IN_SUBSCRIPTION (off) so it returns the day that IP recovers.
     """
     query = f"sni={quote(sni, safe='')}&insecure={'1' if insecure else '0'}"
     if obfs_password:

@@ -207,7 +207,16 @@ if __name__ == "__main__":
 
 
 class Hysteria2SubscriptionTest(unittest.TestCase):
-    def _service(self):
+    """hysteria2 is built correctly but kept out of subscriptions by default.
+
+    RU mobile carriers drop UDP to the foreign box it runs on, and clients dial
+    subscription entries in order — a dead first entry made every subscription
+    look broken on mobile even where the Reality node worked.
+    """
+
+    def _service(self, **hysteria2):
+        opts = {"host": "vpn.example.com", "port": 36712, "password": "s3cret", "sni": "vpn.example.com"}
+        opts.update(hysteria2)
         repo = InMemoryRepository()
         return ApiService(
             repo,
@@ -216,11 +225,20 @@ class Hysteria2SubscriptionTest(unittest.TestCase):
             admin_token="test-admin",
             public_base_url="http://203.0.113.10:8080",
             checkout_mode="mock",
-            hysteria2={"host": "vpn.example.com", "port": 36712, "password": "s3cret", "sni": "vpn.example.com"},
+            hysteria2=opts,
         )
 
-    def test_subscription_includes_hysteria2_first(self) -> None:
+    def test_subscription_omits_hysteria2_by_default(self) -> None:
         svc = self._service()
+        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
+
+        raw = svc.raw_v2ray_subscription(token)
+
+        self.assertNotIn("hysteria2://", raw)
+        self.assertTrue(raw.startswith("vless://"))
+
+    def test_opt_in_puts_hysteria2_first(self) -> None:
+        svc = self._service(in_subscription=True)
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
         raw = svc.raw_v2ray_subscription(token)
@@ -230,15 +248,7 @@ class Hysteria2SubscriptionTest(unittest.TestCase):
         self.assertIn("vless://", raw)
 
     def test_hysteria2_includes_salamander_obfs(self) -> None:
-        repo = InMemoryRepository()
-        svc = ApiService(
-            repo, TokenService("test-secret-with-length"), ConfigBuilder(),
-            admin_token="test-admin", public_base_url="http://203.0.113.10:8080", checkout_mode="mock",
-            hysteria2={
-                "host": "vpn.example.com", "port": 36712, "password": "s3cret",
-                "sni": "vpn.example.com", "obfs_password": "obfsp4ss",
-            },
-        )
+        svc = self._service(in_subscription=True, obfs_password="obfsp4ss")
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
         first = svc.raw_v2ray_subscription(token).splitlines()[0]
@@ -247,21 +257,10 @@ class Hysteria2SubscriptionTest(unittest.TestCase):
         self.assertIn("obfs-password=obfsp4ss", first)
 
     def test_no_obfs_when_password_absent(self) -> None:
-        svc = self._service()
+        svc = self._service(in_subscription=True)
         token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
 
         first = svc.raw_v2ray_subscription(token).splitlines()[0]
 
+        self.assertTrue(first.startswith("hysteria2://"))
         self.assertNotIn("obfs=", first)
-
-    def test_no_hysteria2_when_unconfigured(self) -> None:
-        repo = InMemoryRepository()
-        svc = ApiService(
-            repo, TokenService("test-secret-with-length"), ConfigBuilder(),
-            admin_token="test-admin", public_base_url="http://203.0.113.10:8080", checkout_mode="mock",
-        )
-        token = svc.checkout({"tariff_id": "vpn.1m"})["token"]
-
-        raw = svc.raw_v2ray_subscription(token)
-
-        self.assertNotIn("hysteria2://", raw)
